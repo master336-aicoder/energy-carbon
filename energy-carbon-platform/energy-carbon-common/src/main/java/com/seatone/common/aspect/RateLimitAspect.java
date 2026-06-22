@@ -19,16 +19,31 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 接口限流切面
- * 基于Redis实现滑动窗口限流
+ * 基于Redis实现滑动窗口限流，支持按IP、用户、全局三个维度限流
+ * 标注了 @RateLimit 注解的方法会被此切面拦截并进行限流检查
+ *
+ * @author seatone
+ * @since 2026-06-22
  */
 @Slf4j
 @Aspect
 @Component
 public class RateLimitAspect {
 
+    /**
+     * Redis缓存工具
+     */
     @Autowired
     private RedisCache redisCache;
 
+    /**
+     * 限流环绕通知
+     * 在方法执行前检查是否超过限流阈值，超过则抛出 RateLimitException
+     *
+     * @param joinPoint 切点
+     * @return 方法执行结果
+     * @throws Throwable 限流异常或方法执行异常
+     */
     @Around("@annotation(com.seatone.common.annotation.RateLimit)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
@@ -57,6 +72,11 @@ public class RateLimitAspect {
 
     /**
      * 构建限流Key
+     * 根据限流类型（IP/USER/GLOBAL）和接口信息构建唯一的限流Key
+     *
+     * @param rateLimit 限流注解
+     * @param joinPoint 切点
+     * @return 限流Key
      */
     private String buildLimitKey(RateLimit rateLimit, ProceedingJoinPoint joinPoint) {
         StringBuilder keyBuilder = new StringBuilder("rate_limit:");
@@ -92,6 +112,10 @@ public class RateLimitAspect {
 
     /**
      * 获取客户端真实IP
+     * 支持多级代理环境
+     *
+     * @param request HTTP请求
+     * @return 客户端IP地址
      */
     private String getClientIp(HttpServletRequest request) {
         String ip = request.getHeader("x-forwarded-for");

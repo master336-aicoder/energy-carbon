@@ -23,22 +23,40 @@ import java.util.concurrent.TimeUnit;
 /**
  * 缓存切面
  * 基于 Redis 实现方法级别的缓存读写
- * 支持 @CacheableCustom 和 @CacheEvictCustom 注解
+ * 支持 @CacheableCustom 缓存读取和 @CacheEvictCustom 缓存清除注解
+ * 使用 SpEL 表达式解析方法参数构建缓存Key
+ *
+ * @author seatone
+ * @since 2026-06-22
  */
 @Slf4j
 @Aspect
 @Component
 public class CacheAspect {
 
+    /**
+     * Redis缓存工具
+     */
     @Autowired
     private RedisCache redisCache;
 
+    /**
+     * SpEL表达式解析器
+     */
     private final SpelExpressionParser parser = new SpelExpressionParser();
+
+    /**
+     * 参数名称发现器
+     */
     private final DefaultParameterNameDiscoverer nameDiscoverer = new DefaultParameterNameDiscoverer();
 
     /**
      * 缓存查询切面
      * 先从缓存获取，缓存不存在则执行方法并写入缓存
+     *
+     * @param joinPoint 切点
+     * @return 缓存值或方法执行结果
+     * @throws Throwable 方法执行异常
      */
     @Around("@annotation(com.seatone.common.annotation.CacheableCustom)")
     public Object aroundCacheable(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -78,6 +96,11 @@ public class CacheAspect {
 
     /**
      * 缓存清除切面
+     * 先执行方法，成功后清除指定缓存
+     *
+     * @param joinPoint 切点
+     * @return 方法执行结果
+     * @throws Throwable 方法执行异常
      */
     @Around("@annotation(com.seatone.common.annotation.CacheEvictCustom)")
     public Object aroundCacheEvict(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -114,7 +137,13 @@ public class CacheAspect {
 
     /**
      * 构建缓存Key
-     * 支持SpEL表达式解析方法参数
+     * 支持SpEL表达式解析方法参数，默认使用 类名:方法名:参数hash
+     *
+     * @param prefix        缓存前缀
+     * @param keyExpression SpEL Key表达式
+     * @param method        方法对象
+     * @param joinPoint     切点
+     * @return 缓存Key
      */
     private String buildCacheKey(String prefix, String keyExpression, Method method, ProceedingJoinPoint joinPoint) {
         StringBuilder keyBuilder = new StringBuilder();

@@ -12,24 +12,42 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 系统配置缓存服务
  * 缓存系统配置参数，支持运行时动态更新
+ * 采用二级缓存策略：本地缓存（快速读取）+ Redis缓存（分布式共享）
+ *
+ * @author seatone
+ * @since 2026-06-22
  */
 @Slf4j
 @Service
 public class ConfigCacheService {
 
+    /**
+     * 配置缓存Key前缀
+     */
     private static final String CONFIG_CACHE_PREFIX = "config:";
+
+    /**
+     * 全部配置缓存Key
+     */
     private static final String CONFIG_ALL_KEY = "config:all";
 
+    /**
+     * Redis缓存工具
+     */
     @Autowired
     private RedisCache redisCache;
 
     /**
-     * 本地配置缓存（用于快速读取）
+     * 本地配置缓存（用于快速读取，减少Redis访问）
      */
     private final Map<String, String> localCache = new ConcurrentHashMap<>();
 
     /**
      * 获取配置值
+     * 优先从本地缓存获取，本地缓存不存在则从Redis获取并写入本地缓存
+     *
+     * @param configKey 配置键
+     * @return 配置值，不存在返回 null
      */
     public String getConfig(String configKey) {
         // 先从本地缓存获取
@@ -48,6 +66,10 @@ public class ConfigCacheService {
 
     /**
      * 设置配置值
+     * 同时更新Redis缓存和本地缓存
+     *
+     * @param configKey   配置键
+     * @param configValue 配置值
      */
     public void setConfig(String configKey, String configValue) {
         redisCache.setCacheObject(CONFIG_CACHE_PREFIX + configKey, configValue);
@@ -57,6 +79,9 @@ public class ConfigCacheService {
 
     /**
      * 删除配置
+     * 同时删除Redis缓存和本地缓存
+     *
+     * @param configKey 配置键
      */
     public void removeConfig(String configKey) {
         redisCache.deleteObject(CONFIG_CACHE_PREFIX + configKey);
@@ -66,6 +91,7 @@ public class ConfigCacheService {
 
     /**
      * 刷新所有本地缓存（从Redis重新加载）
+     * 用于配置变更后同步本地缓存
      */
     @SuppressWarnings("unchecked")
     public void refreshLocalCache() {
@@ -79,6 +105,7 @@ public class ConfigCacheService {
 
     /**
      * 清除所有配置缓存
+     * 同时清除本地缓存和Redis缓存
      */
     public void clearAll() {
         localCache.clear();

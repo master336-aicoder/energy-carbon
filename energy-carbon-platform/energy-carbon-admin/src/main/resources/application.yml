@@ -1,51 +1,197 @@
+# ==========================================
+# 能碳数智化平台 - 主配置文件
+# 说明：此文件为通用配置，环境特定配置请使用 application-{profile}.yml
+# ==========================================
+
+# ------------------------------------------
+# 服务器配置
+# ------------------------------------------
 server:
+  # 服务端口
+  # 用途：Spring Boot 应用监听端口
+  # 默认值：8080
+  # 可选值：1024-65535 范围内的任意可用端口
+  # 注意事项：生产环境建议修改为非常用端口（如 8081、9090 等）
   port: 8080
 
+# ------------------------------------------
+# Spring 配置
+# ------------------------------------------
 spring:
   application:
+    # 应用名称
+    # 用途：服务注册、日志标识、监控展示
+    # 默认值：无（必须配置）
     name: energy-carbon-platform
+
+  # 数据源配置（MySQL）
   datasource:
+    # 数据库连接URL
+    # 用途：指定数据库连接地址和参数
+    # 默认值：jdbc:mysql://localhost:3306/energy_carbon?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    # 可选值：根据实际数据库地址修改
+    # 注意事项：
+    #   - serverTimezone 必须设置为 Asia/Shanghai 避免时区问题
+    #   - useUnicode=true&characterEncoding=utf8 确保中文正常存储
+    #   - 生产环境建议添加 useSSL=true&requireSSL=true
     url: jdbc:mysql://localhost:3306/energy_carbon?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    # 数据库用户名
+    # 用途：连接数据库的认证用户名
+    # 默认值：root
+    # 注意事项：生产环境必须使用独立账号，禁止使用 root
     username: root
+    # 数据库密码
+    # 用途：连接数据库的认证密码
+    # 默认值：root
+    # 注意事项：生产环境必须使用强密码，建议通过环境变量或配置中心注入
     password: root
+    # 数据库驱动类名
+    # 用途：指定 JDBC 驱动
+    # 默认值：com.mysql.cj.jdbc.Driver（MySQL 8.x）
+    # 可选值：com.mysql.jdbc.Driver（MySQL 5.x，已废弃）
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # Redis 配置
   redis:
+    # Redis 服务器地址
+    # 用途：指定 Redis 服务地址
+    # 默认值：localhost
     host: localhost
+    # Redis 端口
+    # 用途：指定 Redis 服务端口
+    # 默认值：6379
     port: 6379
+    # Redis 密码
+    # 用途：连接 Redis 的认证密码（无密码留空）
+    # 默认值：空
+    # 注意事项：生产环境必须设置密码
     password:
+    # Redis 数据库索引
+    # 用途：选择 Redis 数据库（0-15）
+    # 默认值：0
+    # 可选值：0-15
     database: 0
+    # 连接超时时间
+    # 用途：连接 Redis 的超时时间
+    # 默认值：3000ms
+    # 可选值：建议 1000ms-10000ms
     timeout: 3000ms
+    # Lettuce 连接池配置
     lettuce:
       pool:
+        # 最大活跃连接数
+        # 用途：连接池中最大并发连接数
+        # 默认值：8
+        # 注意事项：根据并发量调整，建议设置为 CPU 核心数 * 2
         max-active: 8
+        # 最大空闲连接数
+        # 用途：连接池中保持的最大空闲连接
+        # 默认值：8
         max-idle: 8
+        # 最小空闲连接数
+        # 用途：连接池中保持的最小空闲连接
+        # 默认值：0
         min-idle: 0
+
+  # 文件上传配置
   servlet:
     multipart:
+      # 单个文件最大大小
+      # 用途：限制上传的单个文件大小
+      # 默认值：100MB
+      # 可选值：根据实际需求调整，如 10MB、50MB、200MB
+      # 注意事项：Nginx 等反向代理也需要同步调整限制
       max-file-size: 100MB
+      # 整个请求最大大小
+      # 用途：限制整个请求（含多个文件）的大小
+      # 默认值：100MB
       max-request-size: 100MB
 
+# ------------------------------------------
+# MyBatis-Plus 配置
+# ------------------------------------------
 mybatis-plus:
+  # Mapper XML 文件位置
+  # 用途：指定 MyBatis Mapper XML 文件的扫描路径
+  # 默认值：classpath*:mapper/**/*.xml
   mapper-locations: classpath*:mapper/**/*.xml
+  # 实体类包路径
+  # 用途：指定实体类的包路径，用于类型别名
+  # 默认值：com.seatone.**.entity
   type-aliases-package: com.seatone.**.entity
+  # MyBatis 配置
   configuration:
+    # 驼峰命名自动映射
+    # 用途：将数据库下划线命名自动映射为 Java 驼峰命名
+    # 默认值：true
+    # 可选值：true / false
     map-underscore-to-camel-case: true
+    # 日志实现
+    # 用途：指定 SQL 日志输出方式
+    # 默认值：org.apache.ibatis.logging.stdout.StdOutImpl（控制台输出）
+    # 可选值：
+    #   - org.apache.ibatis.logging.stdout.StdOutImpl：控制台输出（开发环境）
+    #   - org.apache.ibatis.logging.slf4j.Slf4jImpl：SLF4J 日志（生产环境）
+    #   - org.apache.ibatis.logging.nologging.NoLoggingImpl：不输出日志
+    # 注意事项：生产环境建议改为 Slf4jImpl 以便统一日志管理
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  # 全局配置
   global-config:
     db-config:
+      # 主键类型
+      # 用途：指定实体类主键的生成策略
+      # 默认值：auto（数据库自增）
+      # 可选值：auto / none / input / assign_id / assign_uuid
       id-type: auto
+      # 逻辑删除字段名
+      # 用途：指定逻辑删除的字段名称
+      # 默认值：deleted
       logic-delete-field: deleted
+      # 逻辑删除值
+      # 用途：标记为已删除的值
+      # 默认值：1
       logic-delete-value: 1
+      # 逻辑未删除值
+      # 用途：标记为未删除的值
+      # 默认值：0
       logic-not-delete-value: 0
 
-# JWT配置
+# ------------------------------------------
+# JWT 配置
+# ------------------------------------------
 jwt:
+  # JWT 密钥
+  # 用途：用于 Token 签名和验证
+  # 默认值：seatone-energy-carbon-platform-secret-key-2026
+  # 注意事项：
+  #   - 生产环境必须修改为复杂随机字符串（建议 32 位以上）
+  #   - 密钥泄露会导致所有 Token 可被伪造
+  #   - 修改密钥后所有已发放的 Token 将失效
   secret: seatone-energy-carbon-platform-secret-key-2026
+  # 访问 Token 过期时间（毫秒）
+  # 用途：access_token 的有效期
+  # 默认值：7200000（2小时）
+  # 可选值：根据安全需求调整，建议 15分钟-2小时
   access-expire: 7200000
+  # 刷新 Token 过期时间（毫秒）
+  # 用途：refresh_token 的有效期
+  # 默认值：604800000（7天）
+  # 可选值：根据安全需求调整，建议 7天-30天
   refresh-expire: 604800000
 
+# ------------------------------------------
 # 日志配置
+# ------------------------------------------
 logging:
   level:
+    # 项目包日志级别
+    # 用途：控制项目代码的日志输出级别
+    # 默认值：debug（开发环境）
+    # 可选值：trace / debug / info / warn / error / off
+    # 注意事项：生产环境建议改为 info 或 warn
     com.seatone: debug
+    # Spring Security 日志级别
+    # 用途：控制安全框架的日志输出
+    # 默认值：debug（开发环境）
+    # 注意事项：生产环境建议改为 info
     org.springframework.security: debug

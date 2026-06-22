@@ -15,7 +15,11 @@ import java.util.stream.Collectors;
 
 /**
  * 全局异常处理器
- * 统一处理各类异常，返回标准错误响应
+ * 统一处理系统中各类异常，返回标准化的错误响应
+ * 使用 @RestControllerAdvice 注解对所有 Controller 进行全局异常拦截
+ *
+ * @author seatone
+ * @since 2026-06-22
  */
 @Slf4j
 @RestControllerAdvice
@@ -23,6 +27,10 @@ public class GlobalExceptionHandler {
 
     /**
      * 业务异常处理
+     *
+     * @param e       业务异常
+     * @param request HTTP请求
+     * @return 错误响应结果
      */
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusinessException(BusinessException e, HttpServletRequest request) {
@@ -32,6 +40,10 @@ public class GlobalExceptionHandler {
 
     /**
      * 限流异常处理（429）
+     *
+     * @param e       限流异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 429
      */
     @ExceptionHandler(RateLimitException.class)
     public Result<Void> handleRateLimitException(RateLimitException e, HttpServletRequest request) {
@@ -40,7 +52,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 权限不足异常处理
+     * 权限不足异常处理（403）
+     *
+     * @param e       权限异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 403
      */
     @ExceptionHandler(AccessDeniedException.class)
     public Result<Void> handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
@@ -49,8 +65,12 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 参数校验异常处理（@Validated）
+     * 参数校验异常处理（@Validated，400）
      * 返回详细的字段校验错误信息
+     *
+     * @param e       参数校验异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 400
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException e, HttpServletRequest request) {
@@ -62,8 +82,12 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 参数绑定异常处理（BindException）
+     * 参数绑定异常处理（BindException，400）
      * 返回详细的字段校验错误信息
+     *
+     * @param e       参数绑定异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 400
      */
     @ExceptionHandler(BindException.class)
     public Result<Void> handleBindException(BindException e, HttpServletRequest request) {
@@ -75,7 +99,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 文件上传异常处理
+     * 文件上传大小超限异常处理（400）
+     *
+     * @param e       文件上传大小超限异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 400
      */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public Result<Void> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request) {
@@ -84,7 +112,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 文件上传相关异常处理
+     * 文件上传相关异常处理（400）
+     *
+     * @param e       文件上传异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 400
      */
     @ExceptionHandler(org.springframework.web.multipart.MultipartException.class)
     public Result<Void> handleMultipartException(org.springframework.web.multipart.MultipartException e, HttpServletRequest request) {
@@ -93,7 +125,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 非法参数异常处理
+     * 非法参数异常处理（400）
+     *
+     * @param e       非法参数异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 400
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public Result<Void> handleIllegalArgumentException(IllegalArgumentException e, HttpServletRequest request) {
@@ -102,7 +138,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 非法状态异常处理
+     * 非法状态异常处理（400）
+     *
+     * @param e       非法状态异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 400
      */
     @ExceptionHandler(IllegalStateException.class)
     public Result<Void> handleIllegalStateException(IllegalStateException e, HttpServletRequest request) {
@@ -111,7 +151,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 数组越界异常处理
+     * 数组越界异常处理（500）
+     *
+     * @param e       数组越界异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 500
      */
     @ExceptionHandler(ArrayIndexOutOfBoundsException.class)
     public Result<Void> handleArrayIndexOutOfBoundsException(ArrayIndexOutOfBoundsException e, HttpServletRequest request) {
@@ -120,7 +164,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 空指针异常处理
+     * 空指针异常处理（500）
+     *
+     * @param e       空指针异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 500
      */
     @ExceptionHandler(NullPointerException.class)
     public Result<Void> handleNullPointerException(NullPointerException e, HttpServletRequest request) {
@@ -129,7 +177,12 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 兜底异常处理
+     * 兜底异常处理（500）
+     * 捕获所有未被特定处理的异常
+     *
+     * @param e       异常
+     * @param request HTTP请求
+     * @return 错误响应结果，状态码 500
      */
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e, HttpServletRequest request) {

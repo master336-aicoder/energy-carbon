@@ -14,7 +14,11 @@ import java.util.List;
 /**
  * 数据权限过滤切面
  * 自动为标注了 @DataScope 注解的方法拼接数据权限 SQL 条件
- * 支持本部门、本部门及以下、自定义数据权限
+ * 支持全部数据、自定义数据权限、本部门、本部门及以下、仅本人五种权限范围
+ * 超级管理员（userId=1）跳过数据权限过滤
+ *
+ * @author seatone
+ * @since 2026-06-22
  */
 @Slf4j
 @Aspect
@@ -53,6 +57,9 @@ public class DataScopeAspect {
 
     /**
      * 执行数据权限过滤
+     * 在方法执行前拼接数据权限 SQL 条件到查询参数中
+     *
+     * @param point 切点
      */
     @Before("@annotation(com.seatone.common.annotation.DataScope)")
     public void doBefore(JoinPoint point) {
@@ -61,6 +68,7 @@ public class DataScopeAspect {
 
     /**
      * 处理数据权限
+     * 根据当前用户的数据权限范围拼接对应的 SQL 条件
      *
      * @param point 切点
      */
@@ -130,6 +138,7 @@ public class DataScopeAspect {
 
     /**
      * 获取自定义数据权限 SQL
+     * 根据角色-部门关联表获取有权限的部门列表
      *
      * @param dataScope 数据权限注解
      * @return SQL 条件
@@ -171,6 +180,7 @@ public class DataScopeAspect {
 
     /**
      * 获取本部门及以下数据权限 SQL
+     * 包含本部门及所有子部门
      *
      * @param dataScope 数据权限注解
      * @param userId    用户ID
@@ -225,6 +235,7 @@ public class DataScopeAspect {
 
     /**
      * 判断是否为超级管理员
+     * 超级管理员 ID 固定为 1
      *
      * @param userId 用户ID
      * @return true=是超级管理员

@@ -19,20 +19,49 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 碳排放核算控制器
+ * 提供碳排放核算的增删改查、提交审核、排放计算、报告生成等功能
+ * 支持按核算名称、年份、期次、状态等条件筛选查询
+ *
+ * @author seatone
+ * @since 2026-06-22
+ */
 @Api(tags = "碳排放核算")
 @RestController
 @RequestMapping("/carbon/accounting")
 public class CarbonAccountingController {
 
+    /**
+     * 碳排放核算服务
+     */
     @Autowired
     private CarbonAccountingService accountingService;
 
+    /**
+     * 碳排放核算明细服务
+     */
     @Autowired
     private CarbonAccountingDetailService detailService;
 
+    /**
+     * 碳排放因子服务
+     */
     @Autowired
     private CarbonEmissionFactorService factorService;
 
+    /**
+     * 分页查询核算列表
+     * 支持按核算名称（模糊）、核算年份、核算期次、状态筛选
+     *
+     * @param current         页码，默认1
+     * @param size            每页条数，默认10
+     * @param accountingName  核算名称（模糊查询）
+     * @param accountingYear  核算年份
+     * @param accountingPeriod 核算期次
+     * @param status          状态
+     * @return 分页核算列表
+     */
     @ApiOperation("分页查询核算列表")
     @GetMapping("/list")
     public Result<PageResult<CarbonAccountingDTO>> list(
@@ -63,6 +92,13 @@ public class CarbonAccountingController {
         return Result.ok(PageResult.of(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal(), records));
     }
 
+    /**
+     * 获取核算详情（含明细）
+     * 查询核算主表信息和关联的明细数据
+     *
+     * @param id 核算ID
+     * @return 核算详情（含明细列表）
+     */
     @ApiOperation("获取核算详情（含明细）")
     @GetMapping("/{id}")
     public Result<CarbonAccountingDTO> getById(@ApiParam("核算ID") @PathVariable Long id) {
@@ -79,6 +115,13 @@ public class CarbonAccountingController {
         return Result.ok(dto);
     }
 
+    /**
+     * 新增核算
+     * 初始状态为草稿（DRAFT）
+     *
+     * @param dto 核算数据
+     * @return 操作结果
+     */
     @ApiOperation("新增核算")
     @PostMapping
     public Result<Void> add(@RequestBody CarbonAccountingDTO dto) {
@@ -90,6 +133,13 @@ public class CarbonAccountingController {
         return Result.ok();
     }
 
+    /**
+     * 修改核算
+     *
+     * @param id  核算ID
+     * @param dto 核算数据
+     * @return 操作结果
+     */
     @ApiOperation("修改核算")
     @PutMapping("/{id}")
     public Result<Void> update(@ApiParam("核算ID") @PathVariable Long id, @RequestBody CarbonAccountingDTO dto) {
@@ -100,6 +150,12 @@ public class CarbonAccountingController {
         return Result.ok();
     }
 
+    /**
+     * 删除核算
+     *
+     * @param id 核算ID
+     * @return 操作结果
+     */
     @ApiOperation("删除核算")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@ApiParam("核算ID") @PathVariable Long id) {
@@ -107,6 +163,13 @@ public class CarbonAccountingController {
         return Result.ok();
     }
 
+    /**
+     * 提交核算
+     * 将核算状态从草稿更新为已提交
+     *
+     * @param id 核算ID
+     * @return 操作结果
+     */
     @ApiOperation("提交核算")
     @PutMapping("/{id}/submit")
     public Result<Void> submit(@ApiParam("核算ID") @PathVariable Long id) {
@@ -119,6 +182,13 @@ public class CarbonAccountingController {
         return Result.ok();
     }
 
+    /**
+     * 审核核算
+     * 将核算状态从已提交更新为已审核
+     *
+     * @param id 核算ID
+     * @return 操作结果
+     */
     @ApiOperation("审核核算")
     @PutMapping("/{id}/approve")
     public Result<Void> approve(@ApiParam("核算ID") @PathVariable Long id) {
@@ -131,6 +201,14 @@ public class CarbonAccountingController {
         return Result.ok();
     }
 
+    /**
+     * 排放计算
+     * 根据活动数据和排放因子计算碳排放量
+     * 排放量 = 活动数据 x 排放因子
+     *
+     * @param calcDTO 计算参数，包含核算ID和活动数据列表
+     * @return 操作结果
+     */
     @ApiOperation("排放计算（活动数据 x 排放因子）")
     @PostMapping("/calculate")
     public Result<Void> calculate(@RequestBody EmissionCalcDTO calcDTO) {
@@ -199,6 +277,13 @@ public class CarbonAccountingController {
         return Result.ok();
     }
 
+    /**
+     * 获取排放报告数据
+     * 按范围一、范围二、范围三分类统计排放量及占比
+     *
+     * @param id 核算ID
+     * @return 排放报告数据
+     */
     @ApiOperation("获取排放报告数据")
     @GetMapping("/report/{id}")
     public Result<EmissionReportDTO> getReport(@ApiParam("核算ID") @PathVariable Long id) {
@@ -249,12 +334,24 @@ public class CarbonAccountingController {
         return Result.ok(report);
     }
 
+    /**
+     * 将 CarbonAccounting 实体转换为 DTO
+     *
+     * @param entity 核算实体
+     * @return 核算DTO
+     */
     private CarbonAccountingDTO convertToDTO(CarbonAccounting entity) {
         CarbonAccountingDTO dto = new CarbonAccountingDTO();
         BeanUtils.copyProperties(entity, dto);
         return dto;
     }
 
+    /**
+     * 将 CarbonAccountingDetail 实体转换为 DTO
+     *
+     * @param entity 核算明细实体
+     * @return 核算明细DTO
+     */
     private CarbonAccountingDetailDTO convertDetailToDTO(CarbonAccountingDetail entity) {
         CarbonAccountingDetailDTO dto = new CarbonAccountingDetailDTO();
         BeanUtils.copyProperties(entity, dto);

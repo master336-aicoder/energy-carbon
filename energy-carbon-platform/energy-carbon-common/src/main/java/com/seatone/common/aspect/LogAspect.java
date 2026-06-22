@@ -24,7 +24,11 @@ import java.util.Map;
 /**
  * 操作日志记录切面
  * 自动记录标注了 @Log 注解的方法的操作日志
- * 使用异步线程池记录日志
+ * 使用异步线程池记录日志，避免影响主业务流程性能
+ * 支持记录请求参数、返回结果、执行耗时、异常信息等
+ *
+ * @author seatone
+ * @since 2026-06-22
  */
 @Slf4j
 @Aspect
@@ -43,6 +47,9 @@ public class LogAspect {
 
     /**
      * 方法执行前：记录请求信息
+     * 包括请求URL、请求方法、IP地址、请求参数、操作用户等
+     *
+     * @param joinPoint 切点
      */
     @Before("@annotation(com.seatone.common.annotation.Log)")
     public void doBefore(JoinPoint joinPoint) {
@@ -87,6 +94,10 @@ public class LogAspect {
 
     /**
      * 方法正常返回后：记录返回结果
+     * 计算执行耗时，异步保存日志
+     *
+     * @param joinPoint  切点
+     * @param jsonResult 方法返回结果
      */
     @AfterReturning(pointcut = "@annotation(com.seatone.common.annotation.Log)", returning = "jsonResult")
     public void doAfterReturning(JoinPoint joinPoint, Object jsonResult) {
@@ -130,6 +141,10 @@ public class LogAspect {
 
     /**
      * 方法抛出异常后：记录异常信息
+     * 计算执行耗时，异步保存日志
+     *
+     * @param joinPoint 切点
+     * @param e         异常
      */
     @AfterThrowing(pointcut = "@annotation(com.seatone.common.annotation.Log)", throwing = "e")
     public void doAfterThrowing(JoinPoint joinPoint, Exception e) {
@@ -180,6 +195,7 @@ public class LogAspect {
 
     /**
      * 获取请求参数
+     * 过滤敏感字段并限制参数长度
      *
      * @param joinPoint 切点
      * @return 参数字符串
@@ -203,6 +219,7 @@ public class LogAspect {
 
     /**
      * 获取客户端 IP 地址
+     * 支持多级代理环境
      *
      * @param request HTTP 请求
      * @return IP 地址

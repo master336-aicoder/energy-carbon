@@ -14,6 +14,11 @@ import java.util.regex.Pattern;
 /**
  * SQL注入过滤器
  * 拦截请求参数中的SQL关键词，防止SQL注入攻击
+ * 通过正则表达式匹配常见的SQL注入特征，对匹配到的参数值进行清空处理
+ * 过滤顺序：1（最先执行）
+ *
+ * @author seatone
+ * @since 2026-06-22
  */
 @Slf4j
 @Order(1)
@@ -33,11 +38,26 @@ public class SqlInjectionFilter implements Filter {
             "'\\s*(or|and)\\s*'.*='"
     };
 
+    /**
+     * 过滤器初始化
+     *
+     * @param filterConfig 过滤器配置
+     */
     @Override
     public void init(FilterConfig filterConfig) {
         log.info("SQL注入过滤器初始化完成");
     }
 
+    /**
+     * 执行过滤
+     * 对请求参数进行SQL注入检测和过滤
+     *
+     * @param request  请求对象
+     * @param response 响应对象
+     * @param chain    过滤器链
+     * @throws IOException      IO异常
+     * @throws ServletException Servlet异常
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -46,6 +66,9 @@ public class SqlInjectionFilter implements Filter {
         chain.doFilter(wrapper, response);
     }
 
+    /**
+     * 过滤器销毁
+     */
     @Override
     public void destroy() {
         log.info("SQL注入过滤器销毁");
@@ -53,6 +76,9 @@ public class SqlInjectionFilter implements Filter {
 
     /**
      * 检查字符串是否包含SQL注入关键词
+     *
+     * @param value 待检查的字符串
+     * @return true=包含SQL注入关键词
      */
     public static boolean containsSqlInjection(String value) {
         if (value == null || value.isEmpty()) {
@@ -71,13 +97,25 @@ public class SqlInjectionFilter implements Filter {
 
     /**
      * SQL注入请求包装器
+     * 对请求参数、请求头进行SQL注入过滤
      */
     static class SqlInjectionHttpServletRequestWrapper extends HttpServletRequestWrapper {
 
+        /**
+         * 构造方法
+         *
+         * @param request HTTP请求
+         */
         public SqlInjectionHttpServletRequestWrapper(HttpServletRequest request) {
             super(request);
         }
 
+        /**
+         * 获取参数值数组（过滤SQL注入）
+         *
+         * @param name 参数名
+         * @return 过滤后的参数值数组
+         */
         @Override
         public String[] getParameterValues(String name) {
             String[] values = super.getParameterValues(name);
@@ -96,6 +134,12 @@ public class SqlInjectionFilter implements Filter {
             return cleanValues;
         }
 
+        /**
+         * 获取单个参数值（过滤SQL注入）
+         *
+         * @param name 参数名
+         * @return 过滤后的参数值
+         */
         @Override
         public String getParameter(String name) {
             String value = super.getParameter(name);
@@ -106,6 +150,12 @@ public class SqlInjectionFilter implements Filter {
             return value;
         }
 
+        /**
+         * 获取请求头（过滤SQL注入）
+         *
+         * @param name 请求头名
+         * @return 过滤后的请求头值
+         */
         @Override
         public String getHeader(String name) {
             String value = super.getHeader(name);
