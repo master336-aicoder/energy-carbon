@@ -1,14 +1,251 @@
 <template>
-  <div class="monitor-time-compare">
-    <h2>时段对比</h2>
+  <div class="time-compare">
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <span>时间对标分析</span>
+        </div>
+      </template>
+
+      <el-form :model="searchForm" inline class="search-form">
+        <el-form-item label="计量器具">
+          <el-select v-model="searchForm.meterId" placeholder="请选择计量器具" clearable filterable style="width: 200px">
+            <el-option v-for="m in meterList" :key="m.id" :label="m.name" :value="m.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="数据类型">
+          <el-select v-model="searchForm.dataType" placeholder="数据类型" clearable style="width: 130px">
+            <el-option label="电量" value="电量" />
+            <el-option label="功率" value="功率" />
+            <el-option label="电压" value="电压" />
+            <el-option label="电流" value="电流" />
+          </el-select>
+        </el-form-item>
+        <el-divider content-position="left">时段A</el-divider>
+        <el-form-item label="开始时间">
+          <el-date-picker
+            v-model="searchForm.startTimeA"
+            type="datetime"
+            placeholder="选择开始时间"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            style="width: 200px"
+          />
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-date-picker
+            v-model="searchForm.endTimeA"
+            type="datetime"
+            placeholder="选择结束时间"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            style="width: 200px"
+          />
+        </el-form-item>
+        <el-divider content-position="left">时段B</el-divider>
+        <el-form-item label="开始时间">
+          <el-date-picker
+            v-model="searchForm.startTimeB"
+            type="datetime"
+            placeholder="选择开始时间"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            style="width: 200px"
+          />
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-date-picker
+            v-model="searchForm.endTimeB"
+            type="datetime"
+            placeholder="选择结束时间"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            style="width: 200px"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleCompare">开始对比</el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+
+      <div class="chart-container" v-loading="loading">
+        <div ref="chartRef" class="chart"></div>
+      </div>
+
+      <el-card shadow="never" class="stat-card" v-if="showStats">
+        <template #header>
+          <span>差异统计</span>
+        </template>
+        <el-descriptions :column="3" border>
+          <el-descriptions-item label="时段A平均值">{{ avgA.toFixed(2) }}</el-descriptions-item>
+          <el-descriptions-item label="时段B平均值">{{ avgB.toFixed(2) }}</el-descriptions-item>
+          <el-descriptions-item label="变化量">{{ change.toFixed(2) }}</el-descriptions-item>
+          <el-descriptions-item label="时段A最大值">{{ maxA.toFixed(2) }}</el-descriptions-item>
+          <el-descriptions-item label="时段B最大值">{{ maxB.toFixed(2) }}</el-descriptions-item>
+          <el-descriptions-item label="变化率">{{ changeRate.toFixed(2) }}%</el-descriptions-item>
+        </el-descriptions>
+      </el-card>
+    </el-card>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { getTimeCompare } from '@/api/timeCompare'
+import { getMeterList } from '@/api/meter'
+import type { Meter, CompareDataSeries } from '@/types'
+import * as echarts from 'echarts'
+
+const loading = ref(false)
+const meterList = ref<Meter[]>([])
+const chartRef = ref<HTMLDivElement>()
+let chartInstance: echarts.ECharts | null = null
+const showStats = ref(false)
+const avgA = ref(0)
+const avgB = ref(0)
+const maxA = ref(0)
+const maxB = ref(0)
+const change = ref(0)
+const changeRate = ref(0)
+
+const searchForm = reactive({
+  meterId: undefined as number | undefined,
+  dataType: undefined as string | undefined,
+  startTimeA: '',
+  endTimeA: '',
+  startTimeB: '',
+  endTimeB: ''
+})
+
+async function fetchMeters() {
+  const res = await getMeterList({ current: 1, size: 9999 })
+  meterList.value = res.data.records
+}
+
+function calcStats(seriesA: CompareDataSeries, seriesB: CompareDataSeries) {
+  const valsA = seriesA.data.map(d => d.value)
+  const valsB = seriesB.data.map(d => d.value)
+  avgA.value = valsA.length > 0 ? valsA.reduce((a, b) => a + b, 0) / valsA.length : 0
+  avgB.value = valsB.length > 0 ? valsB.reduce((a, b) => a + b, 0) / valsB.length : 0
+  maxA.value = valsA.length > 0 ? Math.max(...valsA) : 0
+  maxB.value = valsB.length > 0 ? Math.max(...valsB) : 0
+  change.value = avgB.value - avgA.value
+  changeRate.value = avgA.value !== 0 ? (change.value / avgA.value) * 100 : 0
+  showStats.value = true
+}
+
+function renderChart(seriesList: CompareDataSeries[]) {
+  if (!chartRef.value) return
+  if (!chartInstance) {
+    chartInstance = echarts.init(chartRef.value)
+  }
+
+  const series = seriesList.map(s => ({
+    name: s.seriesName,
+    type: 'line' as const,
+    data: s.data.map(d => d.value),
+    smooth: true,
+    lineStyle: { width: 2, color: s.color },
+    itemStyle: { color: s.color }
+  }))
+
+  const allTimes = Array.from(new Set(seriesList.flatMap(s => s.data.map(d => d.time.slice(0, 19).replace('T', ' '))))).sort()
+
+  const option: echarts.EChartsOption = {
+    title: { text: '时间对标曲线', left: 'center' },
+    tooltip: { trigger: 'axis' },
+    legend: { data: seriesList.map(s => s.seriesName), bottom: 0 },
+    xAxis: { type: 'category', data: allTimes, boundaryGap: false, axisLabel: { rotate: 45 } },
+    yAxis: { type: 'value' },
+    series,
+    grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true }
+  }
+  chartInstance.setOption(option, true)
+}
+
+async function handleCompare() {
+  if (!searchForm.meterId) {
+    ElMessage.warning('请选择计量器具')
+    return
+  }
+  if (!searchForm.startTimeA || !searchForm.endTimeA || !searchForm.startTimeB || !searchForm.endTimeB) {
+    ElMessage.warning('请选择完整的时间段')
+    return
+  }
+  loading.value = true
+  showStats.value = false
+  try {
+    const res = await getTimeCompare({
+      meterId: searchForm.meterId,
+      dataType: searchForm.dataType,
+      startTimeA: searchForm.startTimeA,
+      endTimeA: searchForm.endTimeA,
+      startTimeB: searchForm.startTimeB,
+      endTimeB: searchForm.endTimeB
+    })
+    renderChart(res.data)
+    if (res.data.length >= 2) {
+      calcStats(res.data[0], res.data[1])
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleReset() {
+  searchForm.meterId = undefined
+  searchForm.dataType = undefined
+  searchForm.startTimeA = ''
+  searchForm.endTimeA = ''
+  searchForm.startTimeB = ''
+  searchForm.endTimeB = ''
+  showStats.value = false
+  chartInstance?.clear()
+}
+
+function handleResize() {
+  chartInstance?.resize()
+}
+
+onMounted(() => {
+  fetchMeters()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  chartInstance?.dispose()
+})
 </script>
 
-<style scoped>
-.monitor-time-compare {
+<style scoped lang="scss">
+.time-compare {
   padding: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-form {
+  margin-bottom: 20px;
+}
+
+.chart-container {
+  height: 450px;
+  margin-bottom: 20px;
+}
+
+.chart {
+  width: 100%;
+  height: 100%;
+}
+
+.stat-card {
+  margin-top: 20px;
 }
 </style>

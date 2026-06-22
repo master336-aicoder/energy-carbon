@@ -279,3 +279,425 @@ export interface RealTimeData {
   timestamp: string
   status?: number
 }
+
+// ==================== 碳排放模块类型 ====================
+
+/** 碳排放核算 */
+export interface CarbonAccounting {
+  id: number
+  accountingName: string
+  accountingYear: number
+  accountingPeriod: string
+  energyUnitId?: number
+  scopeType?: string
+  totalEmission?: number
+  emissionUnit?: string
+  status: string
+  remark?: string
+  details?: CarbonAccountingDetail[]
+  createTime?: string
+  updateTime?: string
+}
+
+/** 核算明细 */
+export interface CarbonAccountingDetail {
+  id: number
+  accountingId: number
+  activityName: string
+  energyTypeId?: number
+  activityData?: number
+  activityUnit?: string
+  emissionFactor?: number
+  factorUnit?: string
+  emission?: number
+  emissionUnit?: string
+  sourceDescription?: string
+}
+
+/** 排放因子 */
+export interface EmissionFactor {
+  id: number
+  factorName: string
+  factorCategory: string
+  energyTypeId?: number
+  factorValue: number
+  factorUnit: string
+  source?: string
+  effectiveYear?: number
+  defaultFlag?: number
+  remark?: string
+}
+
+/** 碳核算模型 */
+export interface AccountingModel {
+  id: number
+  modelName: string
+  energyUnitId?: number
+  modelConfig?: string
+  status: number
+  remark?: string
+}
+
+/** 产品碳足迹 */
+export interface CarbonFootprint {
+  id: number
+  productId?: number
+  lifecycleStage?: string
+  emission?: number
+  emissionUnit?: string
+  calcMethod?: string
+  dataSource?: string
+  calcDate?: string
+}
+
+/** 碳核查 */
+export interface CarbonVerification {
+  id: number
+  verificationName: string
+  accountingId?: number
+  verificationType?: string
+  verifier?: string
+  verificationDate?: string
+  dataSourceDescription?: string
+  attachmentPath?: string
+  verificationResult?: string
+  status: string
+  remark?: string
+}
+
+// ==================== 统计报表模块类型 ====================
+
+/** 能耗统计 */
+export interface EnergySummary {
+  id: number
+  energyUnitId?: number
+  reportType: string
+  statDate: string
+  energyTypeId?: number
+  consumption?: number
+  consumptionUnit?: string
+  cost?: number
+  costUnit?: string
+}
+
+/** 能耗汇总 */
+export interface EnergyTotal {
+  id: number
+  energyUnitId?: number
+  reportType: string
+  statDate: string
+  totalConsumption?: number
+  totalCost?: number
+  comparisonPeriod?: string
+  comparisonChangeRate?: number
+}
+
+/** 节能量 */
+export interface EnergySaving {
+  id: number
+  energyUnitId?: number
+  reportType: string
+  statDate: string
+  baselineConsumption?: number
+  actualConsumption?: number
+  savingAmount?: number
+  savingRate?: number
+  savingAmountUnit?: string
+}
+
+/** 用能成本 */
+export interface CostStat {
+  id: number
+  energyUnitId?: number
+  reportType: string
+  statDate: string
+  energyTypeId?: number
+  cost?: number
+  costUnit?: string
+}
+
+/** 基准能耗 */
+export interface BaselineConsumption {
+  id: number
+  energyUnitId?: number
+  startDate: string
+  endDate: string
+  baselineValue?: number
+  baselineType?: string
+  remark?: string
+}
+
+// ==================== 数据录入模块类型 ====================
+
+/** 指标录入 */
+export interface EntryIndicator {
+  id: number
+  energyUnitId?: number
+  indicatorName: string
+  indicatorType?: string
+  indicatorValue?: number
+  indicatorUnit?: string
+  entryDate: string
+  entryPerson?: string
+  remark?: string
+}
+
+/** 产量录入 */
+export interface EntryProduction {
+  id: number
+  energyUnitId?: number
+  productTypeId?: number
+  productionDate: string
+  outputQuantity?: number
+  outputUnit?: string
+  batchNumber?: string
+  remark?: string
+  entryPerson?: string
+}
+
+// ========== 在线监测 - 历史数据 ==========
+
+/** 历史数据 */
+export interface MonitorHistoryData {
+  id?: number
+  meterId: number
+  meterName?: string
+  dataTime: string
+  dataValue: number
+  dataType: string
+  unit?: string
+  createTime?: string
+}
+
+/** 历史数据查询参数 */
+export interface MonitorHistoryParams {
+  current?: number
+  size?: number
+  meterId?: number
+  dataType?: string
+  startTime: string
+  endTime: string
+}
+
+// ========== 在线监测 - 计量抄表 ==========
+
+/** 抄表记录 */
+export interface MeterRecord {
+  id?: number
+  meterId: number
+  meterName?: string
+  meterCode?: string
+  recordTime: string
+  startCode?: number
+  endCode: number
+  consumption: number
+  cost?: number
+  unitPrice?: number
+  operator?: string
+  remark?: string
+  createTime?: string
+}
+
+/** 抄表记录查询参数 */
+export interface MeterRecordParams {
+  current?: number
+  size?: number
+  meterId?: number
+  startTime?: string
+  endTime?: string
+}
+
+// ========== 在线监测 - 状态监测 ==========
+
+/** 状态日志 */
+export interface StatusLog {
+  id?: number
+  deviceId: number
+  deviceName?: string
+  deviceType: string
+  onlineStatus: number
+  offlineTime?: string
+  onlineTime?: string
+  duration?: number
+  createTime?: string
+}
+
+/** 在线率统计 */
+export interface OnlineRate {
+  total: number
+  online: number
+  offline: number
+  onlineRate: number
+}
+
+// ========== 在线监测 - 对比数据 ==========
+
+/** 对比数据点 */
+export interface CompareDataPoint {
+  time: string
+  value: number
+}
+
+/** 对比数据系列 */
+export interface CompareDataSeries {
+  seriesName: string
+  color: string
+  data: CompareDataPoint[]
+}
+
+// ========== 报警管理 - 阈值 ==========
+
+/** 报警阈值 */
+export interface AlarmThreshold {
+  id?: number
+  thresholdName: string
+  energyUnitId?: number
+  energyUnitName?: string
+  metricType: string
+  compareType: string
+  thresholdValue: number
+  alarmLevel: string
+  enabled: number
+  notifyMethod?: string
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
+
+/** 阈值查询参数 */
+export interface AlarmThresholdParams {
+  current?: number
+  size?: number
+  thresholdName?: string
+  metricType?: string
+  alarmLevel?: string
+  enabled?: number
+}
+
+// ========== 报警管理 - 记录 ==========
+
+/** 报警记录 */
+export interface AlarmRecord {
+  id?: number
+  thresholdId?: number
+  thresholdName?: string
+  meterId?: number
+  meterName?: string
+  alarmType: string
+  alarmLevel: string
+  alarmValue: number
+  thresholdValue: number
+  alarmTime: string
+  handleStatus: string
+  handler?: string
+  handleTime?: string
+  handleRemark?: string
+  createTime?: string
+}
+
+/** 报警记录查询参数 */
+export interface AlarmRecordParams {
+  current?: number
+  size?: number
+  alarmLevel?: string
+  handleStatus?: string
+  alarmType?: string
+  startTime?: string
+  endTime?: string
+}
+
+/** 报警统计 */
+export interface AlarmStatistics {
+  total: number
+  unhandled: number
+  handled: number
+  ignored: number
+  critical: number
+  warn: number
+  info: number
+}
+
+// ========== 用能分析 - 能耗数据 ==========
+
+/** 能耗数据 */
+export interface AnalysisConsumption {
+  id: number
+  energyUnitId: number
+  energyUnitName?: string
+  meterId?: number
+  meterName?: string
+  energyTypeId?: number
+  energyTypeName?: string
+  statDate: string
+  statPeriod: string
+  consumption: number
+  unit: string
+  createTime?: string
+}
+
+/** 电费数据 */
+export interface AnalysisElectricityCost {
+  id: number
+  meterId?: number
+  meterName?: string
+  statDate: string
+  peakPower: number
+  valleyPower: number
+  flatPower: number
+  peakCost: number
+  valleyCost: number
+  flatCost: number
+  totalCost: number
+  createTime?: string
+}
+
+/** 能效数据 */
+export interface AnalysisEnergyEfficiency {
+  id: number
+  energyUnitId: number
+  energyUnitName?: string
+  statDate: string
+  outputValue: number
+  outputUnit: string
+  energyConsumption: number
+  energyUnit: string
+  intensity: number
+  benchmarkValue?: number
+  benchmarkUnit?: string
+  createTime?: string
+}
+
+/** 能碳预算 */
+export interface AnalysisEnergyBudget {
+  id: number
+  energyUnitId: number
+  energyUnitName?: string
+  budgetYear: number
+  budgetType: string
+  budgetTypeName?: string
+  targetValue: number
+  targetUnit: string
+  currentValue: number
+  completionRate: number
+  status: number
+  createTime?: string
+  updateTime?: string
+}
+
+/** 对标库 */
+export interface AnalysisBenchmark {
+  id: number
+  benchmarkName: string
+  industry?: string
+  energyTypeId?: number
+  energyTypeName?: string
+  energyCategory?: string
+  benchmarkValue: number
+  benchmarkUnit: string
+  source?: string
+  effectiveDate?: string
+  expireDate?: string
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
