@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { local, StorageKeys } from '@/utils/storage'
 
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -11,8 +12,9 @@ const request = axios.create({
 request.interceptors.request.use(
   config => {
     const userStore = useUserStore()
-    if (userStore.token) {
-      config.headers.Authorization = 'Bearer ' + userStore.token
+    const token = userStore.token || local.get<string>(StorageKeys.TOKEN)
+    if (token) {
+      config.headers.Authorization = 'Bearer ' + token
     }
     return config
   },

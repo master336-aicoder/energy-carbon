@@ -68,11 +68,12 @@
   </el-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
+import type { Menu } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -80,11 +81,80 @@ const userStore = useUserStore()
 const appStore = useAppStore()
 
 const menuRoutes = computed(() => {
+  // 优先使用后端返回的菜单数据
+  if (userStore.menus && userStore.menus.length > 0) {
+    return buildMenuTree(userStore.menus)
+  }
+  // 降级使用路由配置
   const layoutRoute = router.getRoutes().find(r => r.path === '/')
   return layoutRoute?.children || []
 })
 
-function handleCommand(command) {
+interface MenuItem {
+  path: string
+  name?: string
+  meta?: {
+    title: string
+    icon?: string
+    hidden?: boolean
+    keepAlive?: boolean
+    permission?: string
+    sort?: number
+  }
+  children?: MenuItem[]
+}
+
+function buildMenuTree(menus: Menu[]): MenuItem[] {
+  const menuMap = new Map<number, MenuItem>()
+  const roots: MenuItem[] = []
+
+  // 先创建所有菜单项
+  for (const menu of menus) {
+    if (menu.type === 'button' || menu.status !== 1) continue
+    menuMap.set(menu.id, {
+      path: menu.path || '',
+      name: menu.name,
+      meta: {
+        title: menu.title,
+        icon: menu.icon,
+        hidden: menu.hidden,
+        keepAlive: menu.keepAlive,
+        permission: menu.permission,
+        sort: menu.sort
+      }
+    })
+  }
+
+  // 构建树形结构
+  for (const menu of menus) {
+    if (menu.type === 'button' || menu.status !== 1) continue
+    const item = menuMap.get(menu.id)
+    if (!item) continue
+
+    if (menu.parentId === 0) {
+      roots.push(item)
+    } else {
+      const parent = menuMap.get(menu.parentId)
+      if (parent) {
+        if (!parent.children) parent.children = []
+        parent.children.push(item)
+      }
+    }
+  }
+
+  // 排序
+  function sortMenus(items: MenuItem[]) {
+    items.sort((a, b) => (a.meta?.sort || 0) - (b.meta?.sort || 0))
+    for (const item of items) {
+      if (item.children) sortMenus(item.children)
+    }
+  }
+  sortMenus(roots)
+
+  return roots
+}
+
+function handleCommand(command: string) {
   if (command === 'logout') {
     userStore.logout()
     router.push('/login')

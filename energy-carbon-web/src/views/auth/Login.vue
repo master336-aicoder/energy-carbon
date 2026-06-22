@@ -30,6 +30,21 @@
             show-password
           />
         </el-form-item>
+        <el-form-item prop="captcha">
+          <div class="captcha-row">
+            <el-input
+              v-model="loginForm.captcha"
+              placeholder="请输入验证码"
+              :prefix-icon="CircleCheck"
+              size="large"
+              class="captcha-input"
+            />
+            <div class="captcha-img" @click="fetchCaptcha">
+              <img v-if="captchaImg" :src="captchaImg" alt="验证码" />
+              <span v-else class="captcha-placeholder">点击获取</span>
+            </div>
+          </div>
+        </el-form-item>
         <el-form-item>
           <el-button
             type="primary"
@@ -47,25 +62,44 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Lock } from '@element-plus/icons-vue'
+import { User, Lock, CircleCheck } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { getCaptcha } from '@/api/auth'
 
 const router = useRouter()
 const userStore = useUserStore()
 const loginFormRef = ref()
 const loading = ref(false)
+const captchaImg = ref('')
+const captchaKey = ref('')
 
 const loginForm = reactive({
   username: 'admin',
-  password: '123456'
+  password: '123456',
+  captcha: '',
+  captchaKey: ''
 })
 
 const loginRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  captcha: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
+}
+
+async function fetchCaptcha() {
+  try {
+    const res = await getCaptcha()
+    if (res.data) {
+      captchaImg.value = res.data.imageBase64
+      captchaKey.value = res.data.key
+      loginForm.captchaKey = res.data.key
+    }
+  } catch (error) {
+    ElMessage.error('获取验证码失败')
+  }
 }
 
 async function handleLogin() {
@@ -79,11 +113,16 @@ async function handleLogin() {
     ElMessage.success('登录成功')
     router.push('/')
   } catch (error) {
+    fetchCaptcha()
     ElMessage.error(error.message || '登录失败')
   } finally {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  fetchCaptcha()
+})
 </script>
 
 <style scoped lang="scss">
@@ -122,6 +161,41 @@ async function handleLogin() {
 .login-form {
   .login-btn {
     width: 100%;
+  }
+}
+
+.captcha-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+
+  .captcha-input {
+    flex: 1;
+  }
+
+  .captcha-img {
+    width: 120px;
+    height: 40px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f7fa;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .captcha-placeholder {
+      font-size: 12px;
+      color: #909399;
+    }
   }
 }
 </style>

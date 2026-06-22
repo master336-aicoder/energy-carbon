@@ -1,12 +1,15 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { login as loginApi, getUserInfo } from '@/api/auth'
+import { local, StorageKeys } from '@/utils/storage'
+import { resetRouter } from '@/router'
+import type { UserInfo, Menu } from '@/types'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
-  const userInfo = ref<any>(null)
+  const userInfo = ref<UserInfo | null>(null)
   const permissions = ref<string[]>([])
-  const menus = ref<any[]>([])
+  const menus = ref<Menu[]>([])
 
   const isLoggedIn = computed(() => !!token.value)
 
@@ -20,10 +23,28 @@ export const useUserStore = defineStore('user', () => {
 
   async function fetchUserInfo() {
     const res = await getUserInfo()
-    userInfo.value = res.data
-    permissions.value = res.data.permissions || []
-    menus.value = res.data.menus || []
-    return res.data
+    const data = res.data
+    userInfo.value = {
+      id: data.id,
+      username: data.username,
+      nickname: data.nickname,
+      avatar: data.avatar,
+      email: data.email,
+      phone: data.phone,
+      deptName: data.deptName,
+      roles: data.roles || [],
+      permissions: data.permissions || [],
+      menus: data.menus || []
+    }
+    permissions.value = data.permissions || []
+    menus.value = data.menus || []
+
+    // 缓存用户数据
+    local.set(StorageKeys.USER_INFO, userInfo.value)
+    local.set(StorageKeys.USER_MENUS, menus.value)
+    local.set(StorageKeys.USER_PERMISSIONS, permissions.value)
+
+    return data
   }
 
   function logout() {
@@ -33,10 +54,18 @@ export const useUserStore = defineStore('user', () => {
     menus.value = []
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
+    local.remove(StorageKeys.USER_INFO)
+    local.remove(StorageKeys.USER_MENUS)
+    local.remove(StorageKeys.USER_PERMISSIONS)
+    resetRouter()
   }
 
   function hasPermission(perm: string) {
     return permissions.value.includes(perm)
+  }
+
+  function hasRole(role: string) {
+    return userInfo.value?.roles.includes(role) || false
   }
 
   return {
@@ -48,6 +77,7 @@ export const useUserStore = defineStore('user', () => {
     login,
     fetchUserInfo,
     logout,
-    hasPermission
+    hasPermission,
+    hasRole
   }
 })
