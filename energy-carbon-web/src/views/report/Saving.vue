@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from 'vue'
-import * as echarts from 'echarts'
+import echarts from '@/utils/echarts'
 import { getEnergySavingList, getEnergySavingByRange } from '@/api/report'
 
 const loading = ref(false)

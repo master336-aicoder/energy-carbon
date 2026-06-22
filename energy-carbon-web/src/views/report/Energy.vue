@@ -61,7 +61,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from 'vue'
-import * as echarts from 'echarts'
+import echarts from '@/utils/echarts'
 import { getEnergySummaryList, getEnergySummaryByRange, exportEnergySummary } from '@/api/report'
 
 const loading = ref(false)

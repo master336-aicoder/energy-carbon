@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/user'
 import { generateAsyncRoutes, loadComponent } from '@/utils/menu'
 import { local, StorageKeys } from '@/utils/storage'
 import type { AppRoute } from '@/types'
+import { performanceMonitor } from '@/utils/performance'
 
 // 静态路由（无需权限）
 const staticRoutes: RouteRecordRaw[] = [
@@ -18,6 +19,25 @@ const staticRoutes: RouteRecordRaw[] = [
     name: 'NotFound',
     component: () => import('@/views/auth/Login.vue'),
     meta: { public: true, title: '页面不存在' }
+  },
+  // 工具包静态路由
+  {
+    path: '/toolkit/electricity-price',
+    name: 'ElectricityPrice',
+    component: () => import('@/views/toolkit/ElectricityPrice.vue'),
+    meta: { title: '分时电价管理' }
+  },
+  {
+    path: '/toolkit/knowledge',
+    name: 'Knowledge',
+    component: () => import('@/views/toolkit/Knowledge.vue'),
+    meta: { title: 'AI知识库' }
+  },
+  {
+    path: '/toolkit/ai-report',
+    name: 'AiReport',
+    component: () => import('@/views/toolkit/AiReport.vue'),
+    meta: { title: 'AI报告生成' }
   }
 ]
 
@@ -95,6 +115,9 @@ function resetDynamicRoutes() {
 
 // 路由守卫
 router.beforeEach(async (to, from, next) => {
+  // 开始页面加载计时
+  performanceMonitor.startPageLoad(to.path)
+
   const userStore = useUserStore()
   const token = userStore.token || local.get<string>(StorageKeys.TOKEN)
 
@@ -153,7 +176,11 @@ router.beforeEach(async (to, from, next) => {
 
 // 全局后置守卫
 router.afterEach((to, from) => {
-  // 可在此处添加页面访问日志、埋点等
+  // 结束页面加载计时
+  const duration = performanceMonitor.endPageLoad(to.path)
+  if (duration && duration > 1000) {
+    console.debug(`[路由] ${to.path} 加载耗时: ${duration.toFixed(0)}ms`)
+  }
 })
 
 // 全局错误处理

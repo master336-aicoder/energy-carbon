@@ -115,7 +115,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import * as echarts from 'echarts'
+import echarts from '@/utils/echarts'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getConsumptionList, getConsumptionSummary, getConsumptionTrend, deleteConsumption } from '@/api/analysis'
 import type { ConsumptionListParams, AnalysisConsumption } from '@/api/analysis'

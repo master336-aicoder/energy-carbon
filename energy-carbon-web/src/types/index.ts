@@ -701,3 +701,282 @@ export interface AnalysisBenchmark {
   createTime?: string
   updateTime?: string
 }
+
+// ========== AI服务模块类型 ==========
+
+/** AI服务预约记录 */
+export interface AiServiceRecord {
+  id?: number
+  serviceName: string
+  serviceType: string
+  applicant: string
+  contact?: string
+  description?: string
+  expectedDate?: string
+  status: string
+  result?: string
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
+
+/** AI知识库文档 */
+export interface AiKnowledgeDoc {
+  id?: number
+  docName: string
+  docType: string
+  filePath?: string
+  fileSize?: number
+  summary?: string
+  uploadUser?: string
+  uploadTime?: string
+  status?: number
+  createTime?: string
+}
+
+/** AI报告生成任务 */
+export interface AiReportTask {
+  id?: number
+  reportName: string
+  reportType: string
+  templateId?: number
+  templateName?: string
+  paramsJson?: string
+  status: string
+  resultPath?: string
+  errorMsg?: string
+  progress?: number
+  createTime?: string
+  updateTime?: string
+}
+
+/** AI报告模板 */
+export interface AiReportTemplate {
+  id?: number
+  templateName: string
+  reportType: string
+  templateContent?: string
+  variables?: string
+  status?: number
+  createTime?: string
+  updateTime?: string
+}
+
+// ========== 工具包模块类型 ==========
+
+/** 绿色工厂申报 */
+export interface GreenFactory {
+  id?: number
+  declarationName: string
+  enterpriseName: string
+  declarationYear: number
+  status: string
+  progress?: number
+  submitTime?: string
+  remark?: string
+  createTime?: string
+  updateTime?: string
+  items?: GreenFactoryItem[]
+}
+
+/** 绿色工厂申报资料清单 */
+export interface GreenFactoryItem {
+  id?: number
+  declarationId?: number
+  itemName: string
+  itemCategory?: string
+  required?: number
+  uploaded?: number
+  filePath?: string
+  uploadTime?: string
+  remark?: string
+}
+
+/** 错峰排产 */
+export interface PeakShifting {
+  id?: number
+  planName: string
+  planDate: string
+  shiftType?: string
+  productionLine?: string
+  targetOutput?: number
+  actualOutput?: number
+  energyConsumption?: number
+  energyCost?: number
+  savingRate?: number
+  status?: number
+  createTime?: string
+  updateTime?: string
+}
+
+/** 排产配置 */
+export interface PeakShiftingConfig {
+  id?: number
+  configName: string
+  peakHoursStart?: string
+  peakHoursEnd?: string
+  valleyHoursStart?: string
+  valleyHoursEnd?: string
+  flatHoursStart?: string
+  flatHoursEnd?: string
+  maxPower?: number
+  priority?: number
+  status?: number
+  createTime?: string
+  updateTime?: string
+}
+
+/** 计算器记录 */
+export interface CalculatorRecord {
+  id?: number
+  calcName: string
+  calcType: string
+  inputParamsJson?: string
+  resultJson?: string
+  createTime?: string
+}
+
+/** 分时电价配置 */
+export interface ElectricityPrice {
+  id?: number
+  priceName: string
+  effectiveDate: string
+  peakPrice: number
+  flatPrice: number
+  valleyPrice: number
+  peakHours?: string
+  flatHours?: string
+  valleyHours?: string
+  status?: number
+  createTime?: string
+  updateTime?: string
+}
+
+// ==================== 碳资产管理模块类型 ====================
+
+/** 碳资产 */
+export interface CarbonAsset {
+  id: number
+  assetType: string
+  assetName: string
+  assetCode?: string
+  quantity: number
+  unit?: string
+  acquireDate?: string
+  expireDate?: string
+  source?: string
+  cost?: number
+  status: string
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
+
+/** 碳资产交易 */
+export interface CarbonAssetTrade {
+  id: number
+  assetId: number
+  assetName?: string
+  tradeType: string
+  tradeQuantity: number
+  tradePrice: number
+  tradeAmount: number
+  tradeDate: string
+  counterparty?: string
+  status?: string
+  remark?: string
+  createTime?: string
+}
+
+/** 资产汇总项 */
+export interface AssetSummaryItem {
+  assetType: string
+  assetTypeName: string
+  totalQuantity: number
+  totalCost: number
+  count: number
+  availableCount?: number
+  usedCount?: number
+  frozenCount?: number
+}
+
+/** 市场供需信息 */
+export interface CarbonMarketInfo {
+  id: number
+  infoTitle: string
+  infoCategory: string
+  content?: string
+  source?: string
+  publishDate?: string
+  status: number
+  createTime?: string
+  updateTime?: string
+}
+
+// ==================== CBAM申报模块类型 ====================
+
+/** CBAM申报 */
+export interface CbamDeclaration {
+  id: number
+  declarationName: string
+  declarationPeriod: string
+  productName: string
+  productCode?: string
+  cnCode?: string
+  originCountry?: string
+  importQuantity: number
+  unit?: string
+  directEmission?: number
+  indirectEmission?: number
+  totalEmission?: number
+  emissionUnit?: string
+  certificateNumber?: string
+  status: string
+  remark?: string
+  details?: CbamDeclarationDetail[]
+  createTime?: string
+  updateTime?: string
+}
+
+/** CBAM明细 */
+export interface CbamDeclarationDetail {
+  id: number
+  declarationId: number
+  materialName: string
+  materialCategory?: string
+  consumption?: number
+  unit?: string
+  emissionFactor?: number
+  emission?: number
+  dataSource?: string
+}
+
+// ==================== 供应链碳足迹模块类型 ====================
+
+/** 供应链碳足迹 */
+export interface SupplyChainCarbon {
+  id: number
+  supplierName: string
+  supplierCode?: string
+  productName: string
+  productCategory?: string
+  carbonFootprintValue: number
+  unit?: string
+  certType?: string
+  certNumber?: string
+  validDate?: string
+  dataSource?: string
+  status: number
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
+
+/** 供应链汇总项 */
+export interface SupplyChainSummaryItem {
+  supplierName?: string
+  productName?: string
+  productCount?: number
+  supplierCount?: number
+  avgCarbonFootprint: number
+}

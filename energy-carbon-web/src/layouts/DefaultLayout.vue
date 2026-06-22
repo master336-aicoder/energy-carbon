@@ -62,15 +62,19 @@
         </div>
       </el-header>
       <el-main class="main-content">
-        <router-view />
+        <router-view v-slot="{ Component }">
+          <keep-alive :include="cachedViews" :max="10">
+            <component :is="Component" :key="route.path" />
+          </keep-alive>
+        </router-view>
       </el-main>
     </el-container>
   </el-container>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter, onRouteLeave } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
 import type { Menu } from '@/types'
@@ -79,6 +83,50 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const appStore = useAppStore()
+
+// keep-alive 缓存的组件名称列表
+const cachedViews = ref<string[]>([])
+
+// 需要缓存的页面名称（根据路由meta.keepAlive或固定列表）
+const CACHEABLE_NAMES = [
+  'Dashboard',
+  'RealTime',
+  'History',
+  'Consumption',
+  'Accounting',
+  'Summary',
+  'Energy',
+  'Cost',
+  'Saving',
+  'TimeCompare',
+  'DeviceCompare',
+  'StatusMonitor',
+  'Electricity',
+  'Budget',
+  'EnergyFlow',
+  'EfficiencyIndex',
+  'MeterReading',
+  'AlarmRecord',
+  'AlarmConfig',
+  'Footprint',
+  'Factor',
+  'Asset',
+  'CBAM',
+  'SupplyChain'
+]
+
+// 监听路由变化，维护缓存列表
+watch(
+  () => route.name,
+  (newName) => {
+    if (newName && typeof newName === 'string' && CACHEABLE_NAMES.includes(newName)) {
+      if (!cachedViews.value.includes(newName)) {
+        cachedViews.value.push(newName)
+      }
+    }
+  },
+  { immediate: true }
+)
 
 const menuRoutes = computed(() => {
   // 优先使用后端返回的菜单数据

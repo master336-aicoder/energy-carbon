@@ -119,7 +119,7 @@
 import { ref, reactive, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh, OfficeBuilding, SetUp, Odometer, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+import echarts from '@/utils/echarts'
 import { getDeviceTree, getRealtimeData, getHistoryData, type DeviceTreeNode } from '@/api/realtime'
 import type { RealTimeData } from '@/types'
 

@@ -314,3 +314,314 @@ export function deleteVerification(id: number) {
 export function completeVerification(id: number, verificationResult: string) {
   return request.put<Result<null>>(`/carbon/verification/${id}/complete?verificationResult=${encodeURIComponent(verificationResult)}`)
 }
+
+// ==================== 碳资产管理 ====================
+
+export interface CarbonAsset {
+  id: number
+  assetType: string
+  assetName: string
+  assetCode?: string
+  quantity: number
+  unit?: string
+  acquireDate?: string
+  expireDate?: string
+  source?: string
+  cost?: number
+  status: string
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
+
+export interface CarbonAssetListParams {
+  current?: number
+  size?: number
+  assetType?: string
+  assetName?: string
+  status?: string
+}
+
+export interface CarbonAssetTrade {
+  id: number
+  assetId: number
+  assetName?: string
+  tradeType: string
+  tradeQuantity: number
+  tradePrice: number
+  tradeAmount: number
+  tradeDate: string
+  counterparty?: string
+  status?: string
+  remark?: string
+  createTime?: string
+}
+
+export interface CarbonAssetTradeListParams {
+  current?: number
+  size?: number
+  assetId?: number
+  tradeType?: string
+}
+
+export interface AssetSummaryItem {
+  assetType: string
+  assetTypeName: string
+  totalQuantity: number
+  totalCost: number
+  count: number
+  availableCount?: number
+  usedCount?: number
+  frozenCount?: number
+}
+
+/** 获取碳资产列表 */
+export function getAssetList(params: CarbonAssetListParams) {
+  return request.get<Result<PageResult<CarbonAsset>>>('/carbon/asset/list', { params })
+}
+
+/** 获取碳资产详情 */
+export function getAssetDetail(id: number) {
+  return request.get<Result<CarbonAsset>>(`/carbon/asset/${id}`)
+}
+
+/** 新增碳资产 */
+export function createAsset(data: Partial<CarbonAsset>) {
+  return request.post<Result<null>>('/carbon/asset', data)
+}
+
+/** 修改碳资产 */
+export function updateAsset(id: number, data: Partial<CarbonAsset>) {
+  return request.put<Result<null>>(`/carbon/asset/${id}`, data)
+}
+
+/** 删除碳资产 */
+export function deleteAsset(id: number) {
+  return request.delete<Result<null>>(`/carbon/asset/${id}`)
+}
+
+/** 资产汇总统计 */
+export function getAssetSummary() {
+  return request.get<Result<AssetSummaryItem[]>>('/carbon/asset/summary')
+}
+
+/** 获取交易记录列表 */
+export function getTradeList(params: CarbonAssetTradeListParams) {
+  return request.get<Result<PageResult<CarbonAssetTrade>>>('/carbon/asset/trade/list', { params })
+}
+
+/** 新增交易记录 */
+export function createTrade(data: Partial<CarbonAssetTrade>) {
+  return request.post<Result<null>>('/carbon/asset/trade', data)
+}
+
+// ==================== 市场供需信息 ====================
+
+export interface CarbonMarketInfo {
+  id: number
+  infoTitle: string
+  infoCategory: string
+  content?: string
+  source?: string
+  publishDate?: string
+  status: number
+  createTime?: string
+  updateTime?: string
+}
+
+export interface CarbonMarketInfoListParams {
+  current?: number
+  size?: number
+  infoCategory?: string
+  infoTitle?: string
+}
+
+/** 获取市场信息列表 */
+export function getMarketInfoList(params: CarbonMarketInfoListParams) {
+  return request.get<Result<PageResult<CarbonMarketInfo>>>('/carbon/market/list', { params })
+}
+
+/** 获取市场信息详情 */
+export function getMarketInfoDetail(id: number) {
+  return request.get<Result<CarbonMarketInfo>>(`/carbon/market/${id}`)
+}
+
+/** 发布市场信息 */
+export function createMarketInfo(data: Partial<CarbonMarketInfo>) {
+  return request.post<Result<null>>('/carbon/market', data)
+}
+
+/** 修改市场信息 */
+export function updateMarketInfo(id: number, data: Partial<CarbonMarketInfo>) {
+  return request.put<Result<null>>(`/carbon/market/${id}`, data)
+}
+
+/** 删除市场信息 */
+export function deleteMarketInfo(id: number) {
+  return request.delete<Result<null>>(`/carbon/market/${id}`)
+}
+
+/** 获取最新市场信息 */
+export function getLatestMarketInfo(infoCategory?: string, limit?: number) {
+  return request.get<Result<CarbonMarketInfo[]>>('/carbon/market/latest', { params: { infoCategory, limit } })
+}
+
+// ==================== CBAM申报 ====================
+
+export interface CbamDeclaration {
+  id: number
+  declarationName: string
+  declarationPeriod: string
+  productName: string
+  productCode?: string
+  cnCode?: string
+  originCountry?: string
+  importQuantity: number
+  unit?: string
+  directEmission?: number
+  indirectEmission?: number
+  totalEmission?: number
+  emissionUnit?: string
+  certificateNumber?: string
+  status: string
+  remark?: string
+  details?: CbamDeclarationDetail[]
+  createTime?: string
+  updateTime?: string
+}
+
+export interface CbamDeclarationDetail {
+  id: number
+  declarationId: number
+  materialName: string
+  materialCategory?: string
+  consumption?: number
+  unit?: string
+  emissionFactor?: number
+  emission?: number
+  dataSource?: string
+}
+
+export interface CbamDeclarationListParams {
+  current?: number
+  size?: number
+  declarationName?: string
+  declarationPeriod?: string
+  status?: string
+}
+
+/** 获取CBAM申报列表 */
+export function getCbamList(params: CbamDeclarationListParams) {
+  return request.get<Result<PageResult<CbamDeclaration>>>('/carbon/cbam/list', { params })
+}
+
+/** 获取CBAM申报详情 */
+export function getCbamDetail(id: number) {
+  return request.get<Result<CbamDeclaration>>(`/carbon/cbam/${id}`)
+}
+
+/** 新增CBAM申报 */
+export function createCbam(data: Partial<CbamDeclaration>) {
+  return request.post<Result<null>>('/carbon/cbam', data)
+}
+
+/** 修改CBAM申报 */
+export function updateCbam(id: number, data: Partial<CbamDeclaration>) {
+  return request.put<Result<null>>(`/carbon/cbam/${id}`, data)
+}
+
+/** 删除CBAM申报 */
+export function deleteCbam(id: number) {
+  return request.delete<Result<null>>(`/carbon/cbam/${id}`)
+}
+
+/** CBAM排放计算 */
+export function calculateCbam(id: number) {
+  return request.post<Result<CbamDeclaration>>(`/carbon/cbam/calculate/${id}`)
+}
+
+/** 提交CBAM审核 */
+export function submitCbam(id: number) {
+  return request.put<Result<null>>(`/carbon/cbam/${id}/submit`)
+}
+
+/** 审核通过CBAM */
+export function approveCbam(id: number) {
+  return request.put<Result<null>>(`/carbon/cbam/${id}/approve`)
+}
+
+/** 审核驳回CBAM */
+export function rejectCbam(id: number) {
+  return request.put<Result<null>>(`/carbon/cbam/${id}/reject`)
+}
+
+// ==================== 供应链碳足迹 ====================
+
+export interface SupplyChainCarbon {
+  id: number
+  supplierName: string
+  supplierCode?: string
+  productName: string
+  productCategory?: string
+  carbonFootprintValue: number
+  unit?: string
+  certType?: string
+  certNumber?: string
+  validDate?: string
+  dataSource?: string
+  status: number
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
+
+export interface SupplyChainCarbonListParams {
+  current?: number
+  size?: number
+  supplierName?: string
+  productName?: string
+  productCategory?: string
+}
+
+export interface SupplyChainSummaryItem {
+  supplierName?: string
+  productName?: string
+  productCount?: number
+  supplierCount?: number
+  avgCarbonFootprint: number
+}
+
+/** 获取供应链碳足迹列表 */
+export function getSupplyChainList(params: SupplyChainCarbonListParams) {
+  return request.get<Result<PageResult<SupplyChainCarbon>>>('/carbon/supply-chain/list', { params })
+}
+
+/** 获取供应链碳足迹详情 */
+export function getSupplyChainDetail(id: number) {
+  return request.get<Result<SupplyChainCarbon>>(`/carbon/supply-chain/${id}`)
+}
+
+/** 新增供应链碳足迹 */
+export function createSupplyChain(data: Partial<SupplyChainCarbon>) {
+  return request.post<Result<null>>('/carbon/supply-chain', data)
+}
+
+/** 修改供应链碳足迹 */
+export function updateSupplyChain(id: number, data: Partial<SupplyChainCarbon>) {
+  return request.put<Result<null>>(`/carbon/supply-chain/${id}`, data)
+}
+
+/** 删除供应链碳足迹 */
+export function deleteSupplyChain(id: number) {
+  return request.delete<Result<null>>(`/carbon/supply-chain/${id}`)
+}
+
+/** 按供应商汇总 */
+export function getSupplyChainSummaryBySupplier() {
+  return request.get<Result<SupplyChainSummaryItem[]>>('/carbon/supply-chain/summary/supplier')
+}
+
+/** 按产品汇总 */
+export function getSupplyChainSummaryByProduct() {
+  return request.get<Result<SupplyChainSummaryItem[]>>('/carbon/supply-chain/summary/product')
+}

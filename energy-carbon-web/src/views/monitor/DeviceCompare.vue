@@ -79,7 +79,7 @@ import { ElMessage } from 'element-plus'
 import { getDeviceCompare } from '@/api/deviceCompare'
 import { getMeterList } from '@/api/meter'
 import type { Meter, CompareDataSeries } from '@/types'
-import * as echarts from 'echarts'
+import echarts from '@/utils/echarts'
 
 const loading = ref(false)
 const meterList = ref<Meter[]>([])

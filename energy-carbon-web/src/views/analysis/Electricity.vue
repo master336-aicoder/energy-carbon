@@ -88,7 +88,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import * as echarts from 'echarts'
+import echarts from '@/utils/echarts'
 import { ElMessage } from 'element-plus'
 import { getElectricitySummary, getElectricityDetail } from '@/api/analysis'
 

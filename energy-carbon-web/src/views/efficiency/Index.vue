@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import * as echarts from 'echarts'
+import echarts from '@/utils/echarts'
 import { getEfficiencyTrend, getEfficiencyIntensity, getBenchmarkAnalysis } from '@/api/analysis'
 
 const unitTree = ref([{ id: 1, deptName: '一分厂' }, { id: 2, deptName: '二分厂' }, { id: 3, deptName: '三分厂' }])

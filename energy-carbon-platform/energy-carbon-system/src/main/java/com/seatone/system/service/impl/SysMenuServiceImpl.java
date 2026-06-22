@@ -1,6 +1,7 @@
 package com.seatone.system.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.seatone.common.annotation.CacheableCustom;
 import com.seatone.system.entity.SysMenu;
 import com.seatone.system.mapper.SysMenuMapper;
 import com.seatone.system.service.SysMenuService;
@@ -38,6 +39,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     @Override
+    @CacheableCustom(prefix = "menu:user", key = "#userId", ttl = 30, description = "用户菜单路由缓存")
     public List<SysMenu> getUserRouteMenus(Long userId) {
         List<SysMenu> menus = baseMapper.selectMenuTreeByUserId(userId);
         if (menus == null || menus.isEmpty()) {
