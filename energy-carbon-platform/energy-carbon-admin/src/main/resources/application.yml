@@ -22,7 +22,7 @@ spring:
     # 应用名称
     # 用途：服务注册、日志标识、监控展示
     # 默认值：无（必须配置）
-    name: energy-carbon-platform
+    name: energy-carbon-service
 
   # 数据源配置（MySQL）
   datasource:

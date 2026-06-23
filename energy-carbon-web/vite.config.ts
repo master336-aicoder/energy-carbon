@@ -94,7 +94,7 @@ export default defineConfig({
       scss: {
         // 全局引入 SCSS 变量文件
         // 用途：在所有组件中自动可用这些变量，无需重复导入
-        additionalData: `@use "@/styles/variables.scss" as *;`,
+        additionalData: `@use "@/styles/_variables.scss" as *;`,
       },
     },
   },
