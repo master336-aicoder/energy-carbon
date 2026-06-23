@@ -1,0 +1,35 @@
+# ==========================================
+# 能碳数智化平台 - Bootstrap 配置文件
+# 说明：此文件在 application.yml 之前加载，用于配置 Nacos 配置中心和服务注册发现
+# 注意：Spring Cloud 2021.x 需要引入 spring-cloud-starter-bootstrap 依赖才能识别此文件
+# ==========================================
+
+spring:
+  application:
+    # 服务名称（用于 Nacos 配置的 data-id 前缀和服务注册名称）
+    name: energy-carbon-service
+
+  cloud:
+    nacos:
+      # Nacos 配置中心
+      config:
+        server-addr: 192.168.1.81:8848
+        namespace: energy-carbon
+        group: dev
+        username: nacos
+        password: nacos
+        # 配置文件格式
+        file-extension: yml
+        # 共享配置（公共配置，多个服务共用）
+        shared-configs:
+          - data-id: common.yml
+            group: dev
+            refresh: true
+
+      # Nacos 服务注册发现
+      discovery:
+        server-addr: 192.168.1.81:8848
+        namespace: energy-carbon
+        group: dev
+        username: nacos
+        password: nacos

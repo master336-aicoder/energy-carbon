@@ -1,0 +1,46 @@
+// ==========================================
+// 全局 SCSS 变量
+// 说明：此文件通过 vite.config.ts 中的 additionalData 自动注入到所有 SCSS 文件中
+// ==========================================
+
+// 主题色
+$primary-color: #409eff;
+$success-color: #67c23a;
+$warning-color: #e6a23c;
+$danger-color: #f56c6c;
+$info-color: #909399;
+
+// 文字颜色
+$text-primary: #303133;
+$text-regular: #606266;
+$text-secondary: #909399;
+$text-placeholder: #c0c4cc;
+
+// 背景色
+$bg-color: #f0f2f5;
+$bg-white: #ffffff;
+
+// 边框颜色
+$border-color: #dcdfe6;
+$border-light: #e4e7ed;
+
+// 侧边栏
+$sidebar-bg: #304156;
+$sidebar-text: #bfcbd9;
+$sidebar-active-text: #409eff;
+
+// 布局
+$header-height: 60px;
+$sidebar-width: 220px;
+$sidebar-collapsed-width: 64px;
+
+// 圆角
+$border-radius-base: 4px;
+$border-radius-lg: 8px;
+
+// 阴影
+$box-shadow-base: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+$box-shadow-light: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+// 过渡
+$transition-base: all 0.3s ease;
