@@ -5,8 +5,8 @@
 import * as echarts from 'echarts/core'
 
 // 引入必要的图表类型
-import { BarChart, LineChart, PieChart, GaugeChart, ScatterChart, RadarChart } from 'echarts/charts'
-echarts.use([BarChart, LineChart, PieChart, GaugeChart, ScatterChart, RadarChart])
+import { BarChart, LineChart, PieChart, GaugeChart, ScatterChart, RadarChart, SankeyChart } from 'echarts/charts'
+echarts.use([BarChart, LineChart, PieChart, GaugeChart, ScatterChart, RadarChart, SankeyChart])
 
 // 引入必要的组件
 import {

@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class TimeSeriesService {
 
-    @Autowired
+    @Autowired(required = false)
     private InfluxDB influxDB;
 
     public void writePoint(String measurement, String field, Double value, Long timestamp, Map<String, String> tags) {

@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { login as loginApi, getUserInfo as getUserInfoApi } from '@/api/auth'
+import type { UserInfo } from '@/types'
 
 /**
  * 用户 Store
@@ -9,62 +11,78 @@ import { ref, computed } from 'vue'
 export const useUserStore = defineStore('user', () => {
   // ==================== State ====================
 
-  /**
-   * 用户认证 Token
-   * 从 localStorage 恢复持久化的 Token
-   */
+  /** 用户认证 Token */
   const token = ref<string>(localStorage.getItem('token') || '')
 
-  /**
-   * 用户信息对象
-   */
-  const userInfo = ref<any>(null)
+  /** 用户信息对象 */
+  const userInfo = ref<UserInfo | null>(null)
 
   // ==================== Getters ====================
 
-  /**
-   * 是否已登录
-   * 根据 Token 是否存在判断登录状态
-   */
+  /** 是否已登录 */
   const isLoggedIn = computed(() => !!token.value)
 
   // ==================== Actions ====================
 
   /**
-   * 设置用户 Token
-   * 同时持久化到 localStorage
-   *
-   * @param newToken 新的 Token 字符串
+   * 登录
+   * 调用登录接口，保存 Token
    */
+  const login = async (loginForm: { username: string; password: string }) => {
+    const res: any = await loginApi(loginForm)
+    // 后端返回 { code: 200, data: { accessToken: "xxx", refreshToken: "xxx", expiresIn: 7200 } }
+    const accessToken = res.data?.accessToken || res.data?.token || res.access_token
+    if (accessToken) {
+      setToken(accessToken)
+    } else if (typeof res.data === 'string') {
+      setToken(res.data)
+    }
+  }
+
+  /**
+   * 获取用户信息
+   * 后端 /auth/userinfo 返回 { username, nickname, permissions }
+   */
+  const fetchUserInfo = async () => {
+    const res: any = await getUserInfoApi()
+    const data = res.data
+    if (data) {
+      userInfo.value = {
+        id: data.id || 0,
+        username: data.username || '',
+        nickname: data.nickname || data.username || '',
+        avatar: data.avatar || '',
+        roles: data.roles || [],
+        permissions: data.permissions || [],
+        menus: data.menus || [],
+      }
+    }
+  }
+
+  /** 设置用户 Token */
   const setToken = (newToken: string) => {
     token.value = newToken
     localStorage.setItem('token', newToken)
   }
 
-  /**
-   * 设置用户信息
-   *
-   * @param info 用户信息对象
-   */
-  const setUserInfo = (info: any) => {
+  /** 设置用户信息 */
+  const setUserInfo = (info: UserInfo | null) => {
     userInfo.value = info
   }
 
-  /**
-   * 用户登出
-   * 清除 Token 和用户信息，并从 localStorage 移除
-   */
+  /** 用户登出 */
   const logout = () => {
     token.value = ''
     userInfo.value = null
     localStorage.removeItem('token')
   }
 
-  // 返回所有状态和操作
   return {
     token,
     userInfo,
     isLoggedIn,
+    login,
+    fetchUserInfo,
     setToken,
     setUserInfo,
     logout,

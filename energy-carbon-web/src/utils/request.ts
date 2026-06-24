@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
+import axios from 'axios'
+import type { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 
@@ -19,12 +20,11 @@ interface ResponseData<T = any> {
  * 创建 Axios 实例
  * 配置基础URL、超时时间、请求头等通用参数
  */
-const request: AxiosInstance = axios.create({
+const request = axios.create({
   // 基础URL，所有请求都会自动拼接此前缀
   // 开发环境通过 Vite 代理转发到后端，生产环境应配置为实际后端地址
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   // 请求超时时间（毫秒）
-  // 超过此时间未收到响应将触发超时错误
   timeout: 10000,
   // 请求头配置
   headers: {
@@ -37,7 +37,7 @@ const request: AxiosInstance = axios.create({
  * 在请求发送前执行，用于添加认证Token等通用处理
  */
 request.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config) => {
     // 从 Pinia store 获取用户 Token
     const userStore = useUserStore()
     const token = userStore.token
@@ -57,6 +57,7 @@ request.interceptors.request.use(
 /**
  * 响应拦截器
  * 在收到响应后执行，用于统一处理响应数据和错误
+ * 注意：此处不解包 response.data，API 层通过泛型获取完整 ResponseData
  */
 request.interceptors.response.use(
   (response: AxiosResponse<ResponseData>) => {
@@ -73,8 +74,8 @@ request.interceptors.response.use(
       }
       return Promise.reject(new Error(res.message || '请求失败'))
     }
-    // 返回业务数据
-    return res.data
+    // 返回完整的 ResponseData，API 层通过泛型获取
+    return response.data as any
   },
   (error: AxiosError) => {
     // HTTP 错误（如 404、500、网络超时等）

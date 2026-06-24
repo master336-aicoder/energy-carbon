@@ -3,14 +3,13 @@ import type { RouteRecordRaw } from 'vue-router'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import { useUserStore } from '@/stores/user'
-import { local, StorageKeys } from '@/utils/storage'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 
 NProgress.configure({ showSpinner: false })
 
-/** 获取 Token */
+/** 获取 Token（直接从 localStorage 读取原始字符串，避免 JSON.parse 问题） */
 function getToken(): string | null {
-  return local.get<string>(StorageKeys.TOKEN)
+  return localStorage.getItem('token')
 }
 
 // 静态路由（无需权限）
@@ -23,6 +22,7 @@ export const constantRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/',
+    name: 'Layout',
     component: DefaultLayout,
     redirect: '/dashboard',
     children: [
@@ -37,10 +37,11 @@ export const constantRoutes: RouteRecordRaw[] = [
 ]
 
 // 动态路由（需要权限，开发环境直接全部加载）
+// 注意：这些路由通过 addRoute('Layout', route) 添加为 '/' 的子路由
+// 因此不需要再指定 component: DefaultLayout，否则会嵌套布局
 export const asyncRoutes: RouteRecordRaw[] = [
   {
     path: '/monitor',
-    component: DefaultLayout,
     redirect: '/monitor/realtime',
     meta: { title: '实时监测', icon: 'Monitor' },
     children: [
@@ -84,7 +85,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/alarm',
-    component: DefaultLayout,
     redirect: '/alarm/config',
     meta: { title: '告警管理', icon: 'Bell' },
     children: [
@@ -104,7 +104,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/analysis',
-    component: DefaultLayout,
     redirect: '/analysis/consumption',
     meta: { title: '能耗分析', icon: 'DataAnalysis' },
     children: [
@@ -130,7 +129,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/carbon',
-    component: DefaultLayout,
     redirect: '/carbon/accounting',
     meta: { title: '碳管理', icon: 'Smoking' },
     children: [
@@ -174,7 +172,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/report',
-    component: DefaultLayout,
     redirect: '/report/energy',
     meta: { title: '报表中心', icon: 'Document' },
     children: [
@@ -206,7 +203,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/efficiency',
-    component: DefaultLayout,
     redirect: '/efficiency',
     meta: { title: '能效对标', icon: 'Aim' },
     children: [
@@ -226,7 +222,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/dual-carbon',
-    component: DefaultLayout,
     redirect: '/dual-carbon',
     meta: { title: '双碳管理', icon: 'Promotion' },
     children: [
@@ -240,7 +235,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/toolkit',
-    component: DefaultLayout,
     redirect: '/toolkit/ai-report',
     meta: { title: '工具箱', icon: 'Suitcase' },
     children: [
@@ -266,7 +260,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/system',
-    component: DefaultLayout,
     redirect: '/system/device',
     meta: { title: '系统管理', icon: 'Setting' },
     children: [
@@ -332,8 +325,8 @@ router.beforeEach(async (to, _from, next) => {
         next()
       } else {
         try {
-          // 加载所有动态路由（开发环境直接加载全部）
-          asyncRoutes.forEach((route) => router.addRoute(route))
+          // 加载所有动态路由（作为根路由 '/' 的 children 挂载）
+          asyncRoutes.forEach((route) => router.addRoute('Layout', route))
           // 添加 404 兜底路由（必须在动态路由之后添加）
           router.addRoute({
             path: '/:pathMatch(.*)*',
@@ -347,7 +340,6 @@ router.beforeEach(async (to, _from, next) => {
         } catch (error) {
           // 获取用户信息失败，清除登录状态并跳转到登录页
           userStore.logout()
-          local.remove(StorageKeys.TOKEN)
           next(`/login?redirect=${to.path}`)
         }
       }

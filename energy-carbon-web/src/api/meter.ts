@@ -70,3 +70,8 @@ export function importMeter(dataList: MeterSaveParams[]) {
 export function updateMeterStatus(id: number, status: number) {
   return request.put<Result<null>>(`/monitor/meter/${id}/status?status=${status}`)
 }
+
+/** 下载计量器具导入模板 */
+export function downloadMeterTemplate() {
+  return request.get('/monitor/meter/template', { responseType: 'blob' })
+}

@@ -16,7 +16,7 @@
         active-text-color="#0d9488"
       >
         <template v-for="route in menuRoutes" :key="route.path">
-          <el-sub-menu v-if="route.children" :index="route.path">
+          <el-sub-menu v-if="route.children && route.children.length > 1" :index="route.path">
             <template #title>
               <el-icon><component :is="route.meta?.icon" /></el-icon>
               <span>{{ route.meta?.title }}</span>
@@ -29,9 +29,9 @@
               {{ child.meta?.title }}
             </el-menu-item>
           </el-sub-menu>
-          <el-menu-item v-else :index="route.path">
-            <el-icon><component :is="route.meta?.icon" /></el-icon>
-            <template #title>{{ route.meta?.title }}</template>
+          <el-menu-item v-else :index="route.path + (route.children?.[0]?.path ? '/' + route.children[0].path : '')">
+            <el-icon><component :is="route.meta?.icon || route.children?.[0]?.meta?.icon" /></el-icon>
+            <template #title>{{ route.meta?.title || route.children?.[0]?.meta?.title }}</template>
           </el-menu-item>
         </template>
       </el-menu>
@@ -48,7 +48,13 @@
         <div class="header-right">
           <el-dropdown @command="handleCommand">
             <span class="user-info">
-              {{ userStore.userInfo?.nickname || userStore.userInfo?.username }}
+              <el-avatar :size="32" :src="userStore.userInfo?.avatar" v-if="userStore.userInfo?.avatar">
+                <el-icon :size="18"><User /></el-icon>
+              </el-avatar>
+              <el-avatar :size="32" v-else>
+                <el-icon :size="18"><User /></el-icon>
+              </el-avatar>
+              <span class="username">{{ userStore.userInfo?.nickname || userStore.userInfo?.username || '用户' }}</span>
               <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
@@ -74,10 +80,11 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter, onRouteLeave } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
-import type { Menu } from '@/types'
+import { User } from '@element-plus/icons-vue'
+import Breadcrumb from '@/components/Breadcrumb.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -87,32 +94,13 @@ const appStore = useAppStore()
 // keep-alive 缓存的组件名称列表
 const cachedViews = ref<string[]>([])
 
-// 需要缓存的页面名称（根据路由meta.keepAlive或固定列表）
+// 需要缓存的页面名称
 const CACHEABLE_NAMES = [
-  'Dashboard',
-  'RealTime',
-  'History',
-  'Consumption',
-  'Accounting',
-  'Summary',
-  'Energy',
-  'Cost',
-  'Saving',
-  'TimeCompare',
-  'DeviceCompare',
-  'StatusMonitor',
-  'Electricity',
-  'Budget',
-  'EnergyFlow',
-  'EfficiencyIndex',
-  'MeterReading',
-  'AlarmRecord',
-  'AlarmConfig',
-  'Footprint',
-  'Factor',
-  'Asset',
-  'CBAM',
-  'SupplyChain'
+  'Dashboard', 'RealTime', 'History', 'Consumption', 'Accounting',
+  'Summary', 'Energy', 'Cost', 'Saving', 'TimeCompare', 'DeviceCompare',
+  'StatusMonitor', 'Electricity', 'Budget', 'EnergyFlow', 'EfficiencyIndex',
+  'MeterReading', 'AlarmRecord', 'AlarmConfig', 'Footprint', 'Factor',
+  'Asset', 'CBAM', 'SupplyChain',
 ]
 
 // 监听路由变化，维护缓存列表
@@ -128,79 +116,30 @@ watch(
   { immediate: true }
 )
 
+/**
+ * 菜单路由
+ * 从 router.getRoutes() 获取所有已注册路由，过滤出使用 DefaultLayout 的路由
+ * 这些路由的 children 即为菜单项
+ */
 const menuRoutes = computed(() => {
-  // 优先使用后端返回的菜单数据
-  if (userStore.menus && userStore.menus.length > 0) {
-    return buildMenuTree(userStore.menus)
-  }
-  // 降级使用路由配置
-  const layoutRoute = router.getRoutes().find(r => r.path === '/')
-  return layoutRoute?.children || []
+  const allRoutes = router.getRoutes()
+  // 找到所有使用 DefaultLayout 作为 component 的路由（即有 children 的菜单路由）
+  const filtered = allRoutes.filter(r => {
+    // 排除动态路由匹配和隐藏路由
+    if (r.meta?.hidden) return false
+    // 排除根路由 '/'（首页在 constantRoutes 中单独处理）
+    if (r.path === '/') return false
+    // 只取顶层菜单路由（path 以 / 开头且不在 children 中的）
+    return r.children && r.children.length > 0 && !r.path.includes(':') && r.path.startsWith('/')
+  })
+  // 去重：根据 path 去重
+  const seen = new Set<string>()
+  return filtered.filter(r => {
+    if (seen.has(r.path)) return false
+    seen.add(r.path)
+    return true
+  })
 })
-
-interface MenuItem {
-  path: string
-  name?: string
-  meta?: {
-    title: string
-    icon?: string
-    hidden?: boolean
-    keepAlive?: boolean
-    permission?: string
-    sort?: number
-  }
-  children?: MenuItem[]
-}
-
-function buildMenuTree(menus: Menu[]): MenuItem[] {
-  const menuMap = new Map<number, MenuItem>()
-  const roots: MenuItem[] = []
-
-  // 先创建所有菜单项
-  for (const menu of menus) {
-    if (menu.type === 'button' || menu.status !== 1) continue
-    menuMap.set(menu.id, {
-      path: menu.path || '',
-      name: menu.name,
-      meta: {
-        title: menu.title,
-        icon: menu.icon,
-        hidden: menu.hidden,
-        keepAlive: menu.keepAlive,
-        permission: menu.permission,
-        sort: menu.sort
-      }
-    })
-  }
-
-  // 构建树形结构
-  for (const menu of menus) {
-    if (menu.type === 'button' || menu.status !== 1) continue
-    const item = menuMap.get(menu.id)
-    if (!item) continue
-
-    if (menu.parentId === 0) {
-      roots.push(item)
-    } else {
-      const parent = menuMap.get(menu.parentId)
-      if (parent) {
-        if (!parent.children) parent.children = []
-        parent.children.push(item)
-      }
-    }
-  }
-
-  // 排序
-  function sortMenus(items: MenuItem[]) {
-    items.sort((a, b) => (a.meta?.sort || 0) - (b.meta?.sort || 0))
-    for (const item of items) {
-      if (item.children) sortMenus(item.children)
-    }
-  }
-  sortMenus(roots)
-
-  return roots
-}
 
 function handleCommand(command: string) {
   if (command === 'logout') {
@@ -218,6 +157,8 @@ function handleCommand(command: string) {
 .sidebar {
   background: #1a1a2e;
   transition: width 0.3s;
+  overflow-y: auto;
+  overflow-x: hidden;
 
   .logo {
     height: 60px;
@@ -266,7 +207,12 @@ function handleCommand(command: string) {
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
+
+    .username {
+      font-size: 14px;
+      color: #333;
+    }
   }
 }
 

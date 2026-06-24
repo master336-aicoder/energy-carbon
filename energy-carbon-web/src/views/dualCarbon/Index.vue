@@ -191,15 +191,26 @@ function getServiceTypeTag(type: string) {
 }
 
 async function loadData() {
-  const res = await getAiServiceList({ current: pagination.current, size: pagination.size, status: filters.status || undefined, serviceType: filters.serviceType || undefined })
-  tableData.value = res.data.list
-  pagination.total = res.data.total
+  try {
+    const res: any = await getAiServiceList({ current: pagination.current, size: pagination.size, status: filters.status || undefined, serviceType: filters.serviceType || undefined })
+    const list = res.data?.list || []
+    const total = res.data?.total || 0
+    tableData.value = list
+    pagination.total = total
 
-  // 更新统计
-  stats.total = res.data.total
-  stats.pending = res.data.list.filter((r: AiServiceRecord) => r.status === 'PENDING').length
-  stats.processing = res.data.list.filter((r: AiServiceRecord) => r.status === 'PROCESSING').length
-  stats.completed = res.data.list.filter((r: AiServiceRecord) => r.status === 'COMPLETED').length
+    // 更新统计
+    stats.total = total
+    stats.pending = list.filter((r: AiServiceRecord) => r.status === 'PENDING').length
+    stats.processing = list.filter((r: AiServiceRecord) => r.status === 'PROCESSING').length
+    stats.completed = list.filter((r: AiServiceRecord) => r.status === 'COMPLETED').length
+  } catch (error) {
+    tableData.value = []
+    pagination.total = 0
+    stats.total = 0
+    stats.pending = 0
+    stats.processing = 0
+    stats.completed = 0
+  }
 }
 
 function showAddDialog() {

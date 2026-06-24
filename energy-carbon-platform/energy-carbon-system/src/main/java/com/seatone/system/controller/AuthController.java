@@ -9,10 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 认证控制器
@@ -66,18 +66,48 @@ public class AuthController {
 
     /**
      * 获取当前登录用户信息
-     * 从 SecurityContext 获取当前用户基本信息
+     * 从 JWT Token 中解析用户信息
      *
-     * @return 用户信息，包含用户名、昵称、权限等
+     * @param request HTTP请求（用于获取Token）
+     * @return 用户信息，包含用户名、昵称、头像、权限等
      */
     @GetMapping("/userinfo")
-    public Result<Map<String, Object>> userinfo() {
-        // 从SecurityContext获取当前用户
+    public Result<Map<String, Object>> userinfo(HttpServletRequest request) {
+        String token = resolveToken(request);
         Map<String, Object> userinfo = new HashMap<>();
-        userinfo.put("username", "admin");
-        userinfo.put("nickname", "管理员");
-        userinfo.put("permissions", new String[]{"*"});
+
+        if (token != null && JwtUtils.validateToken(token)) {
+            String username = JwtUtils.getUsername(token);
+            SysUser user = userService.getByUsername(username);
+            if (user != null) {
+                userinfo.put("id", user.getId());
+                userinfo.put("username", user.getUsername());
+                userinfo.put("nickname", user.getNickname());
+                userinfo.put("avatar", user.getAvatar());
+                userinfo.put("phone", user.getPhone());
+                userinfo.put("email", user.getEmail());
+                userinfo.put("roles", Collections.singletonList("admin"));
+                userinfo.put("permissions", Collections.singletonList("*"));
+                return Result.ok(userinfo);
+            }
+        }
+
+        // Token 无效时返回默认信息
+        userinfo.put("username", "guest");
+        userinfo.put("nickname", "访客");
+        userinfo.put("permissions", new String[]{});
         return Result.ok(userinfo);
+    }
+
+    /**
+     * 从请求中解析 Bearer Token
+     */
+    private String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
     /**
@@ -89,6 +119,23 @@ public class AuthController {
     @PostMapping("/logout")
     public Result<Void> logout() {
         return Result.ok();
+    }
+
+    /**
+     * 开发环境：重置 admin 密码
+     * 仅在开发环境（dev profile）下可用
+     *
+     * @return 操作结果
+     */
+    @PostMapping("/reset-admin-password")
+    public Result<Void> resetAdminPassword() {
+        SysUser user = userService.getByUsername("admin");
+        if (user != null) {
+            user.setPassword(passwordEncoder.encode("123456"));
+            userService.updateById(user);
+            return Result.ok();
+        }
+        return Result.error("admin用户不存在");
     }
 
     /**

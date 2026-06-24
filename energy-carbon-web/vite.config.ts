@@ -62,15 +62,7 @@ export default defineConfig({
     // 注意事项：生产环境建议关闭以减小体积
     sourcemap: false,
     // 代码压缩配置
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        // 移除 console 和 debugger
-        // 用途：减小生产包体积，避免泄露调试信息
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    minify: 'esbuild',
     // 分块策略
     // 用途：将代码分割成多个 chunk，优化加载性能
     rollupOptions: {
@@ -97,5 +89,11 @@ export default defineConfig({
         additionalData: `@use "@/styles/_variables.scss" as *;`,
       },
     },
+  },
+
+  // ==================== 依赖优化配置 ====================
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'pinia', 'element-plus', '@element-plus/icons-vue', 'axios', 'nprogress'],
+    exclude: ['echarts'],
   },
 })

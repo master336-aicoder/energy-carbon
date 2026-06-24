@@ -67,3 +67,8 @@ export function importDevice(dataList: DeviceSaveParams[]) {
 export function updateDeviceStatus(id: number, status: number) {
   return request.put<Result<null>>(`/monitor/device/${id}/status?status=${status}`)
 }
+
+/** 下载设备导入模板 */
+export function downloadDeviceTemplate() {
+  return request.get('/monitor/device/template', { responseType: 'blob' })
+}

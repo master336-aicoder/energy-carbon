@@ -127,7 +127,7 @@ class AnalysisConsumptionServiceTest {
     @DisplayName("获取同比数据")
     void testGetSamePeriodConsumption() {
         BigDecimal samePeriod = new BigDecimal("6800.0000");
-        when(analysisConsumptionMapper.getSamePeriodConsumption(anyLong(), anyString(), anyString(), anyLong()))
+        when(analysisConsumptionMapper.sumConsumption(anyLong(), anyString(), anyString(), anyString(), anyLong()))
                 .thenReturn(samePeriod);
 
         BigDecimal result = analysisConsumptionService.getSamePeriodConsumption(
@@ -141,7 +141,7 @@ class AnalysisConsumptionServiceTest {
     @DisplayName("获取环比数据")
     void testGetPreviousPeriodConsumption() {
         BigDecimal previousPeriod = new BigDecimal("7200.0000");
-        when(analysisConsumptionMapper.getPreviousPeriodConsumption(anyLong(), anyString(), anyString(), anyLong()))
+        when(analysisConsumptionMapper.sumConsumption(anyLong(), anyString(), anyString(), anyString(), anyLong()))
                 .thenReturn(previousPeriod);
 
         BigDecimal result = analysisConsumptionService.getPreviousPeriodConsumption(

@@ -79,7 +79,7 @@ class PerformanceMonitor {
 
       // 慢请求告警（超过3秒）
       if (metric.duration > 3000) {
-        console.warn(`[性能告警] 慢接口: ${method} ${url} - ${metric.duration.toFixed(0)}ms`)
+        console.warn(`[性能告警] 慢接口: ${metric.method} ${url} - ${metric.duration.toFixed(0)}ms`)
       }
 
       return metric.duration
