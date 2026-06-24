@@ -33,7 +33,7 @@
 | ORM框架 | MyBatis Plus | 3.5.5 |
 | 安全认证 | Spring Security + JWT | 0.11.5 |
 | 数据库 | MySQL | 8.0.x |
-| 缓存 | Redis | - |
+| 缓存 | Redis | 6.0+ |
 | 时序数据库 | InfluxDB | 1.8+ |
 | 消息传输 | MQTT (EMQX 5.9.2) | 3.1.1/5.0 |
 | 接口文档 | Knife4j (OpenAPI 3) | 4.4.0 |
@@ -173,9 +173,12 @@ cd 能碳数智化
 # 创建数据库
 create database energy_carbon character set utf8mb4 collate utf8mb4_unicode_ci;
 
-# 执行初始化脚本
-mysql -u root -p energy_carbon < energy-carbon-platform/energy-carbon-admin/src/main/resources/db/schema.sql
-mysql -u root -p energy_carbon < energy-carbon-platform/energy-carbon-admin/src/main/resources/db/data.sql
+# 执行初始化脚本（推荐使用统一初始化脚本）
+mysql -u root -p energy_carbon < energy-carbon-platform/energy-carbon-admin/src/main/resources/db/init_all.sql
+
+# 或分别执行
+mysql -u root -p energy_carbon < energy-carbon-platform/energy-carbon-admin/src/main/resources/db/schema_pure.sql
+mysql -u root -p energy_carbon < energy-carbon-platform/energy-carbon-admin/src/main/resources/db/data_pure.sql
 ```
 
 ### 3. 启动后端服务
@@ -249,5 +252,5 @@ npm run dev
 ---
 
 **产品归属**：山东世通国际认证有限公司  
-**文档版本**：V1.1  
+**文档版本**：V1.2  
 **最后更新**：2026-06-24

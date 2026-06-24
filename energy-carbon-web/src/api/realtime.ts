@@ -39,7 +39,7 @@ export function getHistoryData(params: HistoryParams) {
 
 /** 获取设备树 */
 export function getDeviceTree() {
-  return request.get<Result<DeviceTreeNode[]>>('/monitor/device-tree')
+  return request.get<Result<DeviceTreeNode[]>>('/monitor/device/device-tree')
 }
 
 /** 获取最近1小时数据（用于实时曲线） */

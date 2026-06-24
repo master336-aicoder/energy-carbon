@@ -65,7 +65,7 @@ spring:
     # 用途：连接 Redis 的认证密码（无密码留空）
     # 默认值：空
     # 注意事项：生产环境必须设置密码
-    password:
+    password: redis
     # Redis 数据库索引
     # 用途：选择 Redis 数据库（0-15）
     # 默认值：0

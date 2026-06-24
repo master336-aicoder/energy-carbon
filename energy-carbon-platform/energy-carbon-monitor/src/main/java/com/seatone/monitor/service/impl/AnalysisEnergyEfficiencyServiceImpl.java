@@ -61,14 +61,21 @@ public class AnalysisEnergyEfficiencyServiceImpl extends ServiceImpl<AnalysisEne
     public Map<String, Object> benchmarkAnalysis(Long unitId, String industry, String startDate, String endDate) {
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> intensity = avgIntensity(unitId, startDate, endDate);
-        result.put("unitIntensity", intensity.get("avgIntensity"));
+        // 防御null：avgIntensity在无数据时可能返回null
+        Object avgIntensityVal = (intensity != null) ? intensity.get("avgIntensity") : null;
+        result.put("unitIntensity", avgIntensityVal);
 
         AnalysisBenchmark benchmark = benchmarkMapper.findIndustryBenchmark(industry);
         if (benchmark != null) {
             result.put("benchmarkName", benchmark.getBenchmarkName());
             result.put("benchmarkValue", benchmark.getBenchmarkValue());
             result.put("benchmarkUnit", benchmark.getBenchmarkUnit());
-            BigDecimal unitVal = (BigDecimal) intensity.get("avgIntensity");
+            BigDecimal unitVal = null;
+            if (avgIntensityVal instanceof BigDecimal) {
+                unitVal = (BigDecimal) avgIntensityVal;
+            } else if (avgIntensityVal instanceof Number) {
+                unitVal = new BigDecimal(avgIntensityVal.toString());
+            }
             BigDecimal benchVal = benchmark.getBenchmarkValue();
             if (unitVal != null && benchVal != null && benchVal.compareTo(BigDecimal.ZERO) > 0) {
                 result.put("gapRate", unitVal.subtract(benchVal).divide(benchVal, 4, BigDecimal.ROUND_HALF_UP)

@@ -6,7 +6,11 @@ import com.seatone.common.result.PageResult;
 import com.seatone.common.result.Result;
 import com.seatone.monitor.dto.EnergyDeviceDTO;
 import com.seatone.monitor.entity.EnergyDevice;
+import com.seatone.monitor.entity.EnergyMeter;
 import com.seatone.monitor.service.EnergyDeviceService;
+import com.seatone.monitor.service.EnergyMeterService;
+import com.seatone.system.entity.SysDept;
+import com.seatone.system.service.SysDeptService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -19,7 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Api(tags = "用能设备管理")
@@ -29,6 +33,12 @@ public class EnergyDeviceController {
 
     @Autowired
     private EnergyDeviceService deviceService;
+
+    @Autowired
+    private EnergyMeterService meterService;
+
+    @Autowired
+    private SysDeptService deptService;
 
     @ApiOperation("分页查询用能设备列表")
     @GetMapping("/list")
@@ -153,6 +163,76 @@ public class EnergyDeviceController {
             deviceService.save(device);
         }
         return Result.ok();
+    }
+
+    @ApiOperation("获取设备树（用能单元->设备->仪表）")
+    @GetMapping("/device-tree")
+    public Result<List<Map<String, Object>>> tree() {
+        List<Map<String, Object>> treeNodes = new ArrayList<>();
+
+        // 1. 查询所有部门（用能单元）
+        List<SysDept> depts = deptService.list(
+                new LambdaQueryWrapper<SysDept>().eq(SysDept::getStatus, 1).orderByAsc(SysDept::getSort));
+
+        // 2. 查询所有设备
+        List<EnergyDevice> allDevices = deviceService.list();
+
+        // 3. 查询所有仪表
+        List<EnergyMeter> allMeters = meterService.list();
+
+        // 按deptId分组设备
+        Map<Long, List<EnergyDevice>> devicesByDept = new HashMap<>();
+        for (EnergyDevice d : allDevices) {
+            devicesByDept.computeIfAbsent(d.getDeptId(), k -> new ArrayList<>()).add(d);
+        }
+
+        // 按deviceId分组仪表
+        Map<Long, List<EnergyMeter>> metersByDevice = new HashMap<>();
+        for (EnergyMeter m : allMeters) {
+            metersByDevice.computeIfAbsent(m.getDeviceId(), k -> new ArrayList<>()).add(m);
+        }
+
+        // 4. 组装树
+        for (SysDept dept : depts) {
+            Map<String, Object> unitNode = new HashMap<>();
+            unitNode.put("id", dept.getId());
+            unitNode.put("name", dept.getDeptName());
+            unitNode.put("type", "unit");
+
+            List<Map<String, Object>> deviceChildren = new ArrayList<>();
+            List<EnergyDevice> deptDevices = devicesByDept.getOrDefault(dept.getId(), Collections.emptyList());
+
+            for (EnergyDevice device : deptDevices) {
+                Map<String, Object> deviceNode = new HashMap<>();
+                deviceNode.put("id", device.getId());
+                deviceNode.put("name", device.getDeviceName());
+                deviceNode.put("type", "device");
+
+                List<Map<String, Object>> meterChildren = new ArrayList<>();
+                List<EnergyMeter> deviceMeters = metersByDevice.getOrDefault(device.getId(), Collections.emptyList());
+
+                for (EnergyMeter meter : deviceMeters) {
+                    Map<String, Object> meterNode = new HashMap<>();
+                    meterNode.put("id", meter.getId());
+                    meterNode.put("name", meter.getMeterName());
+                    meterNode.put("type", "meter");
+                    meterNode.put("data", Collections.singletonMap("status", meter.getStatus()));
+                    meterChildren.add(meterNode);
+                }
+
+                if (!meterChildren.isEmpty()) {
+                    deviceNode.put("children", meterChildren);
+                }
+                deviceChildren.add(deviceNode);
+            }
+
+            if (!deviceChildren.isEmpty()) {
+                unitNode.put("children", deviceChildren);
+            }
+            treeNodes.add(unitNode);
+        }
+
+        return Result.ok(treeNodes);
     }
 
     private EnergyDeviceDTO convertToDTO(EnergyDevice device) {

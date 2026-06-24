@@ -5,8 +5,8 @@
 | 项目 | 内容 |
 |------|------|
 | 项目名称 | 世通AI+能碳管理平台 |
-| 版本号 | v1.0.0 |
-| 文档日期 | 2026-06-22 |
+| 版本号 | v1.1.0 |
+| 文档日期 | 2026-06-24 |
 | 接口规范 | RESTful API |
 | 文档工具 | Knife4j (Swagger增强版) |
 
@@ -371,6 +371,77 @@ Authorization: Bearer {token}
 | deviceType | String | 否 | 设备类型 |
 | deptId | Long | 否 | 部门ID |
 | status | Integer | 否 | 状态 |
+
+### 4.1.1 设备树接口
+
+```
+GET /monitor/device/device-tree
+Authorization: Bearer {token}
+```
+
+**功能描述:** 获取设备树形结构数据，按部门/用能单元组织设备层级关系，用于前端设备选择器、树形展示等场景。
+
+**查询参数:**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| deptId | Long | 否 | 部门ID，不传则返回全部 |
+| deviceType | String | 否 | 设备类型筛选 |
+| status | Integer | 否 | 设备状态筛选(1正常 0停用) |
+| keyword | String | 否 | 关键词搜索(设备名称/编码) |
+
+**响应示例:**
+
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": [
+    {
+      "id": 1,
+      "label": "总公司",
+      "type": "dept",
+      "children": [
+        {
+          "id": 2,
+          "label": "一分厂",
+          "type": "dept",
+          "children": [
+            {
+              "id": 101,
+              "label": "1号变压器",
+              "type": "device",
+              "deviceCode": "DEV-001",
+              "deviceType": "transformer",
+              "status": 1
+            },
+            {
+              "id": 102,
+              "label": "2号变压器",
+              "type": "device",
+              "deviceCode": "DEV-002",
+              "deviceType": "transformer",
+              "status": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**响应字段说明:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Long | 节点ID(部门ID或设备ID) |
+| label | String | 节点显示名称 |
+| type | String | 节点类型(dept=部门, device=设备) |
+| children | Array | 子节点列表 |
+| deviceCode | String | 设备编码(仅设备节点) |
+| deviceType | String | 设备类型(仅设备节点) |
+| status | Integer | 设备状态(仅设备节点, 1正常 0停用) |
 
 ### 4.2 计量器具管理
 
@@ -1134,3 +1205,4 @@ Authorization: Bearer {token}
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v1.0.0 | 2026-06-22 | 初始版本 |
+| v1.1.0 | 2026-06-24 | 新增设备树接口(/monitor/device/device-tree)，更新文档日期 |

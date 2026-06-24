@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能碳数智化平台 - Web功能测试报告</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .meta-info {
+            display: flex;
+            gap: 30px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .meta-item {
+            font-size: 13px;
+            opacity: 0.85;
+        }
+        .meta-item strong {
+            opacity: 1;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        .card .number {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .card .label {
+            font-size: 14px;
+            color: #666;
+        }
+        .card.total .number { color: #0d9488; }
+        .card.passed .number { color: #10b981; }
+        .card.failed .number { color: #ef4444; }
+        .card.rate .number { color: #3b82f6; }
+        .card.avg-time .number { color: #f59e0b; }
+        .card.issues-high .number { color: #ef4444; }
+        .card.issues-medium .number { color: #f59e0b; }
+        .card.issues-low .number { color: #3b82f6; }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .section h2 {
+            font-size: 20px;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .section h3 {
+            font-size: 16px;
+            color: #374151;
+            margin: 16px 0 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th {
+            background: #f8fafc;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+        tr:hover {
+            background: #f8fafc;
+        }
+        tr.pass td:first-child { border-left: 3px solid #10b981; }
+        tr.fail td:first-child { border-left: 3px solid #ef4444; }
+        tr.partial td:first-child { border-left: 3px solid #f59e0b; }
+        .status-pass {
+            color: #10b981;
+            font-weight: 600;
+        }
+        .status-fail {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .count-error {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .count-ok {
+            color: #10b981;
+        }
+        .has-issues {
+            color: #ef4444;
+            font-size: 12px;
+        }
+        .no-issues {
+            color: #10b981;
+            font-size: 12px;
+        }
+        .severity-high {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .severity-medium {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .severity-low {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        tr.severity-high td { background: #fef2f2; }
+        tr.severity-medium td { background: #fffbeb; }
+        tr.severity-low td { background: #eff6ff; }
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #0d9488;
+        }
+        .conclusion {
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .conclusion ul {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+        .conclusion li {
+            margin-bottom: 8px;
+        }
+        .login-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .login-success { background: #d1fae5; color: #065f46; }
+        .login-fail { background: #fee2e2; color: #991b1b; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-pass { background: #d1fae5; color: #065f46; }
+        .badge-fail { background: #fee2e2; color: #991b1b; }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .header { padding: 20px; }
+            table { font-size: 11px; }
+            th, td { padding: 6px 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>能碳数智化平台 - Web功能测试报告</h1>
+            <p>全面功能测试 | 覆盖全部33个页面</p>
+            <div class="meta-info">
+                <div class="meta-item"><strong>测试时间:</strong> 2026-06-25 00:27:47 ~ 2026-06-25 00:29:29</div>
+                <div class="meta-item"><strong>前端地址:</strong> http://localhost:3000</div>
+                <div class="meta-item"><strong>后端地址:</strong> http://localhost:8080</div>
+                <div class="meta-item"><strong>登录状态:</strong> <span class="login-status login-success">成功</span></div>
+                <div class="meta-item"><strong>测试账号:</strong> admin / ******</div>
+            </div>
+        </div>
+
+        <div class="summary-cards">
+            <div class="card total">
+                <div class="number">33</div>
+                <div class="label">总测试页面</div>
+            </div>
+            <div class="card passed">
+                <div class="number">33</div>
+                <div class="label">通过</div>
+            </div>
+            <div class="card failed">
+                <div class="number">0</div>
+                <div class="label">失败</div>
+            </div>
+            <div class="card rate">
+                <div class="number">100.0%</div>
+                <div class="label">通过率</div>
+            </div>
+            <div class="card avg-time">
+                <div class="number">748ms</div>
+                <div class="label">平均加载时间</div>
+            </div>
+            <div class="card issues-high">
+                <div class="number">0</div>
+                <div class="label">高严重度问题</div>
+            </div>
+            <div class="card issues-medium">
+                <div class="number">32</div>
+                <div class="label">中严重度问题</div>
+            </div>
+            <div class="card issues-low">
+                <div class="number">1</div>
+                <div class="label">低严重度问题</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>模块测试汇总</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>模块名称</th>
+                        <th>页面总数</th>
+                        <th>通过数</th>
+                        <th>失败数</th>
+                        <th>通过率</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr class="pass">
+            <td>首页</td>
+            <td>1</td>
+            <td>1</td>
+            <td>0</td>
+            <td>100.0%</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测</td>
+            <td>6</td>
+            <td>6</td>
+            <td>0</td>
+            <td>100.0%</td>
+        </tr>
+        <tr class="pass">
+            <td>告警管理</td>
+            <td>2</td>
+            <td>2</td>
+            <td>0</td>
+            <td>100.0%</td>
+        </tr>
+        <tr class="pass">
+            <td>能耗分析</td>
+            <td>3</td>
+            <td>3</td>
+            <td>0</td>
+            <td>100.0%</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理</td>
+            <td>6</td>
+            <td>6</td>
+            <td>0</td>
+            <td>100.0%</td>
+        </tr>
+        <tr class="pass">
+            <td>报表中心</td>
+            <td>4</td>
+            <td>4</td>
+            <td>0</td>
+            <td>100.0%</td>
+        </tr>
+        <tr class="pass">
+            <td>能效对标</td>
+            <td>2</td>
+            <td>2</td>
+            <td>0</td>
+            <td>100.0%</td>
+        </tr>
+        <tr class="pass">
+            <td>双碳管理</td>
+            <td>1</td>
+            <td>1</td>
+            <td>0</td>
+            <td>100.0%</td>
+        </tr>
+        <tr class="pass">
+            <td>工具箱</td>
+            <td>3</td>
+            <td>3</td>
+            <td>0</td>
+            <td>100.0%</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理</td>
+            <td>5</td>
+            <td>5</td>
+            <td>0</td>
+            <td>100.0%</td>
+        </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>详细测试结果</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>模块</th>
+                            <th>页面名称</th>
+                            <th>路由</th>
+                            <th>加载状态</th>
+                            <th>加载时间</th>
+                            <th>按钮</th>
+                            <th>表格</th>
+                            <th>输入框</th>
+                            <th>图表</th>
+                            <th>JS错误</th>
+                            <th>网络错误</th>
+                            <th>问题描述</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+        <tr class="pass">
+            <td>首页</td>
+            <td>首页Dashboard</td>
+            <td><code>/dashboard</code></td>
+            <td class="status-pass">通过</td>
+            <td>781ms</td>
+            <td>1</td>
+            <td>3</td>
+            <td>3</td>
+            <td>3</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Element Plus弃用警告(3条)</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测</td>
+            <td>实时数据</td>
+            <td><code>/monitor/realtime</code></td>
+            <td class="status-pass">通过</td>
+            <td>803ms</td>
+            <td>1</td>
+            <td>0</td>
+            <td>8</td>
+            <td>4</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/realtime"</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测</td>
+            <td>历史查询</td>
+            <td><code>/monitor/history</code></td>
+            <td class="status-pass">通过</td>
+            <td>823ms</td>
+            <td>17</td>
+            <td>5</td>
+            <td>20</td>
+            <td>2</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/history"</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测</td>
+            <td>抄表录入</td>
+            <td><code>/monitor/meter-reading</code></td>
+            <td class="status-pass">通过</td>
+            <td>690ms</td>
+            <td>18</td>
+            <td>5</td>
+            <td>18</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/meter-reading</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测</td>
+            <td>运行状态</td>
+            <td><code>/monitor/status</code></td>
+            <td class="status-pass">通过</td>
+            <td>645ms</td>
+            <td>2</td>
+            <td>3</td>
+            <td>8</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/status"</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测</td>
+            <td>同比环比</td>
+            <td><code>/monitor/time-compare</code></td>
+            <td class="status-pass">通过</td>
+            <td>797ms</td>
+            <td>26</td>
+            <td>4</td>
+            <td>28</td>
+            <td>2</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/time-compare"</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测</td>
+            <td>设备对比</td>
+            <td><code>/monitor/device-compare</code></td>
+            <td class="status-pass">通过</td>
+            <td>819ms</td>
+            <td>14</td>
+            <td>3</td>
+            <td>18</td>
+            <td>2</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/device-compar</td>
+        </tr>
+        <tr class="pass">
+            <td>告警管理</td>
+            <td>告警配置</td>
+            <td><code>/alarm/config</code></td>
+            <td class="status-pass">通过</td>
+            <td>712ms</td>
+            <td>25</td>
+            <td>3</td>
+            <td>22</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/alarm/config"</td>
+        </tr>
+        <tr class="pass">
+            <td>告警管理</td>
+            <td>告警记录</td>
+            <td><code>/alarm/record</code></td>
+            <td class="status-pass">通过</td>
+            <td>686ms</td>
+            <td>17</td>
+            <td>5</td>
+            <td>21</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/alarm/record"</td>
+        </tr>
+        <tr class="pass">
+            <td>能耗分析</td>
+            <td>能耗统计</td>
+            <td><code>/analysis/consumption</code></td>
+            <td class="status-pass">通过</td>
+            <td>839ms</td>
+            <td>9</td>
+            <td>5</td>
+            <td>8</td>
+            <td>3</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/analysis/consumption"</td>
+        </tr>
+        <tr class="pass">
+            <td>能耗分析</td>
+            <td>用电分析</td>
+            <td><code>/analysis/electricity</code></td>
+            <td class="status-pass">通过</td>
+            <td>874ms</td>
+            <td>7</td>
+            <td>5</td>
+            <td>4</td>
+            <td>1</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/analysis/electricity"</td>
+        </tr>
+        <tr class="pass">
+            <td>能耗分析</td>
+            <td>预算管理</td>
+            <td><code>/analysis/budget</code></td>
+            <td class="status-pass">通过</td>
+            <td>636ms</td>
+            <td>8</td>
+            <td>4</td>
+            <td>4</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/analysis/budget"</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理</td>
+            <td>碳核算</td>
+            <td><code>/carbon/accounting</code></td>
+            <td class="status-pass">通过</td>
+            <td>856ms</td>
+            <td>9</td>
+            <td>4</td>
+            <td>12</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/accounting"</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理</td>
+            <td>排放因子</td>
+            <td><code>/carbon/factor</code></td>
+            <td class="status-pass">通过</td>
+            <td>683ms</td>
+            <td>37</td>
+            <td>4</td>
+            <td>10</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/factor"</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理</td>
+            <td>碳足迹</td>
+            <td><code>/carbon/footprint</code></td>
+            <td class="status-pass">通过</td>
+            <td>627ms</td>
+            <td>5</td>
+            <td>3</td>
+            <td>6</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/footprint"</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理</td>
+            <td>碳资产</td>
+            <td><code>/carbon/asset</code></td>
+            <td class="status-pass">通过</td>
+            <td>637ms</td>
+            <td>3</td>
+            <td>3</td>
+            <td>6</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/asset"</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理</td>
+            <td>CBAM</td>
+            <td><code>/carbon/cbam</code></td>
+            <td class="status-pass">通过</td>
+            <td>668ms</td>
+            <td>9</td>
+            <td>8</td>
+            <td>6</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/cbam"</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理</td>
+            <td>供应链碳</td>
+            <td><code>/carbon/supply-chain</code></td>
+            <td class="status-pass">通过</td>
+            <td>657ms</td>
+            <td>8</td>
+            <td>3</td>
+            <td>26</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/supply-chain"</td>
+        </tr>
+        <tr class="pass">
+            <td>报表中心</td>
+            <td>能耗报表</td>
+            <td><code>/report/energy</code></td>
+            <td class="status-pass">通过</td>
+            <td>889ms</td>
+            <td>15</td>
+            <td>5</td>
+            <td>8</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/report/energy"</td>
+        </tr>
+        <tr class="pass">
+            <td>报表中心</td>
+            <td>成本报表</td>
+            <td><code>/report/cost</code></td>
+            <td class="status-pass">通过</td>
+            <td>890ms</td>
+            <td>14</td>
+            <td>5</td>
+            <td>10</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/report/cost"</td>
+        </tr>
+        <tr class="pass">
+            <td>报表中心</td>
+            <td>节能量报表</td>
+            <td><code>/report/saving</code></td>
+            <td class="status-pass">通过</td>
+            <td>979ms</td>
+            <td>14</td>
+            <td>5</td>
+            <td>8</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/report/saving"</td>
+        </tr>
+        <tr class="pass">
+            <td>报表中心</td>
+            <td>汇总报表</td>
+            <td><code>/report/summary</code></td>
+            <td class="status-pass">通过</td>
+            <td>900ms</td>
+            <td>14</td>
+            <td>5</td>
+            <td>8</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/report/summary"</td>
+        </tr>
+        <tr class="pass">
+            <td>能效对标</td>
+            <td>能效对标</td>
+            <td><code>/efficiency</code></td>
+            <td class="status-pass">通过</td>
+            <td>908ms</td>
+            <td>6</td>
+            <td>5</td>
+            <td>6</td>
+            <td>3</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/efficiency"</td>
+        </tr>
+        <tr class="pass">
+            <td>能效对标</td>
+            <td>能源流向</td>
+            <td><code>/efficiency/energy-flow</code></td>
+            <td class="status-pass">通过</td>
+            <td>1001ms</td>
+            <td>7</td>
+            <td>5</td>
+            <td>4</td>
+            <td>2</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/efficiency/energy-flo</td>
+        </tr>
+        <tr class="pass">
+            <td>双碳管理</td>
+            <td>AI智慧管理平台</td>
+            <td><code>/dual-carbon</code></td>
+            <td class="status-pass">通过</td>
+            <td>644ms</td>
+            <td>3</td>
+            <td>3</td>
+            <td>6</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/dual-carbon"</td>
+        </tr>
+        <tr class="pass">
+            <td>工具箱</td>
+            <td>AI报告生成</td>
+            <td><code>/toolkit/ai-report</code></td>
+            <td class="status-pass">通过</td>
+            <td>666ms</td>
+            <td>3</td>
+            <td>3</td>
+            <td>12</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/toolkit/ai-report"</td>
+        </tr>
+        <tr class="pass">
+            <td>工具箱</td>
+            <td>分时电价</td>
+            <td><code>/toolkit/electricity-price</code></td>
+            <td class="status-pass">通过</td>
+            <td>635ms</td>
+            <td>3</td>
+            <td>3</td>
+            <td>2</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/toolkit/electricity-p</td>
+        </tr>
+        <tr class="pass">
+            <td>工具箱</td>
+            <td>AI知识库</td>
+            <td><code>/toolkit/knowledge</code></td>
+            <td class="status-pass">通过</td>
+            <td>643ms</td>
+            <td>4</td>
+            <td>3</td>
+            <td>7</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/toolkit/knowledge"</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理</td>
+            <td>设备管理</td>
+            <td><code>/system/device</code></td>
+            <td class="status-pass">通过</td>
+            <td>674ms</td>
+            <td>7</td>
+            <td>3</td>
+            <td>14</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/system/device"</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理</td>
+            <td>计量器具</td>
+            <td><code>/system/meter</code></td>
+            <td class="status-pass">通过</td>
+            <td>681ms</td>
+            <td>7</td>
+            <td>3</td>
+            <td>16</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/system/meter"</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理</td>
+            <td>用能单元</td>
+            <td><code>/system/unit</code></td>
+            <td class="status-pass">通过</td>
+            <td>628ms</td>
+            <td>24</td>
+            <td>3</td>
+            <td>0</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/system/unit"</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理</td>
+            <td>角色管理</td>
+            <td><code>/system/role</code></td>
+            <td class="status-pass">通过</td>
+            <td>673ms</td>
+            <td>20</td>
+            <td>3</td>
+            <td>13</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/system/role"</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理</td>
+            <td>用户管理</td>
+            <td><code>/system/user</code></td>
+            <td class="status-pass">通过</td>
+            <td>647ms</td>
+            <td>9</td>
+            <td>3</td>
+            <td>9</td>
+            <td>0</td>
+            <td class="count-ok">0</td>
+            <td class="count-ok">0</td>
+            <td class="has-issues">Vue Router警告: [Vue Router warn]: No match found for location with path "/system/user"</td>
+        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>问题列表（按严重程度排序）</h2>
+            <p style="margin-bottom: 12px; color: #666; font-size: 13px;">
+                共发现 <strong>33</strong> 个问题：
+                <span class="severity-high">高 0</span> |
+                <span class="severity-medium">中 32</span> |
+                <span class="severity-low">低 1</span>
+            </p>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>页面</th>
+                            <th>路由</th>
+                            <th>问题描述</th>
+                            <th>严重程度</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+        <tr class="severity-中">
+            <td>1</td>
+            <td>实时监测 - 实时数据</td>
+            <td><code>/monitor/realtime</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/realtime"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>2</td>
+            <td>实时监测 - 历史查询</td>
+            <td><code>/monitor/history</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/history"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>3</td>
+            <td>实时监测 - 抄表录入</td>
+            <td><code>/monitor/meter-reading</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/meter-reading</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>4</td>
+            <td>实时监测 - 运行状态</td>
+            <td><code>/monitor/status</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/status"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>5</td>
+            <td>实时监测 - 同比环比</td>
+            <td><code>/monitor/time-compare</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/time-compare"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>6</td>
+            <td>实时监测 - 设备对比</td>
+            <td><code>/monitor/device-compare</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/monitor/device-compar</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>7</td>
+            <td>告警管理 - 告警配置</td>
+            <td><code>/alarm/config</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/alarm/config"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>8</td>
+            <td>告警管理 - 告警记录</td>
+            <td><code>/alarm/record</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/alarm/record"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>9</td>
+            <td>能耗分析 - 能耗统计</td>
+            <td><code>/analysis/consumption</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/analysis/consumption"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>10</td>
+            <td>能耗分析 - 用电分析</td>
+            <td><code>/analysis/electricity</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/analysis/electricity"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>11</td>
+            <td>能耗分析 - 预算管理</td>
+            <td><code>/analysis/budget</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/analysis/budget"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>12</td>
+            <td>碳管理 - 碳核算</td>
+            <td><code>/carbon/accounting</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/accounting"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>13</td>
+            <td>碳管理 - 排放因子</td>
+            <td><code>/carbon/factor</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/factor"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>14</td>
+            <td>碳管理 - 碳足迹</td>
+            <td><code>/carbon/footprint</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/footprint"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>15</td>
+            <td>碳管理 - 碳资产</td>
+            <td><code>/carbon/asset</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/asset"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>16</td>
+            <td>碳管理 - CBAM</td>
+            <td><code>/carbon/cbam</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/cbam"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>17</td>
+            <td>碳管理 - 供应链碳</td>
+            <td><code>/carbon/supply-chain</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/carbon/supply-chain"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>18</td>
+            <td>报表中心 - 能耗报表</td>
+            <td><code>/report/energy</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/report/energy"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>19</td>
+            <td>报表中心 - 成本报表</td>
+            <td><code>/report/cost</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/report/cost"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>20</td>
+            <td>报表中心 - 节能量报表</td>
+            <td><code>/report/saving</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/report/saving"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>21</td>
+            <td>报表中心 - 汇总报表</td>
+            <td><code>/report/summary</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/report/summary"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>22</td>
+            <td>能效对标 - 能效对标</td>
+            <td><code>/efficiency</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/efficiency"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>23</td>
+            <td>能效对标 - 能源流向</td>
+            <td><code>/efficiency/energy-flow</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/efficiency/energy-flo</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>24</td>
+            <td>双碳管理 - AI智慧管理平台</td>
+            <td><code>/dual-carbon</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/dual-carbon"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>25</td>
+            <td>工具箱 - AI报告生成</td>
+            <td><code>/toolkit/ai-report</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/toolkit/ai-report"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>26</td>
+            <td>工具箱 - 分时电价</td>
+            <td><code>/toolkit/electricity-price</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/toolkit/electricity-p</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>27</td>
+            <td>工具箱 - AI知识库</td>
+            <td><code>/toolkit/knowledge</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/toolkit/knowledge"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>28</td>
+            <td>系统管理 - 设备管理</td>
+            <td><code>/system/device</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/system/device"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>29</td>
+            <td>系统管理 - 计量器具</td>
+            <td><code>/system/meter</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/system/meter"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>30</td>
+            <td>系统管理 - 用能单元</td>
+            <td><code>/system/unit</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/system/unit"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>31</td>
+            <td>系统管理 - 角色管理</td>
+            <td><code>/system/role</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/system/role"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-中">
+            <td>32</td>
+            <td>系统管理 - 用户管理</td>
+            <td><code>/system/user</code></td>
+            <td>Vue Router警告: [Vue Router warn]: No match found for location with path "/system/user"</td>
+            <td class="severity-中">中</td>
+        </tr>
+        <tr class="severity-低">
+            <td>33</td>
+            <td>首页 - 首页Dashboard</td>
+            <td><code>/dashboard</code></td>
+            <td>Element Plus弃用警告(3条)</td>
+            <td class="severity-低">低</td>
+        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>测试结论与建议</h2>
+            <div class="conclusion">
+                <h3>测试结论</h3>
+                <p>本次测试对能碳数智化平台的 <strong>33</strong> 个页面进行了全面的功能测试，涵盖首页、实时监测、告警管理、能耗分析、碳管理、报表中心、能效对标、双碳管理、工具箱和系统管理共 <strong>10</strong> 个模块。</p>
+                <ul>
+                    <li>测试通过率：<strong>100.0%</strong>（33/33）</li>
+                    <li>平均页面加载时间：<strong>748ms</strong></li>
+                    <li>发现高严重度问题：<strong>0</strong> 个</li>
+                    <li>发现中严重度问题：<strong>32</strong> 个（均为Vue Router动态路由注册时序警告）</li>
+                    <li>发现低严重度问题：<strong>1</strong> 个（Element Plus组件API弃用警告）</li>
+                </ul>
+
+                <h3>问题分析</h3>
+                <p><strong>Vue Router "No match found" 警告（影响全部32个动态路由页面）</strong></p>
+                <p>该警告是由于前端采用动态路由注册机制（<code>router.addRoute</code>）导致的。当浏览器直接导航到动态路由页面时，路由尚未注册完成，Vue Router会先触发"No match found"警告，随后在路由守卫中完成动态路由注册并通过<code>next({ ...to, replace: true })</code>重新导航。这是Vue Router动态路由的已知行为模式，不影响页面正常加载和功能使用。建议在路由守卫中增加路由预注册逻辑，避免该警告的产生。</p>
+
+                <p><strong>Element Plus 弃用警告（影响首页Dashboard）</strong></p>
+                <p>首页使用了Element Plus的<code>el-radio</code>组件，该组件的<code>label</code>属性作为值使用的API将在Element Plus 3.0.0版本中被弃用，建议迁移为使用<code>value</code>属性替代。</p>
+
+                <h3>建议</h3>
+                <ul>
+                    <li><strong>路由优化</strong>：建议在应用初始化时预注册所有动态路由，或在路由守卫中先检查路由是否已注册再执行导航，避免"No match found"警告</li>
+                    <li><strong>组件升级</strong>：建议将<code>el-radio</code>组件的<code>label</code>属性迁移为<code>value</code>属性，以兼容Element Plus 3.0版本</li>
+                    <li><strong>MQTT服务</strong>：建议对MQTT服务进行单独测试，确保实时数据推送功能正常（本次测试未覆盖MQTT实时数据）</li>
+                    <li><strong>交互测试</strong>：建议增加更多的端到端测试用例，覆盖表单提交、数据编辑、删除等交互操作</li>
+                    <li><strong>权限测试</strong>：建议使用不同角色的账号进行权限测试，验证各模块的访问控制是否正确</li>
+                    <li><strong>性能优化</strong>：报表中心模块的加载时间略高于平均水平（约900ms），建议关注数据加载优化</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>能碳数智化平台 Web功能测试报告 | 自动生成于 2026-06-25 00:29:29</p>
+        </div>
+    </div>
+</body>
+</html>
