@@ -29,12 +29,12 @@ export interface DeviceTreeNode {
 
 /** 获取实时数据 */
 export function getRealtimeData(params: RealtimeParams) {
-  return request.get<Result<RealTimeData>>('/monitor/realtime', { params })
+  return request.get<Result<RealTimeData>>('/monitor/realtime/list', { params })
 }
 
 /** 获取历史数据 */
 export function getHistoryData(params: HistoryParams) {
-  return request.get<Result<RealTimeData[]>>('/monitor/history', { params })
+  return request.get<Result<RealTimeData[]>>('/monitor/history/list', { params })
 }
 
 /** 获取设备树 */
@@ -46,7 +46,7 @@ export function getDeviceTree() {
 export function getRecentHourData(meterId: number, dataType?: string) {
   const endTime = new Date()
   const startTime = new Date(endTime.getTime() - 60 * 60 * 1000)
-  return request.get<Result<RealTimeData[]>>('/monitor/history', {
+  return request.get<Result<RealTimeData[]>>('/monitor/history/list', {
     params: {
       meterId,
       dataType,

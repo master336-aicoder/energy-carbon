@@ -63,32 +63,27 @@
       </el-form>
 
       <el-table :data="tableData" v-loading="loading" border stripe>
-        <el-table-column prop="code" label="器具编码" min-width="120" />
-        <el-table-column prop="name" label="器具名称" min-width="140" />
-        <el-table-column prop="type" label="器具类型" min-width="100">
+        <el-table-column prop="meterCode" label="器具编码" min-width="120" />
+        <el-table-column prop="meterName" label="器具名称" min-width="140" />
+        <el-table-column prop="meterType" label="器具类型" min-width="100">
           <template #default="{ row }">
-            <el-tag>{{ meterTypeMap[row.type] || row.type }}</el-tag>
+            <el-tag>{{ meterTypeMap[row.meterType] || row.meterType }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="deviceName" label="关联设备" min-width="120">
+        <el-table-column prop="accuracyClass" label="精度等级" min-width="100">
           <template #default="{ row }">
-            <span>{{ row.deviceName || '-' }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="accuracy" label="精度等级" min-width="100">
-          <template #default="{ row }">
-            <span>{{ row.accuracy || '-' }}</span>
+            <span>{{ row.accuracyClass || '-' }}</span>
           </template>
         </el-table-column>
         <el-table-column label="量程" min-width="120">
           <template #default="{ row }">
             <span v-if="row.rangeMin !== undefined && row.rangeMax !== undefined">
-              {{ row.rangeMin }} ~ {{ row.rangeMax }} {{ row.rangeUnit || '' }}
+              {{ row.rangeMin }} ~ {{ row.rangeMax }}
             </span>
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="deptName" label="所属部门" min-width="120" />
+        <el-table-column prop="installDate" label="安装日期" min-width="120" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
             <el-switch
@@ -125,20 +120,20 @@
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="器具编码" prop="code">
-              <el-input v-model="form.code" placeholder="请输入器具编码" />
+            <el-form-item label="器具编码" prop="meterCode">
+              <el-input v-model="form.meterCode" placeholder="请输入器具编码" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="器具名称" prop="name">
-              <el-input v-model="form.name" placeholder="请输入器具名称" />
+            <el-form-item label="器具名称" prop="meterName">
+              <el-input v-model="form.meterName" placeholder="请输入器具名称" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="器具类型" prop="type">
-              <el-select v-model="form.type" placeholder="请选择器具类型" style="width: 100%">
+            <el-form-item label="器具类型" prop="meterType">
+              <el-select v-model="form.meterType" placeholder="请选择器具类型" style="width: 100%">
                 <el-option label="电能表" value="electric_meter" />
                 <el-option label="水表" value="water_meter" />
                 <el-option label="燃气表" value="gas_meter" />
@@ -177,7 +172,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="精度等级">
-              <el-input v-model="form.accuracy" placeholder="如: 0.5级" />
+              <el-input v-model="form.accuracyClass" placeholder="如: 0.5级" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -333,9 +328,9 @@ const form = reactive({
 })
 
 const formRules = {
-  code: [{ required: true, message: '请输入器具编码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入器具名称', trigger: 'blur' }],
-  type: [{ required: true, message: '请选择器具类型', trigger: 'change' }],
+  meterCode: [{ required: true, message: '请输入器具编码', trigger: 'blur' }],
+  meterName: [{ required: true, message: '请输入器具名称', trigger: 'blur' }],
+  meterType: [{ required: true, message: '请选择器具类型', trigger: 'change' }],
   deptId: [{ required: true, message: '请选择所属部门', trigger: 'change' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
@@ -344,17 +339,14 @@ async function fetchList() {
   loading.value = true
   try {
     const res = await getMeterList({
-      pageNum: pagination.pageNum,
-      pageSize: pagination.pageSize,
-      code: searchForm.code || undefined,
-      name: searchForm.name || undefined,
-      type: searchForm.type || undefined,
-      deviceId: searchForm.deviceId || undefined,
-      deptId: searchForm.deptId || undefined,
+      current: pagination.pageNum,
+      size: pagination.pageSize,
+      meterName: searchForm.name || undefined,
+      meterType: searchForm.type || undefined,
       status: searchForm.status ?? undefined
     })
-    tableData.value = res.data.list
-    pagination.total = res.data.total
+    tableData.value = res.data.records || []
+    pagination.total = res.data.total || 0
   } finally {
     loading.value = false
   }

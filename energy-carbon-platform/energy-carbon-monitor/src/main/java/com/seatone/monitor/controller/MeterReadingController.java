@@ -7,6 +7,8 @@ import com.seatone.common.result.Result;
 import com.seatone.monitor.dto.MeterRecordDTO;
 import com.seatone.monitor.entity.MonitorMeterRecord;
 import com.seatone.monitor.service.MonitorMeterRecordService;
+import com.seatone.monitor.entity.EnergyMeter;
+import com.seatone.monitor.service.EnergyMeterService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Api(tags = "计量抄表")
@@ -26,6 +29,9 @@ public class MeterReadingController {
 
     @Autowired
     private MonitorMeterRecordService recordService;
+
+    @Autowired
+    private EnergyMeterService meterService;
 
     @ApiOperation("分页查询抄表记录")
     @GetMapping("/list")
@@ -128,6 +134,14 @@ public class MeterReadingController {
     private MeterRecordDTO convertToDTO(MonitorMeterRecord record) {
         MeterRecordDTO dto = new MeterRecordDTO();
         BeanUtils.copyProperties(record, dto);
+        // 关联查询计量器具名称和编码
+        if (record.getMeterId() != null) {
+            EnergyMeter meter = meterService.getById(record.getMeterId());
+            if (meter != null) {
+                dto.setMeterName(meter.getMeterName());
+                dto.setMeterCode(meter.getMeterCode());
+            }
+        }
         return dto;
     }
 }

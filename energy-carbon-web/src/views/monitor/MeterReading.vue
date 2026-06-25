@@ -265,7 +265,12 @@ async function fetchList() {
 
 async function fetchMeters() {
   const res = await getMeterList({ current: 1, size: 9999 })
-  meterList.value = res.data.records
+  meterList.value = (res.data.records || []).map((m: any) => ({
+    ...m,
+    name: m.meterName || m.name,
+    code: m.meterCode || m.code,
+    type: m.meterType || m.type
+  }))
 }
 
 async function handleDialogOpen() {

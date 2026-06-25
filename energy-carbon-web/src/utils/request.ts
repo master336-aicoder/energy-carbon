@@ -67,7 +67,7 @@ request.interceptors.response.use(
       // 业务错误，显示错误消息
       ElMessage.error(res.message || '请求失败')
       // 401：未授权，清除登录状态并跳转登录页
-      if (res.code === 401) {
+      if (res.code === 401 || res.code === 403) {
         const userStore = useUserStore()
         userStore.logout()
         window.location.href = '/login'
@@ -79,7 +79,15 @@ request.interceptors.response.use(
   },
   (error: AxiosError) => {
     // HTTP 错误（如 404、500、网络超时等）
-    ElMessage.error(error.message || '网络错误')
+    const status = error.response?.status
+    if (status === 401 || status === 403) {
+      ElMessage.error('登录已过期，请重新登录')
+      const userStore = useUserStore()
+      userStore.logout()
+      window.location.href = '/login'
+    } else {
+      ElMessage.error(error.message || '网络错误')
+    }
     return Promise.reject(error)
   }
 )

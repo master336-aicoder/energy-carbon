@@ -145,6 +145,10 @@ function handleCommand(command: string) {
   if (command === 'logout') {
     userStore.logout()
     router.push('/login')
+  } else if (command === 'profile') {
+    router.push('/system/profile')
+  } else if (command === 'settings') {
+    router.push('/system/settings')
   }
 }
 </script>

@@ -293,6 +293,18 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/system/User.vue'),
         meta: { title: '用户管理' },
       },
+      {
+        path: 'profile',
+        name: 'SystemProfile',
+        component: () => import('@/views/system/Profile.vue'),
+        meta: { title: '个人中心', hidden: true },
+      },
+      {
+        path: 'settings',
+        name: 'SystemSettings',
+        component: () => import('@/views/system/Settings.vue'),
+        meta: { title: '系统设置', hidden: true },
+      },
     ],
   },
 ]
