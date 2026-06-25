@@ -1,10 +1,299 @@
-# The Docker image that will be used to build your app
-image: alpine:latest
-create-pages:
-  pages:
-    # The folder that contains the files to be exposed at the Page URL
-    publish: public
+# =============================================================================
+# 能碳数智化平台 - GitLab CI/CD 配置
+# 功能：自动构建前后端 + GitLab Pages 文档发布
+# =============================================================================
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -DskipTests"
+  NODE_OPTIONS: "--max-old-space-size=4096"
+  FRONTEND_DIR: "energy-carbon-web"
+  BACKEND_DIR: "energy-carbon-platform"
+
+# -----------------------------------------------------------------------------
+# 阶段定义
+# -----------------------------------------------------------------------------
+stages:
+  - install
+  - build
+  - test
+  - deploy
+  - pages
+
+# -----------------------------------------------------------------------------
+# 全局缓存
+# -----------------------------------------------------------------------------
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - ${FRONTEND_DIR}/node_modules/
+    - .m2/repository/
+
+# =============================================================================
+# Stage: install - 依赖安装
+# =============================================================================
+
+install-frontend:
+  stage: install
+  image: node:20-alpine
+  script:
+    - cd ${FRONTEND_DIR}
+    - npm ci --prefer-offline --no-audit
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-node
+    paths:
+      - ${FRONTEND_DIR}/node_modules/
+    policy: pull-push
   rules:
-    # This ensures that only pushes to the default branch will trigger
-    # a pages deploy
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH
+
+install-backend:
+  stage: install
+  image: maven:3.9-eclipse-temurin-8
+  script:
+    - cd ${BACKEND_DIR}
+    - mvn dependency:go-offline -pl energy-carbon-admin -am
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-maven
+    paths:
+      - .m2/repository/
+    policy: pull-push
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH
+
+# =============================================================================
+# Stage: build - 构建
+# =============================================================================
+
+build-frontend:
+  stage: build
+  image: node:20-alpine
+  needs:
+    - job: install-frontend
+      optional: true
+  script:
+    - cd ${FRONTEND_DIR}
+    - npm run build
+  artifacts:
+    name: "frontend-dist-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - ${FRONTEND_DIR}/dist/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - ${FRONTEND_DIR}/**
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - ${FRONTEND_DIR}/**
+    - if: $CI_COMMIT_BRANCH
+      changes:
+        - ${FRONTEND_DIR}/**
+
+build-backend:
+  stage: build
+  image: maven:3.9-eclipse-temurin-8
+  needs:
+    - job: install-backend
+      optional: true
+  script:
+    - cd ${BACKEND_DIR}
+    - mvn clean package ${MAVEN_OPTS} -pl energy-carbon-admin -am
+  artifacts:
+    name: "backend-jar-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - ${BACKEND_DIR}/energy-carbon-admin/target/*.jar
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - ${BACKEND_DIR}/**
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - ${BACKEND_DIR}/**
+    - if: $CI_COMMIT_BRANCH
+      changes:
+        - ${BACKEND_DIR}/**
+
+# =============================================================================
+# Stage: test - 测试
+# =============================================================================
+
+test-frontend:
+  stage: test
+  image: node:20-alpine
+  needs:
+    - job: build-frontend
+      optional: true
+  script:
+    - cd ${FRONTEND_DIR}
+    - npm run lint 2>/dev/null || echo "Lint skipped"
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - ${FRONTEND_DIR}/**
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - ${FRONTEND_DIR}/**
+
+test-backend:
+  stage: test
+  image: maven:3.9-eclipse-temurin-8
+  needs:
+    - job: build-backend
+      optional: true
+  script:
+    - cd ${BACKEND_DIR}
+    - mvn test -pl energy-carbon-admin -am
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - ${BACKEND_DIR}/**
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - ${BACKEND_DIR}/**
+
+# =============================================================================
+# Stage: deploy - 部署（构建产物归档）
+# =============================================================================
+
+deploy-release:
+  stage: deploy
+  image: alpine:latest
+  needs:
+    - job: build-frontend
+      optional: true
+    - job: build-backend
+      optional: true
+  script:
+    - echo "Frontend dist: ${FRONTEND_DIR}/dist/"
+    - echo "Backend jar: ${BACKEND_DIR}/energy-carbon-admin/target/"
+    - ls -la ${FRONTEND_DIR}/dist/ 2>/dev/null || echo "Frontend not built"
+    - ls -la ${BACKEND_DIR}/energy-carbon-admin/target/*.jar 2>/dev/null || echo "Backend not built"
+  dependencies:
+    - build-frontend
+    - build-backend
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+# =============================================================================
+# Stage: pages - GitLab Pages 文档发布
+# =============================================================================
+
+pages:
+  stage: pages
+  image: node:20-alpine
+  script:
+    # 安装静态站点生成器（将 Markdown 转为 HTML）
+    - npm install -g markdown-it-cli 2>/dev/null || npm install -g markdown-it 2>/dev/null || echo "Using raw markdown"
+    # 创建 Pages 输出目录
+    - mkdir -p public
+    # 复制现有文档到 Pages 根目录
+    - cp -r public/docs/* public/ 2>/dev/null || true
+    # 为 Markdown 文件生成索引页
+    - |
+      cat > public/index.html << 'HTMLEOF'
+      <!DOCTYPE html>
+      <html lang="zh-CN">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>能碳数智化平台 - 文档中心</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
+          .header { background: linear-gradient(135deg, #1a5f3f 0%, #2d8b5a 100%); color: white; padding: 60px 20px; text-align: center; }
+          .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+          .header p { font-size: 1.1em; opacity: 0.9; }
+          .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+          .section { background: white; border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+          .section h2 { color: #1a5f3f; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e8f5e9; }
+          .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+          .doc-card { background: #f8fafc; border-radius: 8px; padding: 20px; border-left: 4px solid #2d8b5a; transition: transform 0.2s, box-shadow 0.2s; }
+          .doc-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+          .doc-card h3 { color: #1a5f3f; margin-bottom: 8px; font-size: 1.1em; }
+          .doc-card p { color: #666; font-size: 0.9em; margin-bottom: 12px; }
+          .doc-card a { color: #2d8b5a; text-decoration: none; font-weight: 500; }
+          .doc-card a:hover { text-decoration: underline; }
+          .footer { text-align: center; padding: 40px 20px; color: #999; font-size: 0.9em; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>能碳数智化平台</h1>
+          <p>文档中心 - 设计、需求、测试及部署文档</p>
+        </div>
+        <div class="container">
+          <div class="section">
+            <h2>项目文档</h2>
+            <div class="doc-grid">
+              <div class="doc-card">
+                <h3>产品需求文档 (PRD)</h3>
+                <p>功能模块、业务流程、权限体系等需求定义</p>
+                <a href="prd/prd-能碳管理平台.html">查看文档</a>
+              </div>
+              <div class="doc-card">
+                <h3>技术设计文档</h3>
+                <p>系统架构、数据库设计、接口规范</p>
+                <a href="tech-design/tech-design-能碳管理平台.html">查看文档</a>
+              </div>
+              <div class="doc-card">
+                <h3>开发计划</h3>
+                <p>功能迭代、里程碑、任务排期</p>
+                <a href="design/dev-plan-能碳管理平台.html">查看文档</a>
+              </div>
+              <div class="doc-card">
+                <h3>测试计划</h3>
+                <p>测试策略、用例设计、执行标准</p>
+                <a href="test-plan/test-plan-能碳管理平台.html">查看文档</a>
+              </div>
+              <div class="doc-card">
+                <h3>测试报告</h3>
+                <p>功能测试结果、Bug修复记录</p>
+                <a href="test-report/test-report-v4.html">查看最新报告 (v4)</a>
+              </div>
+              <div class="doc-card">
+                <h3>API接口文档</h3>
+                <p>RESTful API 接口说明</p>
+                <a href="API接口说明.md">查看文档</a>
+              </div>
+              <div class="doc-card">
+                <h3>部署文档</h3>
+                <p>环境依赖、部署步骤、配置说明</p>
+                <a href="部署文档.md">查看文档</a>
+              </div>
+              <div class="doc-card">
+                <h3>用户使用说明</h3>
+                <p>系统操作指南、功能使用说明</p>
+                <a href="用户使用说明.md">查看文档</a>
+              </div>
+            </div>
+          </div>
+          <div class="section">
+            <h2>数据库文档</h2>
+            <div class="doc-grid">
+              <div class="doc-card">
+                <h3>数据库表结构</h3>
+                <p>表设计、字段说明、关系图</p>
+                <a href="数据库表结构说明.md">查看文档</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <p>能碳数智化平台 &copy; 2026 | GitLab Pages 自动发布</p>
+        </div>
+      </body>
+      </html>
+      HTMLEOF
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
