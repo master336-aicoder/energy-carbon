@@ -85,7 +85,7 @@ export function isInteger(value: unknown): boolean {
  * @returns 是否为正整数
  */
 export function isPositiveInteger(value: unknown): boolean {
-  return isInteger(value) && value > 0
+  return isInteger(value) && (value as number) > 0
 }
 
 /**

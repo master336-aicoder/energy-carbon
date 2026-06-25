@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import type { Result, Menu } from '@/types'
+import type { Result } from '@/types'
 import type { MenuApi } from '@/types/api'
 
 /** 获取菜单列表 */

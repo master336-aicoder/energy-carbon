@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import type { Result, PageResult, Role } from '@/types'
+import type { Result, Role } from '@/types'
 import type { RoleApi } from '@/types/api'
 
 /** 获取角色列表 */

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
+import type { AxiosResponse, AxiosError } from 'axios'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 

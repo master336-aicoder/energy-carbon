@@ -69,11 +69,10 @@ export default defineConfig({
       output: {
         // 手动分块配置
         // 将第三方库单独打包，利用浏览器缓存
-        manualChunks: {
-          // Element Plus 组件库单独打包
-          'element-plus': ['element-plus'],
-          // Vue 生态单独打包
-          vue: ['vue', 'vue-router', 'pinia'],
+        manualChunks(id: string) {
+          if (id.includes('node_modules/element-plus')) return 'element-plus'
+          if (id.includes('node_modules/vue') || id.includes('node_modules/vue-router') || id.includes('node_modules/pinia')) return 'vue'
+          return null
         },
       },
     },

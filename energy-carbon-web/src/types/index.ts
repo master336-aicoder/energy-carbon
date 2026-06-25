@@ -89,7 +89,7 @@ export type MenuType = 'directory' | 'menu' | 'button'
 
 /** 路由元信息 */
 export interface RouteMeta {
-  title: string
+  title?: string
   icon?: string
   hidden?: boolean
   keepAlive?: boolean
