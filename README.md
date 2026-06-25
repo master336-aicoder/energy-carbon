@@ -151,6 +151,16 @@
 | 测试计划 | [mobile-test-plan.md](./public/docs/test-plan/mobile-test-plan.md) | 108个测试用例，覆盖全部页面和按钮，含已修复问题回归验证 |
 | 测试报告 | [mobile-test-report.md](./public/docs/test-report/mobile-test-report.md) | V1.1测试报告（通过率98.15%） |
 
+### 二期规划（增强功能）
+
+| 文档 | 路径 | 说明 |
+|------|------|------|
+| 二期需求 | [mobile-prd-v2.md](./public/docs/prd/mobile-prd-v2.md) | 6大方向38项功能 |
+| 二期技术设计 | [mobile-tech-design-v2.md](./public/docs/tech-design/mobile-tech-design-v2.md) | 巡检/报表增强/消息中心/主题切换 |
+| 二期开发计划 | [mobile-dev-plan-v2.md](./public/docs/dev-plan/mobile-dev-plan-v2.md) | M1-M7共8周，96.5人天 |
+
+二期核心方向：设备巡检、录入增强（采购/排放因子/OCR）、报表增强（多维度/对比/导出）、告警增强、消息中心、个人中心增强（主题切换/收藏/统计）
+
 ### 里程碑（共7周）
 
 | 里程碑 | 周期 | 核心内容 |
