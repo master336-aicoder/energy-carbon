@@ -41,7 +41,7 @@ class SysUserServiceTest {
         testUser.setPassword("encoded_password");
         testUser.setNickname("管理员");
         testUser.setPhone("13800138000");
-        testUser.setEmail("admin@seatone.com");
+        testUser.setEmail("master336@163.com");
         testUser.setDeptId(1L);
         testUser.setStatus(1);
         testUser.setCreateTime(LocalDateTime.now());

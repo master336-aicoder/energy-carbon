@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.seatone</groupId>
         <artifactId>energy-carbon-platform</artifactId>
-        <version>1.0.0</version>
+        <version>master336</version>
     </parent>
 
     <artifactId>energy-carbon-common</artifactId>
