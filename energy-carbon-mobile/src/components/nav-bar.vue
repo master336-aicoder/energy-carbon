@@ -32,7 +32,12 @@ statusBarHeight.value = uni.getSystemInfoSync().statusBarHeight || 0
 // #endif
 
 const goBack = () => {
-  uni.navigateBack()
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack({ delta: 1 })
+  } else {
+    uni.switchTab({ url: '/pages/home/index' })
+  }
 }
 </script>
 
