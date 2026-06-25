@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>能碳管理平台 - 移动端接口文档</title>
+<style>
+:root {
+  --primary: #1a5f3f;
+  --primary-light: #22805a;
+  --primary-lighter: #e8f5ee;
+  --primary-dark: #134430;
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --border: #e4e7ed;
+  --text: #303133;
+  --text-secondary: #606266;
+  --text-light: #909399;
+  --get: #409EFF;
+  --post: #67C23A;
+  --put: #E6A23C;
+  --delete: #F56C6C;
+  --mobile-badge: #1a5f3f;
+  --admin-badge: #909399;
+  --sidebar-width: 280px;
+  --header-height: 60px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* Header */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.header .version {
+  font-size: 12px;
+  background: rgba(255,255,255,0.2);
+  padding: 2px 10px;
+  border-radius: 10px;
+  margin-left: 12px;
+}
+
+.header .stats {
+  margin-left: auto;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.search-box {
+  margin-left: 24px;
+  position: relative;
+}
+
+.search-box input {
+  width: 280px;
+  height: 36px;
+  padding: 0 12px 0 36px;
+  border: none;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.search-box input::placeholder { color: rgba(255,255,255,0.6); }
+.search-box input:focus { background: rgba(255,255,255,0.3); width: 320px; }
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  width: var(--sidebar-width);
+  height: calc(100vh - var(--header-height));
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 900;
+  padding: 16px 0;
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: #c0c4cc; border-radius: 2px; }
+
+.nav-group {
+  margin-bottom: 4px;
+}
+
+.nav-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s;
+  user-select: none;
+}
+
+.nav-group-title:hover { background: var(--bg); }
+.nav-group-title .count {
+  font-size: 11px;
+  background: var(--border);
+  color: var(--text-secondary);
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-weight: 400;
+}
+
+.nav-group-title .arrow {
+  font-size: 12px;
+  transition: transform 0.3s;
+  color: var(--text-light);
+}
+
+.nav-group.collapsed .arrow { transform: rotate(-90deg); }
+.nav-group.collapsed .nav-items { display: none; }
+
+.nav-items {
+  padding: 2px 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 7px 20px 7px 28px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  gap: 8px;
+}
+
+.nav-item:hover {
+  background: var(--primary-lighter);
+  color: var(--primary);
+}
+
+.nav-item.active {
+  background: var(--primary-lighter);
+  color: var(--primary);
+  font-weight: 500;
+  border-right: 3px solid var(--primary);
+}
+
+.nav-item .mobile-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mobile-badge);
+  flex-shrink: 0;
+}
+
+.nav-item .admin-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--admin-badge);
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.nav-item .method-tag {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.method-tag.get { background: #ecf5ff; color: var(--get); }
+.method-tag.post { background: #f0f9eb; color: var(--post); }
+.method-tag.put { background: #fdf6ec; color: var(--put); }
+.method-tag.delete { background: #fef0f0; color: var(--delete); }
+
+/* Content */
+.content {
+  margin-left: var(--sidebar-width);
+  margin-top: var(--header-height);
+  padding: 24px 32px 60px;
+  min-height: calc(100vh - var(--header-height));
+}
+
+.section {
+  margin-bottom: 40px;
+  scroll-margin-top: 80px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary);
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--primary);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title .icon {
+  width: 32px;
+  height: 32px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+/* Auth info */
+.info-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+.info-card h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: var(--primary);
+}
+
+.info-card code {
+  background: #f4f4f5;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  color: var(--primary-dark);
+}
+
+.info-card pre {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+.response-format {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 1000px) {
+  .response-format { grid-template-columns: 1fr; }
+}
+
+/* API Card */
+.api-card {
+  background: var(--card);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.api-card:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.api-card.is-mobile {
+  border-left: 4px solid var(--primary);
+}
+
+.api-card-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.api-card-header:hover { background: #fafafa; }
+
+.api-method {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.api-method.get { background: var(--get); }
+.api-method.post { background: var(--post); }
+.api-method.put { background: var(--put); }
+.api-method.delete { background: var(--delete); }
+
+.api-path {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.api-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.api-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.api-badge.mobile {
+  background: var(--primary-lighter);
+  color: var(--primary);
+}
+
+.api-badge.admin {
+  background: #f4f4f5;
+  color: var(--text-light);
+}
+
+.api-card-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+  display: none;
+}
+
+.api-card.expanded .api-card-body { display: block; }
+
+.api-card.expanded .api-arrow { transform: rotate(90deg); }
+
+.api-arrow {
+  font-size: 12px;
+  color: var(--text-light);
+  transition: transform 0.2s;
+}
+
+.param-section {
+  margin-top: 14px;
+}
+
+.param-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.param-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.param-table th {
+  background: #fafafa;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.param-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  color: var(--text-secondary);
+}
+
+.param-table tr:last-child td { border-bottom: none; }
+
+.param-table code {
+  background: #f4f4f5;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  color: var(--primary-dark);
+}
+
+.required-yes { color: var(--delete); font-weight: 600; }
+.required-no { color: var(--text-light); }
+
+/* Sub-section title */
+.sub-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 24px 0 12px;
+  padding-left: 12px;
+  border-left: 3px solid var(--primary);
+}
+
+/* Legend */
+.legend {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+/* Back to top */
+.back-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(26,95,63,0.3);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 800;
+  transition: all 0.3s;
+}
+
+.back-top:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(26,95,63,0.4); }
+.back-top.show { display: flex; }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .content { margin-left: 0; padding: 16px; }
+  .search-box input { width: 180px; }
+  .search-box input:focus { width: 220px; }
+  .header .stats { display: none; }
+}
+
+/* Filter highlight */
+.api-card.filtered-out {
+  opacity: 0.2;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>能碳管理平台 - 移动端接口文档</h1>
+  <span class="version">v1.0</span>
+  <div class="search-box">
+    <span class="search-icon">&#128269;</span>
+    <input type="text" id="searchInput" placeholder="搜索接口路径、名称..." />
+  </div>
+  <div class="stats" id="statsInfo"></div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div id="navContent"></div>
+</div>
+
+<!-- Content -->
+<div class="content">
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item">
+      <span class="api-badge mobile">&#128241; 移动端</span>
+      <span>移动端主要使用的接口</span>
+    </div>
+    <div class="legend-item">
+      <span class="api-badge admin">&#9881; 管理端</span>
+      <span>管理后台使用的接口</span>
+    </div>
+    <div class="legend-item"><span class="api-method get" style="font-size:11px">GET</span> 查询</div>
+    <div class="legend-item"><span class="api-method post" style="font-size:11px">POST</span> 新增</div>
+    <div class="legend-item"><span class="api-method put" style="font-size:11px">PUT</span> 修改</div>
+    <div class="legend-item"><span class="api-method delete" style="font-size:11px">DELETE</span> 删除</div>
+  </div>
+
+  <!-- Auth Section -->
+  <div class="section" id="sec-auth">
+    <div class="section-title"><span class="icon">1</span>认证方式</div>
+    <div class="info-card">
+      <h3>JWT Bearer Token 认证</h3>
+      <p style="font-size:14px;color:var(--text-secondary);">所有接口（除登录外）均需在请求头中携带 JWT Token：</p>
+      <pre>Authorization: Bearer &lt;accessToken&gt;</pre>
+      <p style="font-size:13px;color:var(--text-light);margin-top:8px;">Token 有效期：7200 秒（2小时），过期后可使用 refreshToken 刷新</p>
+    </div>
+  </div>
+
+  <!-- Response Format Section -->
+  <div class="section" id="sec-response">
+    <div class="section-title"><span class="icon">2</span>通用响应格式</div>
+    <div class="response-format">
+      <div class="info-card">
+        <h3>成功响应</h3>
+        <pre>{ "code": 200, "message": "操作成功", "data": { ... } }</pre>
+      </div>
+      <div class="info-card">
+        <h3>失败响应</h3>
+        <pre>{ "code": 500, "message": "错误信息", "data": null }</pre>
+      </div>
+    </div>
+    <div class="info-card" style="margin-top:12px">
+      <h3>分页响应</h3>
+      <pre>{ "code": 200, "message": "操作成功",
+  "data": {
+    "current": 1, "size": 10, "total": 100,
+    "records": [ ... ]
+  }
+}</pre>
+    </div>
+  </div>
+
+  <!-- API Sections will be injected here -->
+  <div id="apiSections"></div>
+
+</div>
+
+<!-- Back to Top -->
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<script>
+const apiData = [
+  {
+    id: "auth",
+    title: "认证模块",
+    icon: "3",
+    apis: [
+      { method: "POST", path: "/auth/login", desc: "用户登录", mobile: true, params: [
+        { name: "username", type: "String", required: true, desc: "用户名" },
+        { name: "password", type: "String", required: true, desc: "密码" }
+      ], response: [
+        { name: "accessToken", type: "String", desc: "访问令牌" },
+        { name: "refreshToken", type: "String", desc: "刷新令牌" },
+        { name: "expiresIn", type: "Integer", desc: "过期时间(秒)" }
+      ]},
+      { method: "GET", path: "/auth/userinfo", desc: "获取当前用户信息", mobile: true, params: [], response: [
+        { name: "id", type: "Long", desc: "用户ID" },
+        { name: "username", type: "String", desc: "用户名" },
+        { name: "nickname", type: "String", desc: "昵称" },
+        { name: "avatar", type: "String", desc: "头像URL" },
+        { name: "phone", type: "String", desc: "手机号" },
+        { name: "email", type: "String", desc: "邮箱" },
+        { name: "roles", type: "Array", desc: "角色列表" },
+        { name: "permissions", type: "Array", desc: "权限列表" }
+      ]},
+      { method: "POST", path: "/auth/logout", desc: "用户登出", mobile: true }
+    ]
+  },
+  {
+    id: "system",
+    title: "系统管理模块",
+    icon: "4",
+    apis: [
+      { method: "GET", path: "/system/dept/tree", desc: "查询部门树", mobile: true },
+      { method: "GET", path: "/system/dept/list", desc: "查询部门列表", mobile: true },
+      { method: "GET", path: "/system/dept/{id}", desc: "根据ID查询部门", mobile: false },
+      { method: "POST", path: "/system/dept", desc: "新增部门", mobile: false },
+      { method: "PUT", path: "/system/dept/{id}", desc: "修改部门", mobile: false },
+      { method: "DELETE", path: "/system/dept/{id}", desc: "删除部门", mobile: false },
+      { method: "GET", path: "/system/dictData/type/{dictType}", desc: "按字典类型查询数据", mobile: true, params: [
+        { name: "dictType", type: "String", required: true, desc: "字典类型编码(路径参数)" }
+      ]},
+      { method: "GET", path: "/system/user/list", desc: "分页查询用户列表", mobile: false, params: [
+        { name: "current", type: "Long", required: false, desc: "页码，默认1" },
+        { name: "size", type: "Long", required: false, desc: "每页条数，默认10" },
+        { name: "username", type: "String", required: false, desc: "用户名(模糊)" },
+        { name: "status", type: "Integer", required: false, desc: "状态" }
+      ]},
+      { method: "GET", path: "/system/role/list", desc: "分页查询角色列表", mobile: false },
+      { method: "GET", path: "/system/role/all", desc: "查询所有角色", mobile: false },
+      { method: "GET", path: "/system/menu/list", desc: "查询菜单列表", mobile: false },
+      { method: "GET", path: "/system/menu/tree", desc: "获取菜单树", mobile: false },
+      { method: "GET", path: "/system/dictType/list", desc: "分页查询字典类型", mobile: false },
+      { method: "GET", path: "/system/dictData/list", desc: "分页查询字典数据", mobile: false },
+      { method: "GET", path: "/system/operLog/list", desc: "分页查询操作日志", mobile: false }
+    ]
+  },
+  {
+    id: "monitor",
+    title: "设备监控模块",
+    icon: "5",
+    apis: [
+      { method: "GET", path: "/monitor/device/list", desc: "分页查询设备列表", mobile: true, params: [
+        { name: "current", type: "Long", required: false, desc: "页码，默认1" },
+        { name: "size", type: "Long", required: false, desc: "每页条数，默认10" },
+        { name: "deviceName", type: "String", required: false, desc: "设备名称(模糊)" },
+        { name: "deviceType", type: "String", required: false, desc: "设备类型" },
+        { name: "status", type: "Integer", required: false, desc: "状态" }
+      ]},
+      { method: "GET", path: "/monitor/device/{id}", desc: "根据ID查询设备", mobile: true },
+      { method: "GET", path: "/monitor/device/device-tree", desc: "获取设备树(单元->设备->仪表)", mobile: true },
+      { method: "POST", path: "/monitor/device", desc: "新增设备", mobile: false },
+      { method: "PUT", path: "/monitor/device/{id}", desc: "修改设备", mobile: false },
+      { method: "DELETE", path: "/monitor/device/{id}", desc: "删除设备", mobile: false },
+      { method: "PUT", path: "/monitor/device/{id}/status", desc: "修改设备状态", mobile: false },
+      { method: "GET", path: "/monitor/meter/list", desc: "分页查询计量器具", mobile: true },
+      { method: "GET", path: "/monitor/meter/{id}", desc: "根据ID查询计量器具", mobile: true },
+      { method: "POST", path: "/monitor/meter", desc: "新增计量器具", mobile: false },
+      { method: "PUT", path: "/monitor/meter/{id}", desc: "修改计量器具", mobile: false },
+      { method: "DELETE", path: "/monitor/meter/{id}", desc: "删除计量器具", mobile: false },
+      { method: "GET", path: "/monitor/realtime/list", desc: "查询实时监测数据", mobile: true, params: [
+        { name: "unitId", type: "Long", required: false, desc: "单元ID" },
+        { name: "energyType", type: "String", required: false, desc: "能源类型" },
+        { name: "page", type: "Integer", required: false, desc: "页码，默认1" },
+        { name: "size", type: "Integer", required: false, desc: "每页条数，默认20" }
+      ], response: [
+        { name: "records[].id", type: "Integer", desc: "数据项ID" },
+        { name: "records[].dataItemName", type: "String", desc: "数据项名称" },
+        { name: "records[].collectValue", type: "Number", desc: "采集值" },
+        { name: "records[].realValue", type: "Number", desc: "实际值" },
+        { name: "records[].unit", type: "String", desc: "单位" }
+      ]},
+      { method: "GET", path: "/monitor/status/latest", desc: "获取设备最新状态", mobile: true },
+      { method: "GET", path: "/monitor/status/online-rate", desc: "获取在线率统计", mobile: true, response: [
+        { name: "total", type: "Long", desc: "设备总数" },
+        { name: "online", type: "Long", desc: "在线数量" },
+        { name: "offline", type: "Long", desc: "离线数量" },
+        { name: "onlineRate", type: "Double", desc: "在线率(%)" }
+      ]},
+      { method: "GET", path: "/monitor/status/list", desc: "分页查询状态日志", mobile: true },
+      { method: "GET", path: "/monitor/history/chart", desc: "查询历史数据曲线", mobile: true, params: [
+        { name: "meterId", type: "Long", required: true, desc: "计量器具ID" },
+        { name: "dataType", type: "String", required: false, desc: "数据类型" },
+        { name: "startTime", type: "String", required: true, desc: "开始时间(ISO格式)" },
+        { name: "endTime", type: "String", required: true, desc: "结束时间(ISO格式)" }
+      ]},
+      { method: "GET", path: "/monitor/history/list", desc: "分页查询历史数据", mobile: true },
+      { method: "GET", path: "/monitor/history/data-types", desc: "获取数据类型列表", mobile: true },
+      { method: "GET", path: "/monitor/energyType/all", desc: "查询所有能源品种", mobile: true },
+      { method: "GET", path: "/monitor/energyType/list", desc: "分页查询能源品种", mobile: true },
+      { method: "POST", path: "/monitor/meter-record", desc: "新增抄表记录(自动计算用量/费用)", mobile: true, params: [
+        { name: "meterId", type: "Long", required: true, desc: "计量器具ID" },
+        { name: "startCode", type: "BigDecimal", required: true, desc: "起始表码" },
+        { name: "endCode", type: "BigDecimal", required: true, desc: "结束表码" },
+        { name: "recordTime", type: "DateTime", required: true, desc: "抄表时间" },
+        { name: "unitPrice", type: "BigDecimal", required: false, desc: "单价" },
+        { name: "remark", type: "String", required: false, desc: "备注" }
+      ]},
+      { method: "GET", path: "/monitor/meter-record/list", desc: "分页查询抄表记录", mobile: true },
+      { method: "GET", path: "/monitor/meter-record/last/{meterId}", desc: "获取上次抄表记录", mobile: true },
+      { method: "GET", path: "/monitor/analysis/consumption/summary", desc: "能耗汇总卡片数据", mobile: true, params: [
+        { name: "energyUnitId", type: "Long", required: false, desc: "用能单元ID" },
+        { name: "statPeriod", type: "String", required: false, desc: "DAY/MONTH/YEAR，默认MONTH" },
+        { name: "startDate", type: "String", required: false, desc: "开始日期" },
+        { name: "endDate", type: "String", required: false, desc: "结束日期" },
+        { name: "energyTypeId", type: "Long", required: false, desc: "能源品种ID" }
+      ], response: [
+        { name: "totalConsumption", type: "BigDecimal", desc: "总能耗" },
+        { name: "samePeriodConsumption", type: "BigDecimal", desc: "同期能耗" },
+        { name: "prevPeriodConsumption", type: "BigDecimal", desc: "上期能耗" },
+        { name: "yoyRate", type: "BigDecimal", desc: "同比变化率(%)" },
+        { name: "momRate", type: "BigDecimal", desc: "环比变化率(%)" },
+        { name: "typeRatio", type: "Array", desc: "按能源品种占比" }
+      ]},
+      { method: "GET", path: "/monitor/analysis/consumption/trend", desc: "能耗趋势数据", mobile: true },
+      { method: "GET", path: "/monitor/analysis/consumption/list", desc: "分页查询能耗数据", mobile: true },
+      { method: "GET", path: "/monitor/analysis/electricity/summary", desc: "电费汇总数据", mobile: true },
+      { method: "GET", path: "/monitor/analysis/electricity/detail", desc: "分时电价统计明细", mobile: true },
+      { method: "GET", path: "/monitor/analysis/electricity/list", desc: "分页查询电费明细", mobile: true },
+      { method: "GET", path: "/monitor/analysis/efficiency/trend", desc: "能效趋势数据", mobile: true },
+      { method: "GET", path: "/monitor/analysis/efficiency/intensity", desc: "能耗强度计算", mobile: true },
+      { method: "GET", path: "/monitor/analysis/efficiency/benchmark", desc: "对标分析结果", mobile: true },
+      { method: "GET", path: "/monitor/analysis/efficiency/list", desc: "分页查询能效数据", mobile: true },
+      { method: "GET", path: "/monitor/analysis/benchmark/all", desc: "查询所有生效对标数据", mobile: true },
+      { method: "GET", path: "/monitor/analysis/benchmark/list", desc: "分页查询对标数据", mobile: true },
+      { method: "GET", path: "/monitor/analysis/benchmark/industry/{industry}", desc: "查询行业基准", mobile: true },
+      { method: "GET", path: "/monitor/analysis/budget/list", desc: "分页查询预算列表", mobile: true },
+      { method: "GET", path: "/monitor/analysis/budget/summary/year", desc: "按年度汇总预算执行情况", mobile: true },
+      { method: "GET", path: "/monitor/analysis/budget/year/{year}", desc: "按年度查询预算列表", mobile: true },
+      { method: "GET", path: "/monitor/device-compare/compare", desc: "双设备同时段曲线对比", mobile: true, params: [
+        { name: "meterIdA", type: "Long", required: true, desc: "设备A ID" },
+        { name: "meterIdB", type: "Long", required: true, desc: "设备B ID" },
+        { name: "dataType", type: "String", required: false, desc: "数据类型" },
+        { name: "startTime", type: "String", required: true, desc: "开始时间" },
+        { name: "endTime", type: "String", required: true, desc: "结束时间" }
+      ]},
+      { method: "GET", path: "/monitor/time-compare/compare", desc: "同设备不同时间段曲线对比", mobile: true },
+      { method: "GET", path: "/monitor/productType/all", desc: "查询所有产品种类", mobile: true },
+      { method: "GET", path: "/monitor/productType/list", desc: "分页查询产品种类", mobile: true },
+      { method: "GET", path: "/monitor/workShift/all", desc: "查询所有班组", mobile: true },
+      { method: "GET", path: "/monitor/workShift/list", desc: "分页查询班组列表", mobile: true },
+      { method: "POST", path: "/toolkit/calculator/carbon", desc: "碳排放计算", mobile: true, params: [
+        { name: "activityData", type: "Double", required: true, desc: "活动数据" },
+        { name: "emissionFactor", type: "Double", required: true, desc: "排放因子" }
+      ], response: [
+        { name: "emission", type: "BigDecimal", desc: "排放量" },
+        { name: "unit", type: "String", desc: "单位(tCO2)" }
+      ]},
+      { method: "POST", path: "/toolkit/calculator/electricity", desc: "电量计算", mobile: true },
+      { method: "POST", path: "/toolkit/calculator/cost", desc: "成本计算", mobile: true },
+      { method: "GET", path: "/toolkit/calculator/history", desc: "查询计算历史记录", mobile: true },
+      { method: "GET", path: "/toolkit/electricity-price/current", desc: "获取当前生效电价", mobile: true },
+      { method: "GET", path: "/toolkit/electricity-price/list", desc: "分页查询电价配置", mobile: true },
+      { method: "GET", path: "/toolkit/green-factory/list", desc: "分页查询申报列表", mobile: true },
+      { method: "GET", path: "/toolkit/green-factory/{id}", desc: "获取申报详情", mobile: true },
+      { method: "POST", path: "/toolkit/green-factory", desc: "创建申报", mobile: true },
+      { method: "POST", path: "/toolkit/green-factory/{id}/upload-item", desc: "上传资料", mobile: true },
+      { method: "PUT", path: "/toolkit/green-factory/{id}/submit", desc: "提交审核", mobile: true },
+      { method: "GET", path: "/toolkit/peak-shifting/list", desc: "分页查询排产计划", mobile: true },
+      { method: "GET", path: "/toolkit/peak-shifting/suggestion", desc: "智能排产建议", mobile: true },
+      { method: "GET", path: "/toolkit/peak-shifting/config/list", desc: "获取排产配置列表", mobile: true }
+    ]
+  },
+  {
+    id: "alarm",
+    title: "告警模块",
+    icon: "6",
+    apis: [
+      { method: "GET", path: "/alarm/record/statistics", desc: "获取报警统计", mobile: true, response: [
+        { name: "total", type: "Long", desc: "报警总数" },
+        { name: "unhandled", type: "Long", desc: "未处理" },
+        { name: "handled", type: "Long", desc: "已处理" },
+        { name: "ignored", type: "Long", desc: "已忽略" },
+        { name: "critical", type: "Long", desc: "严重级别数" },
+        { name: "warn", type: "Long", desc: "警告级别数" },
+        { name: "info", type: "Long", desc: "信息级别数" }
+      ]},
+      { method: "GET", path: "/alarm/record/list", desc: "分页查询报警记录", mobile: true, params: [
+        { name: "current", type: "Long", required: false, desc: "页码，默认1" },
+        { name: "size", type: "Long", required: false, desc: "每页条数，默认10" },
+        { name: "alarmLevel", type: "String", required: false, desc: "CRITICAL/WARN/INFO" },
+        { name: "handleStatus", type: "String", required: false, desc: "UNHANDLED/HANDLED/IGNORED" },
+        { name: "alarmType", type: "String", required: false, desc: "报警类型" },
+        { name: "startTime", type: "String", required: false, desc: "开始时间" },
+        { name: "endTime", type: "String", required: false, desc: "结束时间" }
+      ]},
+      { method: "GET", path: "/alarm/record/{id}", desc: "获取报警详情", mobile: true },
+      { method: "PUT", path: "/alarm/record/{id}/handle", desc: "处理报警记录", mobile: true, params: [
+        { name: "handleStatus", type: "String", required: true, desc: "HANDLED/IGNORED" },
+        { name: "handler", type: "String", required: false, desc: "处理人" },
+        { name: "handleRemark", type: "String", required: false, desc: "处理备注" }
+      ]},
+      { method: "PUT", path: "/alarm/record/batch-handle", desc: "批量处理报警记录", mobile: false },
+      { method: "GET", path: "/alarm/threshold/enabled", desc: "获取所有启用的阈值", mobile: true },
+      { method: "GET", path: "/alarm/threshold/list", desc: "分页查询阈值列表", mobile: true }
+    ]
+  },
+  {
+    id: "carbon",
+    title: "碳排放模块",
+    icon: "7",
+    apis: [
+      { method: "GET", path: "/carbon/accounting/list", desc: "分页查询核算列表", mobile: true },
+      { method: "GET", path: "/carbon/accounting/{id}", desc: "获取核算详情(含明细)", mobile: true },
+      { method: "GET", path: "/carbon/accounting/report/{id}", desc: "获取排放报告数据", mobile: true, response: [
+        { name: "accountingName", type: "String", desc: "核算名称" },
+        { name: "accountingYear", type: "Integer", desc: "核算年份" },
+        { name: "scope1Emission", type: "BigDecimal", desc: "范围一排放量" },
+        { name: "scope2Emission", type: "BigDecimal", desc: "范围二排放量" },
+        { name: "scope3Emission", type: "BigDecimal", desc: "范围三排放量" },
+        { name: "totalEmission", type: "BigDecimal", desc: "总排放量" },
+        { name: "emissionUnit", type: "String", desc: "排放单位(tCO2e)" }
+      ]},
+      { method: "POST", path: "/carbon/accounting", desc: "新增核算", mobile: false },
+      { method: "PUT", path: "/carbon/accounting/{id}", desc: "修改核算", mobile: false },
+      { method: "DELETE", path: "/carbon/accounting/{id}", desc: "删除核算", mobile: false },
+      { method: "PUT", path: "/carbon/accounting/{id}/submit", desc: "提交核算", mobile: false },
+      { method: "PUT", path: "/carbon/accounting/{id}/approve", desc: "审核核算", mobile: false },
+      { method: "POST", path: "/carbon/accounting/calculate", desc: "排放计算", mobile: false },
+      { method: "GET", path: "/carbon/model/list", desc: "分页查询核算模型", mobile: true },
+      { method: "GET", path: "/carbon/asset/list", desc: "分页查询碳资产列表", mobile: true },
+      { method: "GET", path: "/carbon/asset/{id}", desc: "获取碳资产详情", mobile: true },
+      { method: "GET", path: "/carbon/asset/summary", desc: "资产汇总统计(配额/CCER/绿证)", mobile: true },
+      { method: "GET", path: "/carbon/asset/trade/list", desc: "查询交易记录", mobile: true },
+      { method: "GET", path: "/carbon/factor/defaults", desc: "获取默认因子列表", mobile: true },
+      { method: "GET", path: "/carbon/factor/list", desc: "分页查询因子列表", mobile: true },
+      { method: "GET", path: "/carbon/factor/category/{category}", desc: "按类别查询因子列表", mobile: true },
+      { method: "GET", path: "/carbon/factor/energyType/{energyTypeId}", desc: "按能源类型查询因子", mobile: true },
+      { method: "GET", path: "/carbon/footprint/list", desc: "分页查询碳足迹", mobile: true },
+      { method: "GET", path: "/carbon/footprint/{id}", desc: "获取产品碳足迹详情", mobile: true },
+      { method: "GET", path: "/carbon/footprint/product/{productId}", desc: "按产品查询碳足迹", mobile: true },
+      { method: "GET", path: "/carbon/market/list", desc: "分页查询市场信息", mobile: true },
+      { method: "GET", path: "/carbon/market/{id}", desc: "获取市场信息详情", mobile: true },
+      { method: "GET", path: "/carbon/market/latest", desc: "获取最新市场信息", mobile: true },
+      { method: "GET", path: "/carbon/verification/list", desc: "分页查询碳核查列表", mobile: true },
+      { method: "GET", path: "/carbon/verification/{id}", desc: "获取碳核查详情", mobile: true },
+      { method: "GET", path: "/carbon/verification/byAccounting/{accountingId}", desc: "按核算查询核查记录", mobile: true },
+      { method: "GET", path: "/carbon/cbam/list", desc: "分页查询CBAM申报列表", mobile: true },
+      { method: "GET", path: "/carbon/cbam/{id}", desc: "获取CBAM申报详情(含材料明细)", mobile: true },
+      { method: "GET", path: "/carbon/supply-chain/list", desc: "分页查询供应链碳足迹列表", mobile: true },
+      { method: "GET", path: "/carbon/supply-chain/{id}", desc: "获取供应链碳足迹详情", mobile: true },
+      { method: "GET", path: "/carbon/supply-chain/summary/supplier", desc: "按供应商汇总统计", mobile: true },
+      { method: "GET", path: "/carbon/supply-chain/summary/product", desc: "按产品汇总统计", mobile: true }
+    ]
+  },
+  {
+    id: "report",
+    title: "报表模块",
+    icon: "8",
+    apis: [
+      { method: "GET", path: "/report/energy/summary/list", desc: "分页查询能耗统计", mobile: true },
+      { method: "GET", path: "/report/energy/summary/range", desc: "按日期范围查询能耗统计", mobile: true },
+      { method: "GET", path: "/report/energy/total/list", desc: "分页查询能耗汇总", mobile: true },
+      { method: "GET", path: "/report/energy/total/range", desc: "按日期范围查询汇总", mobile: true },
+      { method: "GET", path: "/report/cost/list", desc: "分页查询成本统计", mobile: true },
+      { method: "GET", path: "/report/cost/range", desc: "按日期范围查询成本", mobile: true },
+      { method: "GET", path: "/report/energy/saving/list", desc: "分页查询节能量统计", mobile: true },
+      { method: "GET", path: "/report/energy/saving/range", desc: "按日期范围查询节能量", mobile: true },
+      { method: "GET", path: "/report/baseline/list", desc: "分页查询基准能耗", mobile: true },
+      { method: "GET", path: "/entry/indicator/list", desc: "分页查询指标列表", mobile: true },
+      { method: "POST", path: "/entry/indicator", desc: "新增指标", mobile: true },
+      { method: "GET", path: "/entry/production/list", desc: "分页查询产量记录", mobile: true },
+      { method: "GET", path: "/entry/production/range", desc: "按日期范围查询产量", mobile: true },
+      { method: "POST", path: "/entry/production", desc: "新增产量记录", mobile: true }
+    ]
+  },
+  {
+    id: "ai",
+    title: "AI服务模块",
+    icon: "9",
+    apis: [
+      { method: "GET", path: "/ai/knowledge/list", desc: "分页查询文档列表", mobile: true },
+      { method: "GET", path: "/ai/knowledge/search", desc: "文档检索", mobile: true, params: [
+        { name: "keyword", type: "String", required: true, desc: "关键词" }
+      ]},
+      { method: "GET", path: "/ai/knowledge/{id}", desc: "获取文档详情", mobile: true },
+      { method: "GET", path: "/ai/report/list", desc: "分页查询报告任务列表", mobile: true },
+      { method: "GET", path: "/ai/report/{id}", desc: "查询任务状态", mobile: true },
+      { method: "POST", path: "/ai/report", desc: "创建报告任务", mobile: true },
+      { method: "PUT", path: "/ai/report/{id}/cancel", desc: "取消任务", mobile: true },
+      { method: "GET", path: "/ai/report-template/list", desc: "分页查询模板列表", mobile: true },
+      { method: "GET", path: "/ai/report-template/all", desc: "获取所有模板", mobile: true },
+      { method: "GET", path: "/ai/report-template/{id}", desc: "获取模板详情", mobile: true },
+      { method: "GET", path: "/ai/service/list", desc: "分页查询服务预约列表", mobile: true },
+      { method: "GET", path: "/ai/service/{id}", desc: "获取预约详情", mobile: true },
+      { method: "POST", path: "/ai/service", desc: "新增服务预约", mobile: true },
+      { method: "PUT", path: "/ai/service/{id}/cancel", desc: "取消预约", mobile: true }
+    ]
+  }
+];
+
+// Render navigation
+function renderNav() {
+  let html = '';
+  let totalApis = 0;
+  let mobileApis = 0;
+
+  apiData.forEach(section => {
+    const mCount = section.apis.filter(a => a.mobile).length;
+    mobileApis += mCount;
+    totalApis += section.apis.length;
+    html += `<div class="nav-group" id="nav-${section.id}">
+      <div class="nav-group-title" onclick="toggleNav('${section.id}')">
+        <span>${section.title}</span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span class="count">${section.apis.length}</span>
+          <span class="arrow">&#9660;</span>
+        </span>
+      </div>
+      <div class="nav-items">`;
+
+    section.apis.forEach((api, idx) => {
+      const anchor = `${section.id}-${idx}`;
+      html += `<a class="nav-item" href="#api-${anchor}" onclick="scrollToApi(event, 'api-${anchor}')">
+        <span class="${api.mobile ? 'mobile-dot' : 'admin-dot'}"></span>
+        <span class="method-tag ${api.method.toLowerCase()}">${api.method}</span>
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${api.path}</span>
+      </a>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  document.getElementById('navContent').innerHTML = html;
+  document.getElementById('statsInfo').innerHTML = `共 ${totalApis} 个接口，其中 ${mobileApis} 个移动端可用`;
+}
+
+function toggleNav(id) {
+  document.getElementById('nav-' + id).classList.toggle('collapsed');
+}
+
+// Render API sections
+function renderApis() {
+  let html = '';
+
+  apiData.forEach(section => {
+    html += `<div class="section" id="sec-${section.id}">
+      <div class="section-title"><span class="icon">${section.icon}</span>${section.title}</div>`;
+
+    section.apis.forEach((api, idx) => {
+      const anchor = `${section.id}-${idx}`;
+      html += `<div class="api-card ${api.mobile ? 'is-mobile' : ''}" id="api-${anchor}" data-search="${(api.path + ' ' + api.desc).toLowerCase()}">
+        <div class="api-card-header" onclick="toggleCard(this)">
+          <span class="api-arrow">&#9654;</span>
+          <span class="api-method ${api.method.toLowerCase()}">${api.method}</span>
+          <span class="api-path">${api.path}</span>
+          <span class="api-desc">${api.desc}</span>
+          <span class="api-badge ${api.mobile ? 'mobile' : 'admin'}">${api.mobile ? '&#128241; 移动端' : '&#9881; 管理端'}</span>
+        </div>
+        <div class="api-card-body">`;
+
+      if (api.params && api.params.length > 0) {
+        html += `<div class="param-section">
+          <h4>请求参数</h4>
+          <table class="param-table">
+            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+            <tbody>`;
+        api.params.forEach(p => {
+          html += `<tr>
+            <td><code>${p.name}</code></td>
+            <td>${p.type}</td>
+            <td class="${p.required ? 'required-yes' : 'required-no'}">${p.required ? '是' : '否'}</td>
+            <td>${p.desc}</td>
+          </tr>`;
+        });
+        html += `</tbody></table></div>`;
+      }
+
+      if (api.response && api.response.length > 0) {
+        html += `<div class="param-section">
+          <h4>响应数据</h4>
+          <table class="param-table">
+            <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+            <tbody>`;
+        api.response.forEach(r => {
+          html += `<tr>
+            <td><code>${r.name}</code></td>
+            <td>${r.type}</td>
+            <td>${r.desc}</td>
+          </tr>`;
+        });
+        html += `</tbody></table></div>`;
+      }
+
+      if (!api.params && !api.response) {
+        html += `<div class="param-section"><p style="color:var(--text-light);font-size:13px;">无额外参数</p></div>`;
+      }
+
+      html += `</div></div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  document.getElementById('apiSections').innerHTML = html;
+}
+
+function toggleCard(header) {
+  const card = header.closest('.api-card');
+  card.classList.toggle('expanded');
+}
+
+function scrollToApi(e, id) {
+  e.preventDefault();
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!el.classList.contains('expanded')) {
+      el.classList.add('expanded');
+    }
+  }
+}
+
+// Search
+document.getElementById('searchInput').addEventListener('input', function() {
+  const query = this.value.toLowerCase().trim();
+  const cards = document.querySelectorAll('.api-card');
+
+  cards.forEach(card => {
+    if (!query) {
+      card.classList.remove('filtered-out');
+      return;
+    }
+    const searchText = card.getAttribute('data-search') || '';
+    if (searchText.includes(query)) {
+      card.classList.remove('filtered-out');
+    } else {
+      card.classList.add('filtered-out');
+    }
+  });
+});
+
+// Back to top
+window.addEventListener('scroll', function() {
+  const btn = document.getElementById('backTop');
+  if (window.scrollY > 300) {
+    btn.classList.add('show');
+  } else {
+    btn.classList.remove('show');
+  }
+});
+
+// Init
+renderNav();
+renderApis();
+</script>
+</body>
+</html>

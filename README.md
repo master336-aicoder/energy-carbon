@@ -135,9 +135,21 @@
 
 ### 技术方案
 
-- **跨端框架**：UniApp + Vue3 + uView UI，一套代码输出H5、微信小程序、Android App
+- **跨端框架**：UniApp + Vue3 + uni-ui，一套代码输出H5、微信小程序、Android App
 - **后端复用**：直接复用现有Spring Boot后端API，无需额外后端开发
 - **核心功能**：首页仪表盘、数据录入、告警中心、报表查看、个人中心、扫码功能
+
+### 移动端文档
+
+| 文档 | 路径 | 说明 |
+|------|------|------|
+| 需求方案 | [mobile-prd.md](./public/docs/prd/mobile-prd.md) | 7大模块28项功能设计 |
+| 技术设计 | [mobile-tech-design.md](./public/docs/tech-design/mobile-tech-design.md) | 架构设计、安全方案、离线方案 |
+| 开发计划 | [mobile-dev-plan.md](./public/docs/dev-plan/mobile-dev-plan.md) | M1-M5共7周里程碑 |
+| 接口文档(MD) | [mobile-api.md](./public/docs/mobile-api.md) | 完整API接口文档 |
+| 接口文档(HTML) | [mobile-api.html](./public/docs/mobile-api.html) | 交互式API文档页面 |
+| 测试计划 | [mobile-test-plan.md](./public/docs/test-plan/mobile-test-plan.md) | 50个测试用例 |
+| 测试报告 | [mobile-test-report.md](./public/docs/test-report/mobile-test-report.md) | V1.0测试报告(通过率90.91%) |
 
 ### 里程碑（共7周）
 
