@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能碳数智化平台 - Web功能测试报告 v4</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .header .subtitle {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .header .meta {
+            margin-top: 12px;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .section h2 {
+            font-size: 20px;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e8e8e8;
+        }
+        .section h3 {
+            font-size: 16px;
+            color: #333;
+            margin: 16px 0 12px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .stat-card .label {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .stat-card.total .number { color: #0d9488; }
+        .stat-card.pass .number { color: #10b981; }
+        .stat-card.fail .number { color: #ef4444; }
+        .stat-card.rate .number { color: #3b82f6; }
+        .stat-card.bug .number { color: #f59e0b; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th {
+            background: #f1f5f9;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+        tr:hover { background: #f8fafc; }
+        tr.pass td { background: #f0fdf4; }
+        tr.fail td { background: #fef2f2; }
+        .status-PASS {
+            color: #10b981;
+            font-weight: 600;
+        }
+        .status-FAIL {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .no-bugs {
+            text-align: center;
+            color: #10b981;
+            font-weight: 600;
+            padding: 20px !important;
+        }
+
+        .compare-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .compare-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .compare-card h4 {
+            font-size: 15px;
+            margin-bottom: 12px;
+            color: #475569;
+        }
+        .compare-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .compare-item:last-child { border-bottom: none; }
+        .compare-item .val {
+            font-weight: 600;
+        }
+        .compare-item .val.pass { color: #10b981; }
+        .compare-item .val.fail { color: #ef4444; }
+
+        .bug-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .bug-badge.severe { background: #fef2f2; color: #ef4444; }
+        .bug-badge.low { background: #fffbeb; color: #f59e0b; }
+        .bug-badge.fixed { background: #f0fdf4; color: #10b981; }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .detail-text {
+            max-width: 600px;
+            word-break: break-all;
+            font-size: 12px;
+            color: #64748b;
+        }
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .compare-section { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>能碳数智化平台 - Web功能测试报告 v4</h1>
+        <div class="subtitle">全面Web功能测试 | v3 Bug修复验证 | 33个页面常规测试</div>
+        <div class="meta">
+            测试时间: 2026-06-25 12:59:12 | 前端: http://localhost:3000 | 后端: http://localhost:8080 | 账号: admin / 123456
+        </div>
+    </div>
+
+    <!-- 1. 测试概述 -->
+    <div class="section">
+        <h2>1. 测试概述</h2>
+        <p style="margin-bottom:16px">本轮测试(v4)是能碳数智化平台的第四轮全面Web功能测试，重点验证v3报告中发现的5个Bug的修复情况，同时对全部33个页面进行常规功能回归测试。</p>
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="number">54</div>
+                <div class="label">总测试项</div>
+            </div>
+            <div class="stat-card pass">
+                <div class="number">54</div>
+                <div class="label">通过</div>
+            </div>
+            <div class="stat-card fail">
+                <div class="number">0</div>
+                <div class="label">失败</div>
+            </div>
+            <div class="stat-card rate">
+                <div class="number">100.0%</div>
+                <div class="label">通过率</div>
+            </div>
+            <div class="stat-card bug">
+                <div class="number">0</div>
+                <div class="label">新发现Bug</div>
+            </div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number" style="color:#0d9488">20</div>
+                <div class="label">Bug验证项</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" style="color:#10b981">20</div>
+                <div class="label">Bug已修复</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" style="color:#ef4444">0</div>
+                <div class="label">Bug未修复</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" style="color:#3b82f6">34</div>
+                <div class="label">页面测试</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" style="color:#10b981">34</div>
+                <div class="label">页面通过</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. v3 Bug修复验证 -->
+    <div class="section">
+        <h2>2. v3 Bug修复验证结果</h2>
+        <p style="margin-bottom:16px">v3报告共发现5个Bug(BUG-003 ~ BUG-007)，本轮逐一验证修复情况：</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:25%">验证项</th>
+                    <th style="width:10%">状态</th>
+                    <th style="width:50%">验证详情</th>
+                    <th style="width:15%">时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr class="pass">
+            <td>BUG-003 页面标题</td>
+            <td class="status-pass">PASS</td>
+            <td>标题: 碳资产管理, 期望包含"碳资产管理"</td>
+            <td>12:59:19</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-003 搜索栏筛选</td>
+            <td class="status-pass">PASS</td>
+            <td>资产类型筛选: True, 状态筛选: True</td>
+            <td>12:59:19</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-003 表格列验证</td>
+            <td class="status-pass">PASS</td>
+            <td>列头: ['序号', '资产名称', '资产类型', '数量(tCO2)', '来源', '获取日期', '状态', '操作'], 找到: ['资产名称', '资产类型', '数量', '来源'], 缺失: []</td>
+            <td>12:59:19</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-003 新增弹窗</td>
+            <td class="status-pass">PASS</td>
+            <td>弹窗可见: True, 标题: 新增碳资产</td>
+            <td>12:59:21</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-004 页面标题</td>
+            <td class="status-pass">PASS</td>
+            <td>标题: CBAM碳边境调节机制, 期望包含"CBAM碳边境调节机制"</td>
+            <td>12:59:24</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-004 表格列验证</td>
+            <td class="status-pass">PASS</td>
+            <td>列头: ['序号', '申报编号', '产品类别', '原产国', '排放量(tCO2)', 'CBAM证书数量', '申报状态', '申报日期', '操作'], 找到: ['申报编号', '产品类别', '原产国', '排放量'], 缺失: []</td>
+            <td>12:59:24</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-004 搜索栏筛选</td>
+            <td class="status-pass">PASS</td>
+            <td>申报状态: True, 产品类别: True</td>
+            <td>12:59:24</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-004 新增弹窗</td>
+            <td class="status-pass">PASS</td>
+            <td>弹窗可见: True</td>
+            <td>12:59:26</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-005 页面标题</td>
+            <td class="status-pass">PASS</td>
+            <td>标题: 供应链碳足迹, 期望包含"供应链碳足迹"</td>
+            <td>12:59:29</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-005 搜索栏筛选</td>
+            <td class="status-pass">PASS</td>
+            <td>供应商名称: True, 产品类别: True</td>
+            <td>12:59:29</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-005 表格列验证</td>
+            <td class="status-pass">PASS</td>
+            <td>列头: ['序号', '供应商名称', '产品名称', '碳排放量(tCO2)', '碳足迹强度', '核算日期', '状态', '操作']</td>
+            <td>12:59:29</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-005 新增弹窗</td>
+            <td class="status-pass">PASS</td>
+            <td>弹窗可见: True</td>
+            <td>12:59:31</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-006 设备管理数据</td>
+            <td class="status-pass">PASS</td>
+            <td>路径: /system/device, 行数: 14, 期望>= 14, 总数文本: Total 0</td>
+            <td>12:59:36</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-006 计量器具数据</td>
+            <td class="status-pass">PASS</td>
+            <td>路径: /system/meter, 行数: 20, 期望>= 20, 总数文本: Total 0</td>
+            <td>12:59:40</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-006 抄表记录数据</td>
+            <td class="status-pass">PASS</td>
+            <td>路径: /monitor/meter-reading, 行数: 19, 期望>= 10, 总数文本: Total 0</td>
+            <td>12:59:44</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-006 碳资产数据</td>
+            <td class="status-pass">PASS</td>
+            <td>路径: /carbon/asset, 行数: 5, 期望>= 5, 总数文本: Total 0</td>
+            <td>12:59:49</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-006 告警记录数据</td>
+            <td class="status-pass">PASS</td>
+            <td>路径: /alarm/record, 行数: 7, 期望>= 7, 总数文本: Total 0</td>
+            <td>12:59:53</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-007 器具编码字段</td>
+            <td class="status-pass">PASS</td>
+            <td>显示"器具编码": True</td>
+            <td>12:59:59</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-007 器具名称字段</td>
+            <td class="status-pass">PASS</td>
+            <td>显示"器具名称": True</td>
+            <td>12:59:59</td>
+        </tr>
+        <tr class="pass">
+            <td>BUG-007 器具类型字段</td>
+            <td class="status-pass">PASS</td>
+            <td>显示"器具类型": True</td>
+            <td>12:59:59</td>
+        </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 3. 33个页面测试结果 -->
+    <div class="section">
+        <h2>3. 33个页面测试结果</h2>
+        <p style="margin-bottom:16px">对每个页面执行：导航 -> 验证加载 -> 检查表格数据 -> 点击查询 -> 点击新增 -> 关闭弹窗</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:20%">页面名称</th>
+                    <th style="width:8%">状态</th>
+                    <th style="width:57%">测试详情</th>
+                    <th style="width:15%">时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr class="pass">
+            <td>首页 > 首页</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "首页", "module": "首页", "path": "/dashboard", "navigation": "PASS", "load": "PASS", "table_data": "4行", "query": "SKIP", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "12:59:59", "console_errors": [], "new_bugs": []}</td>
+            <td>13:00:33</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测 > 实时数据</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "实时数据", "module": "实时监测", "path": "/monitor/realtime", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "SKIP", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:00:33", "console_errors": [], "new_bugs": []}</td>
+            <td>13:01:06</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测 > 历史查询</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "历史查询", "module": "实时监测", "path": "/monitor/history", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "PASS", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:01:06", "console_errors": [], "new_bugs": []}</td>
+            <td>13:01:26</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测 > 抄表录入</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "抄表录入", "module": "实时监测", "path": "/monitor/meter-reading", "navigation": "PASS", "load": "PASS", "table_data": "19行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:01:26", "console_errors": [], "new_bugs": []}</td>
+            <td>13:01:33</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测 > 运行状态</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "运行状态", "module": "实时监测", "path": "/monitor/status", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "SKIP", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:01:33", "console_errors": [], "new_bugs": []}</td>
+            <td>13:02:06</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测 > 同比环比</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "同比环比", "module": "实时监测", "path": "/monitor/time-compare", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "SKIP", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:02:06", "console_errors": [], "new_bugs": []}</td>
+            <td>13:02:39</td>
+        </tr>
+        <tr class="pass">
+            <td>实时监测 > 设备对比</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "设备对比", "module": "实时监测", "path": "/monitor/device-compare", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "SKIP", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:02:39", "console_errors": [], "new_bugs": []}</td>
+            <td>13:03:13</td>
+        </tr>
+        <tr class="pass">
+            <td>告警管理 > 告警配置</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "告警配置", "module": "告警管理", "path": "/alarm/config", "navigation": "PASS", "load": "PASS", "table_data": "10行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:03:13", "console_errors": [], "new_bugs": []}</td>
+            <td>13:03:20</td>
+        </tr>
+        <tr class="pass">
+            <td>告警管理 > 告警记录</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "告警记录", "module": "告警管理", "path": "/alarm/record", "navigation": "PASS", "load": "PASS", "table_data": "7行", "query": "PASS", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:03:20", "console_errors": [], "new_bugs": []}</td>
+            <td>13:03:40</td>
+        </tr>
+        <tr class="pass">
+            <td>能耗分析 > 能耗统计</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "能耗统计", "module": "能耗分析", "path": "/analysis/consumption", "navigation": "PASS", "load": "PASS", "table_data": "8行", "query": "PASS", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:03:40", "console_errors": [], "new_bugs": []}</td>
+            <td>13:04:00</td>
+        </tr>
+        <tr class="pass">
+            <td>能耗分析 > 用电分析</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "用电分析", "module": "能耗分析", "path": "/analysis/electricity", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "PASS", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:04:00", "console_errors": [], "new_bugs": []}</td>
+            <td>13:04:20</td>
+        </tr>
+        <tr class="pass">
+            <td>能耗分析 > 预算管理</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "预算管理", "module": "能耗分析", "path": "/analysis/budget", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:04:20", "console_errors": [], "new_bugs": []}</td>
+            <td>13:04:26</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理 > 碳核算</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "碳核算", "module": "碳管理", "path": "/carbon/accounting", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:04:26", "console_errors": [], "new_bugs": []}</td>
+            <td>13:04:33</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理 > 排放因子</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "排放因子", "module": "碳管理", "path": "/carbon/factor", "navigation": "PASS", "load": "PASS", "table_data": "10行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:04:33", "console_errors": [], "new_bugs": []}</td>
+            <td>13:04:39</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理 > 碳足迹</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "碳足迹", "module": "碳管理", "path": "/carbon/footprint", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:04:39", "console_errors": [], "new_bugs": []}</td>
+            <td>13:04:45</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理 > 碳资产</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "碳资产", "module": "碳管理", "path": "/carbon/asset", "navigation": "PASS", "load": "PASS", "table_data": "5行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:04:45", "console_errors": [], "new_bugs": []}</td>
+            <td>13:04:52</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理 > CBAM</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "CBAM", "module": "碳管理", "path": "/carbon/cbam", "navigation": "PASS", "load": "PASS", "table_data": "5行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:04:52", "console_errors": [], "new_bugs": []}</td>
+            <td>13:04:58</td>
+        </tr>
+        <tr class="pass">
+            <td>碳管理 > 供应链碳</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "供应链碳", "module": "碳管理", "path": "/carbon/supply-chain", "navigation": "PASS", "load": "PASS", "table_data": "5行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:04:58", "console_errors": [], "new_bugs": []}</td>
+            <td>13:05:05</td>
+        </tr>
+        <tr class="pass">
+            <td>报表中心 > 能耗报表</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "能耗报表", "module": "报表中心", "path": "/report/energy", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "PASS", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:05:05", "console_errors": [], "new_bugs": []}</td>
+            <td>13:05:25</td>
+        </tr>
+        <tr class="pass">
+            <td>报表中心 > 成本报表</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "成本报表", "module": "报表中心", "path": "/report/cost", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "PASS", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:05:25", "console_errors": [], "new_bugs": []}</td>
+            <td>13:05:45</td>
+        </tr>
+        <tr class="pass">
+            <td>报表中心 > 节能量报表</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "节能量报表", "module": "报表中心", "path": "/report/saving", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "PASS", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:05:45", "console_errors": [], "new_bugs": []}</td>
+            <td>13:06:05</td>
+        </tr>
+        <tr class="pass">
+            <td>报表中心 > 汇总报表</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "汇总报表", "module": "报表中心", "path": "/report/summary", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "PASS", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:06:05", "console_errors": [], "new_bugs": []}</td>
+            <td>13:06:25</td>
+        </tr>
+        <tr class="pass">
+            <td>能效对标 > 能效对标</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "能效对标", "module": "能效对标", "path": "/efficiency", "navigation": "PASS", "load": "PASS", "table_data": "1行", "query": "PASS", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:06:25", "console_errors": [], "new_bugs": []}</td>
+            <td>13:06:45</td>
+        </tr>
+        <tr class="pass">
+            <td>能效对标 > 能源流向</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "能源流向", "module": "能效对标", "path": "/efficiency/energy-flow", "navigation": "PASS", "load": "PASS", "table_data": "20行", "query": "PASS", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:06:45", "console_errors": [], "new_bugs": []}</td>
+            <td>13:07:05</td>
+        </tr>
+        <tr class="pass">
+            <td>双碳管理 > AI智慧管理平台</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "AI智慧管理平台", "module": "双碳管理", "path": "/dual-carbon", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "SKIP", "add_dialog": "PASS", "detail": "", "timestamp": "13:07:05", "console_errors": [], "new_bugs": []}</td>
+            <td>13:07:25</td>
+        </tr>
+        <tr class="pass">
+            <td>工具箱 > AI报告生成</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "AI报告生成", "module": "工具箱", "path": "/toolkit/ai-report", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "SKIP", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:07:25", "console_errors": [], "new_bugs": []}</td>
+            <td>13:07:58</td>
+        </tr>
+        <tr class="pass">
+            <td>工具箱 > 分时电价</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "分时电价", "module": "工具箱", "path": "/toolkit/electricity-price", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "SKIP", "add_dialog": "PASS", "detail": "", "timestamp": "13:07:58", "console_errors": [], "new_bugs": []}</td>
+            <td>13:08:18</td>
+        </tr>
+        <tr class="pass">
+            <td>工具箱 > AI知识库</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "AI知识库", "module": "工具箱", "path": "/toolkit/knowledge", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "SKIP", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:08:18", "console_errors": [], "new_bugs": []}</td>
+            <td>13:08:51</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理 > 设备管理</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "设备管理", "module": "系统管理", "path": "/system/device", "navigation": "PASS", "load": "PASS", "table_data": "14行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:08:51", "console_errors": [], "new_bugs": []}</td>
+            <td>13:08:58</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理 > 计量器具</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "计量器具", "module": "系统管理", "path": "/system/meter", "navigation": "PASS", "load": "PASS", "table_data": "20行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:08:58", "console_errors": [], "new_bugs": []}</td>
+            <td>13:09:04</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理 > 用能单元</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "用能单元", "module": "系统管理", "path": "/system/unit", "navigation": "PASS", "load": "PASS", "table_data": "7行", "query": "SKIP", "add_dialog": "PASS", "detail": "", "timestamp": "13:09:04", "console_errors": [], "new_bugs": []}</td>
+            <td>13:09:24</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理 > 角色管理</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "角色管理", "module": "系统管理", "path": "/system/role", "navigation": "PASS", "load": "PASS", "table_data": "5行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:09:24", "console_errors": [], "new_bugs": []}</td>
+            <td>13:09:30</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理 > 用户管理</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "用户管理", "module": "系统管理", "path": "/system/user", "navigation": "PASS", "load": "PASS", "table_data": "1行", "query": "PASS", "add_dialog": "PASS", "detail": "", "timestamp": "13:09:30", "console_errors": [], "new_bugs": []}</td>
+            <td>13:09:37</td>
+        </tr>
+        <tr class="pass">
+            <td>系统管理 > 个人中心</td>
+            <td class="status-pass">PASS</td>
+            <td>{"name": "个人中心", "module": "系统管理", "path": "/system/profile", "navigation": "PASS", "load": "PASS", "table_data": "0行", "query": "SKIP", "add_dialog": "SKIP(无新增按钮)", "detail": "", "timestamp": "13:09:37", "console_errors": [], "new_bugs": []}</td>
+            <td>13:10:10</td>
+        </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 4. 新发现Bug -->
+    <div class="section">
+        <h2>4. 新发现Bug</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:30%">Bug描述</th>
+                    <th style="width:45%">详情</th>
+                    <th style="width:25%">发现时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="3" class="no-bugs">本轮未发现新Bug</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 5. 测试统计 -->
+    <div class="section">
+        <h2>5. 测试统计</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number" style="color:#0d9488">54</div>
+                <div class="label">总测试项</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" style="color:#10b981">54</div>
+                <div class="label">通过项</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" style="color:#ef4444">0</div>
+                <div class="label">失败项</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" style="color:#3b82f6">100.0%</div>
+                <div class="label">通过率</div>
+            </div>
+        </div>
+        <h3>按类别统计</h3>
+        <table>
+            <thead>
+                <tr><th>类别</th><th>总数</th><th>通过</th><th>失败</th><th>通过率</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Bug修复验证</td>
+                    <td>20</td>
+                    <td style="color:#10b981;font-weight:600">20</td>
+                    <td style="color:#ef4444;font-weight:600">0</td>
+                    <td>100.0%</td>
+                </tr>
+                <tr>
+                    <td>页面常规测试</td>
+                    <td>34</td>
+                    <td style="color:#10b981;font-weight:600">34</td>
+                    <td style="color:#ef4444;font-weight:600">0</td>
+                    <td>100.0%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 6. 与v3对比 -->
+    <div class="section">
+        <h2>6. 与v3对比</h2>
+        <div class="compare-section">
+            <div class="compare-card">
+                <h4>v3 测试结果</h4>
+                <div class="compare-item">
+                    <span>发现Bug数</span>
+                    <span class="val fail">5</span>
+                </div>
+                <div class="compare-item">
+                    <span>严重Bug</span>
+                    <span class="val fail">3 (BUG-003,004,005)</span>
+                </div>
+                <div class="compare-item">
+                    <span>低级Bug</span>
+                    <span class="val" style="color:#f59e0b">2 (BUG-006,007)</span>
+                </div>
+                <div class="compare-item">
+                    <span>页面通过率</span>
+                    <span class="val fail">待查</span>
+                </div>
+            </div>
+            <div class="compare-card">
+                <h4>v4 测试结果</h4>
+                <div class="compare-item">
+                    <span>Bug修复验证</span>
+                    <span class="val pass">20/20</span>
+                </div>
+                <div class="compare-item">
+                    <span>严重Bug修复</span>
+                    <span class="val pass">验证中</span>
+                </div>
+                <div class="compare-item">
+                    <span>低级Bug修复</span>
+                    <span class="val pass">验证中</span>
+                </div>
+                <div class="compare-item">
+                    <span>页面通过率</span>
+                    <span class="val pass">100.0%</span>
+                </div>
+                <div class="compare-item">
+                    <span>新发现Bug</span>
+                    <span class="val pass">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        能碳数智化平台 Web功能测试报告 v4 | 自动化测试生成 | 2026-06-25 12:59:12
+    </div>
+</div>
+</body>
+</html>

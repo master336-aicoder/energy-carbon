@@ -1,163 +1,138 @@
 <template>
-  <div class="peak-shifting-page">
-    <div class="page-header">
-      <h2>错峰排产小助手</h2>
-      <p>智能排产计划管理与节能优化</p>
-    </div>
-
-    <el-tabs v-model="activeTab">
-      <!-- 排产计划 -->
-      <el-tab-pane label="排产计划" name="plan">
-        <div class="filter-bar">
-          <el-input v-model="filters.productionLine" placeholder="产线名称" clearable style="width: 150px" @change="loadPlans" />
-          <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" @change="loadPlans" />
-          <el-button type="primary" @click="showPlanDialog">新增计划</el-button>
-          <el-button type="success" @click="getSuggestion">智能建议</el-button>
+  <div class="carbon-cbam">
+    <el-card shadow="never">
+      <template #header>
+        <div class="header-row">
+          <span class="title">CBAM碳边境调节机制</span>
+          <div>
+            <el-button type="primary" @click="handleAdd">新增申报</el-button>
+            <el-button type="success" @click="handleExport">导出</el-button>
+          </div>
         </div>
+      </template>
 
-        <el-table :data="planData" border stripe style="width: 100%">
-          <el-table-column prop="planName" label="计划名称" min-width="150" />
-          <el-table-column prop="planDate" label="计划日期" width="110" />
-          <el-table-column prop="shiftType" label="班次" width="80" />
-          <el-table-column prop="productionLine" label="产线" width="120" />
-          <el-table-column prop="targetOutput" label="目标产量" width="100" />
-          <el-table-column prop="actualOutput" label="实际产量" width="100" />
-          <el-table-column prop="energyConsumption" label="能耗(kWh)" width="110" />
-          <el-table-column prop="energyCost" label="能源成本(元)" width="120" />
-          <el-table-column prop="savingRate" label="节能率(%)" width="100">
-            <template #default="{ row }">
-              <span :style="{ color: row.savingRate > 0 ? '#67c23a' : '#f56c6c' }">{{ row.savingRate || 0 }}%</span>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="140" fixed="right">
-            <template #default="{ row }">
-              <el-button link type="primary" size="small" @click="editPlan(row)">编辑</el-button>
-              <el-button link type="danger" size="small" @click="deletePlan(row)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <div class="pagination">
-          <el-pagination v-model:current-page="planPagination.current" v-model:page-size="planPagination.size" :total="planPagination.total" :page-sizes="[10, 20, 50]" layout="total, sizes, prev, pager, next" @size-change="loadPlans" @current-change="loadPlans" />
-        </div>
-      </el-tab-pane>
-
-      <!-- 排产配置 -->
-      <el-tab-pane label="排产配置" name="config">
-        <div class="filter-bar">
-          <el-button type="primary" @click="showConfigDialog">新增配置</el-button>
-        </div>
-
-        <el-table :data="configData" border stripe style="width: 100%">
-          <el-table-column prop="configName" label="配置名称" min-width="150" />
-          <el-table-column label="峰时段" width="180">
-            <template #default="{ row }">{{ row.peakHoursStart }} - {{ row.peakHoursEnd }}</template>
-          </el-table-column>
-          <el-table-column label="谷时段" width="180">
-            <template #default="{ row }">{{ row.valleyHoursStart }} - {{ row.valleyHoursEnd }}</template>
-          </el-table-column>
-          <el-table-column label="平时段" width="180">
-            <template #default="{ row }">{{ row.flatHoursStart }} - {{ row.flatHoursEnd }}</template>
-          </el-table-column>
-          <el-table-column prop="maxPower" label="最大功率(kW)" width="130" />
-          <el-table-column prop="priority" label="优先级" width="80" />
-          <el-table-column label="操作" width="140" fixed="right">
-            <template #default="{ row }">
-              <el-button link type="primary" size="small" @click="editConfig(row)">编辑</el-button>
-              <el-button link type="danger" size="small" @click="deleteConfig(row)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </el-tab-pane>
-    </el-tabs>
-
-    <!-- 新增/编辑排产计划弹窗 -->
-    <el-dialog v-model="planDialogVisible" :title="editingPlan ? '编辑排产计划' : '新增排产计划'" width="550px" destroy-on-close>
-      <el-form :model="planForm" :rules="planRules" ref="planFormRef" label-width="100px">
-        <el-form-item label="计划名称" prop="planName">
-          <el-input v-model="planForm.planName" placeholder="请输入计划名称" />
-        </el-form-item>
-        <el-form-item label="计划日期" prop="planDate">
-          <el-date-picker v-model="planForm.planDate" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="班次类型">
-          <el-select v-model="planForm.shiftType" placeholder="选择班次" style="width: 100%">
-            <el-option label="白班" value="DAY" />
-            <el-option label="夜班" value="NIGHT" />
-            <el-option label="全天" value="ALL_DAY" />
+      <!-- 搜索栏 -->
+      <el-form :inline="true" :model="queryParams" class="search-form">
+        <el-form-item label="申报状态">
+          <el-select v-model="queryParams.status" placeholder="全部" clearable style="width:140px">
+            <el-option label="草稿" value="DRAFT" />
+            <el-option label="已提交" value="SUBMITTED" />
+            <el-option label="已审核" value="APPROVED" />
           </el-select>
         </el-form-item>
-        <el-form-item label="产线名称">
-          <el-input v-model="planForm.productionLine" placeholder="请输入产线名称" />
+        <el-form-item label="年份">
+          <el-date-picker v-model="queryParams.year" type="year" placeholder="选择年份" value-format="YYYY" style="width:140px" />
         </el-form-item>
-        <el-form-item label="目标产量">
-          <el-input-number v-model="planForm.targetOutput" :precision="2" style="width: 100%" />
+        <el-form-item label="产品类别">
+          <el-select v-model="queryParams.productCategory" placeholder="全部" clearable style="width:180px">
+            <el-option label="钢铁" value="IRON_STEEL" />
+            <el-option label="铝" value="ALUMINIUM" />
+            <el-option label="水泥" value="CEMENT" />
+            <el-option label="化肥" value="FERTILIZER" />
+            <el-option label="电力" value="ELECTRICITY" />
+            <el-option label="氢" value="HYDROGEN" />
+          </el-select>
         </el-form-item>
-        <el-form-item label="实际产量">
-          <el-input-number v-model="planForm.actualOutput" :precision="2" style="width: 100%" />
+        <el-form-item>
+          <el-button type="primary" @click="handleQuery">查询</el-button>
+          <el-button @click="handleReset">重置</el-button>
         </el-form-item>
-        <el-form-item label="能耗(kWh)">
-          <el-input-number v-model="planForm.energyConsumption" :precision="2" style="width: 100%" />
+      </el-form>
+
+      <!-- 表格 -->
+      <el-table :data="tableData" v-loading="loading" border stripe>
+        <el-table-column type="index" label="序号" width="60" />
+        <el-table-column prop="declarationName" label="申报编号" min-width="160" />
+        <el-table-column prop="productName" label="产品类别" width="120">
+          <template #default="{ row }">
+            <el-tag size="small">{{ productCategoryMap[row.productName] || row.productName }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="originCountry" label="原产国" width="120" />
+        <el-table-column prop="totalEmission" label="排放量(tCO2)" width="130" />
+        <el-table-column prop="certificateNumber" label="CBAM证书数量" width="140" />
+        <el-table-column prop="status" label="申报状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 'APPROVED' ? 'success' : row.status === 'SUBMITTED' ? 'warning' : 'info'" size="small">
+              {{ row.status === 'DRAFT' ? '草稿' : row.status === 'SUBMITTED' ? '已提交' : '已审核' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="declarationPeriod" label="申报日期" width="120" />
+        <el-table-column label="操作" width="280" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+            <el-button link type="primary" v-if="row.status === 'DRAFT'" @click="handleCalculate(row)">计算</el-button>
+            <el-button link type="primary" v-if="row.status === 'DRAFT'" @click="handleSubmit(row)">提交</el-button>
+            <el-button link type="primary" v-if="row.status === 'SUBMITTED'" @click="handleApprove(row)">审核</el-button>
+            <el-button link type="danger" v-if="row.status === 'DRAFT'" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="pagination-row">
+        <el-pagination
+          v-model:current="queryParams.current"
+          v-model:page-size="queryParams.size"
+          :total="total"
+          :page-sizes="[10, 20, 50]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @current-change="getList"
+          @size-change="getList"
+        />
+      </div>
+    </el-card>
+
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑CBAM申报' : '新增CBAM申报'" width="600px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
+        <el-form-item label="申报名称" prop="declarationName">
+          <el-input v-model="form.declarationName" placeholder="请输入" />
         </el-form-item>
-        <el-form-item label="能源成本(元)">
-          <el-input-number v-model="planForm.energyCost" :precision="2" style="width: 100%" />
+        <el-form-item label="产品名称" prop="productName">
+          <el-input v-model="form.productName" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="产品编码">
+          <el-input v-model="form.productCode" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="CN编码">
+          <el-input v-model="form.cnCode" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="原产国">
+          <el-input v-model="form.originCountry" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="进口数量" prop="importQuantity">
+          <el-input-number v-model="form.importQuantity" :min="0" :precision="2" style="width:100%" />
+        </el-form-item>
+        <el-form-item label="单位">
+          <el-input v-model="form.unit" placeholder="如: t" />
+        </el-form-item>
+        <el-form-item label="直接排放(tCO2)">
+          <el-input-number v-model="form.directEmission" :min="0" :precision="4" style="width:100%" />
+        </el-form-item>
+        <el-form-item label="间接排放(tCO2)">
+          <el-input-number v-model="form.indirectEmission" :min="0" :precision="4" style="width:100%" />
+        </el-form-item>
+        <el-form-item label="排放单位">
+          <el-input v-model="form.emissionUnit" placeholder="如: tCO2" />
+        </el-form-item>
+        <el-form-item label="申报期次">
+          <el-input v-model="form.declarationPeriod" placeholder="如: 2024-Q1" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-select v-model="form.status" placeholder="请选择" style="width:100%">
+            <el-option label="草稿" value="DRAFT" />
+            <el-option label="已提交" value="SUBMITTED" />
+            <el-option label="已审核" value="APPROVED" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="planDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitPlan">确定</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmitForm">确定</el-button>
       </template>
-    </el-dialog>
-
-    <!-- 新增/编辑排产配置弹窗 -->
-    <el-dialog v-model="configDialogVisible" :title="editingConfig ? '编辑排产配置' : '新增排产配置'" width="550px" destroy-on-close>
-      <el-form :model="configForm" :rules="configRules" ref="configFormRef" label-width="100px">
-        <el-form-item label="配置名称" prop="configName">
-          <el-input v-model="configForm.configName" placeholder="请输入配置名称" />
-        </el-form-item>
-        <el-form-item label="峰时段开始">
-          <el-time-picker v-model="configForm.peakHoursStart" placeholder="峰时段开始" format="HH:mm" value-format="HH:mm" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="峰时段结束">
-          <el-time-picker v-model="configForm.peakHoursEnd" placeholder="峰时段结束" format="HH:mm" value-format="HH:mm" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="谷时段开始">
-          <el-time-picker v-model="configForm.valleyHoursStart" placeholder="谷时段开始" format="HH:mm" value-format="HH:mm" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="谷时段结束">
-          <el-time-picker v-model="configForm.valleyHoursEnd" placeholder="谷时段结束" format="HH:mm" value-format="HH:mm" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="平时段开始">
-          <el-time-picker v-model="configForm.flatHoursStart" placeholder="平时段开始" format="HH:mm" value-format="HH:mm" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="平时段结束">
-          <el-time-picker v-model="configForm.flatHoursEnd" placeholder="平时段结束" format="HH:mm" value-format="HH:mm" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="最大功率(kW)">
-          <el-input-number v-model="configForm.maxPower" :precision="2" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="优先级">
-          <el-input-number v-model="configForm.priority" :min="0" :max="100" style="width: 100%" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="configDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitConfig">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 智能建议弹窗 -->
-    <el-dialog v-model="suggestionDialogVisible" title="智能排产建议" width="500px">
-      <el-result v-if="suggestion" icon="success" :title="suggestion.suggestion as string" sub-title="基于当前排产配置的智能建议">
-        <template #extra>
-          <el-descriptions :column="1" border size="small">
-            <el-descriptions-item label="峰时段">{{ suggestion.peakHoursStart }} - {{ suggestion.peakHoursEnd }}</el-descriptions-item>
-            <el-descriptions-item label="谷时段">{{ suggestion.valleyHoursStart }} - {{ suggestion.valleyHoursEnd }}</el-descriptions-item>
-            <el-descriptions-item label="最大功率">{{ suggestion.maxPower }} kW</el-descriptions-item>
-          </el-descriptions>
-        </template>
-      </el-result>
-      <el-empty v-else description="暂无排产配置，请先配置峰谷时段" />
     </el-dialog>
   </div>
 </template>
@@ -165,126 +140,147 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { FormInstance } from 'element-plus'
-import { getPeakShiftingList, addPeakShifting, updatePeakShifting, deletePeakShifting, getPeakShiftingConfigList, addPeakShiftingConfig, updatePeakShiftingConfig, deletePeakShiftingConfig, getPeakShiftingSuggestion, type PeakShifting, type PeakShiftingConfig } from '@/api/toolkit'
+import { getCbamList, createCbam, updateCbam, deleteCbam, calculateCbam, submitCbam, approveCbam } from '@/api/carbon'
 
-const activeTab = ref('plan')
-const planData = ref<PeakShifting[]>([])
-const configData = ref<PeakShiftingConfig[]>([])
-const dateRange = ref<string[]>([])
-const filters = reactive({ productionLine: '' })
-const planPagination = reactive({ current: 1, size: 10, total: 0 })
+const loading = ref(false)
+const tableData = ref<any[]>([])
+const total = ref(0)
+const queryParams = reactive({ current: 1, size: 10, status: '', year: null, productCategory: '' })
 
-const planDialogVisible = ref(false)
-const configDialogVisible = ref(false)
-const suggestionDialogVisible = ref(false)
-const planFormRef = ref<FormInstance>()
-const configFormRef = ref<FormInstance>()
-const editingPlan = ref<PeakShifting | null>(null)
-const editingConfig = ref<PeakShiftingConfig | null>(null)
-const suggestion = ref<Record<string, unknown> | null>(null)
+const dialogVisible = ref(false)
+const isEdit = ref(false)
+const editId = ref(0)
+const form = reactive({
+  declarationName: '',
+  productName: '',
+  productCode: '',
+  cnCode: '',
+  originCountry: '',
+  importQuantity: null as number | null,
+  unit: 't',
+  directEmission: null as number | null,
+  indirectEmission: null as number | null,
+  totalEmission: null as number | null,
+  emissionUnit: 'tCO2',
+  certificateNumber: '',
+  declarationPeriod: '',
+  status: 'DRAFT',
+  remark: ''
+})
+const rules = {
+  declarationName: [{ required: true, message: '请输入申报名称', trigger: 'blur' }],
+  productName: [{ required: true, message: '请输入产品名称', trigger: 'blur' }],
+  importQuantity: [{ required: true, message: '请输入进口数量', trigger: 'blur' }],
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
+}
 
-const planForm = reactive({ planName: '', planDate: '', shiftType: '', productionLine: '', targetOutput: 0, actualOutput: 0, energyConsumption: 0, energyCost: 0 })
-const planRules = { planName: [{ required: true, message: '请输入计划名称', trigger: 'blur' }], planDate: [{ required: true, message: '请选择日期', trigger: 'change' }] }
+const productCategoryMap: Record<string, string> = {
+  IRON_STEEL: '钢铁',
+  ALUMINIUM: '铝',
+  CEMENT: '水泥',
+  FERTILIZER: '化肥',
+  ELECTRICITY: '电力',
+  HYDROGEN: '氢'
+}
 
-const configForm = reactive({ configName: '', peakHoursStart: '', peakHoursEnd: '', valleyHoursStart: '', valleyHoursEnd: '', flatHoursStart: '', flatHoursEnd: '', maxPower: 0, priority: 0 })
-const configRules = { configName: [{ required: true, message: '请输入配置名称', trigger: 'blur' }] }
+onMounted(() => { getList() })
 
-async function loadPlans() {
-  const res = await getPeakShiftingList({
-    current: planPagination.current, size: planPagination.size,
-    productionLine: filters.productionLine || undefined,
-    startDate: dateRange.value?.[0], endDate: dateRange.value?.[1]
+async function getList() {
+  loading.value = true
+  try {
+    const params: any = { current: queryParams.current, size: queryParams.size }
+    if (queryParams.status) params.status = queryParams.status
+    if (queryParams.year) params.year = parseInt(queryParams.year as string)
+    if (queryParams.productCategory) params.productCategory = queryParams.productCategory
+    const res = await getCbamList(params)
+    tableData.value = res.data.records
+    total.value = res.data.total
+  } catch (e: any) { console.error(e) } finally { loading.value = false }
+}
+
+function handleQuery() { queryParams.current = 1; getList() }
+function handleReset() { Object.assign(queryParams, { current: 1, size: 10, status: '', year: null, productCategory: '' }); getList() }
+
+function handleAdd() {
+  isEdit.value = false; editId.value = 0
+  Object.assign(form, {
+    declarationName: '', productName: '', productCode: '', cnCode: '', originCountry: '',
+    importQuantity: null, unit: 't', directEmission: null, indirectEmission: null,
+    totalEmission: null, emissionUnit: 'tCO2', certificateNumber: '',
+    declarationPeriod: '', status: 'DRAFT', remark: ''
   })
-  planData.value = res.data.records
-  planPagination.total = res.data.total
+  dialogVisible.value = true
 }
 
-async function loadConfigs() {
-  const res = await getPeakShiftingConfigList()
-  configData.value = res.data
+function handleEdit(row: any) {
+  isEdit.value = true; editId.value = row.id
+  Object.assign(form, {
+    declarationName: row.declarationName,
+    productName: row.productName,
+    productCode: row.productCode || '',
+    cnCode: row.cnCode || '',
+    originCountry: row.originCountry || '',
+    importQuantity: row.importQuantity,
+    unit: row.unit || 't',
+    directEmission: row.directEmission || null,
+    indirectEmission: row.indirectEmission || null,
+    totalEmission: row.totalEmission || null,
+    emissionUnit: row.emissionUnit || 'tCO2',
+    certificateNumber: row.certificateNumber || '',
+    declarationPeriod: row.declarationPeriod || '',
+    status: row.status,
+    remark: row.remark || ''
+  })
+  dialogVisible.value = true
 }
 
-function showPlanDialog() {
-  editingPlan.value = null
-  Object.assign(planForm, { planName: '', planDate: '', shiftType: '', productionLine: '', targetOutput: 0, actualOutput: 0, energyConsumption: 0, energyCost: 0 })
-  planDialogVisible.value = true
-}
-
-function editPlan(row: PeakShifting) {
-  editingPlan.value = row
-  Object.assign(planForm, row)
-  planDialogVisible.value = true
-}
-
-async function submitPlan() {
-  await planFormRef.value?.validate()
-  if (editingPlan.value) {
-    await updatePeakShifting(editingPlan.value.id!, planForm)
+async function handleSubmitForm() {
+  const data: any = { ...form }
+  if (isEdit.value) {
+    await updateCbam(editId.value, data)
     ElMessage.success('修改成功')
   } else {
-    await addPeakShifting(planForm as PeakShifting)
+    await createCbam(data)
     ElMessage.success('新增成功')
   }
-  planDialogVisible.value = false
-  loadPlans()
+  dialogVisible.value = false
+  getList()
 }
 
-async function deletePlan(row: PeakShifting) {
-  await ElMessageBox.confirm('确定要删除该排产计划吗？', '提示', { type: 'warning' })
-  await deletePeakShifting(row.id!)
-  ElMessage.success('已删除')
-  loadPlans()
+async function handleCalculate(row: any) {
+  await calculateCbam(row.id)
+  ElMessage.success('排放计算完成')
+  getList()
 }
 
-function showConfigDialog() {
-  editingConfig.value = null
-  Object.assign(configForm, { configName: '', peakHoursStart: '', peakHoursEnd: '', valleyHoursStart: '', valleyHoursEnd: '', flatHoursStart: '', flatHoursEnd: '', maxPower: 0, priority: 0 })
-  configDialogVisible.value = true
+async function handleSubmit(row: any) {
+  await submitCbam(row.id)
+  ElMessage.success('已提交')
+  getList()
 }
 
-function editConfig(row: PeakShiftingConfig) {
-  editingConfig.value = row
-  Object.assign(configForm, row)
-  configDialogVisible.value = true
+async function handleApprove(row: any) {
+  await approveCbam(row.id)
+  ElMessage.success('已审核')
+  getList()
 }
 
-async function submitConfig() {
-  await configFormRef.value?.validate()
-  if (editingConfig.value) {
-    await updatePeakShiftingConfig(editingConfig.value.id!, configForm)
-    ElMessage.success('修改成功')
-  } else {
-    await addPeakShiftingConfig(configForm as PeakShiftingConfig)
-    ElMessage.success('新增成功')
-  }
-  configDialogVisible.value = false
-  loadConfigs()
+async function handleDelete(row: any) {
+  await ElMessageBox.confirm('确认删除该CBAM申报？', '提示')
+  await deleteCbam(row.id)
+  ElMessage.success('删除成功')
+  getList()
 }
 
-async function deleteConfig(row: PeakShiftingConfig) {
-  await ElMessageBox.confirm('确定要删除该配置吗？', '提示', { type: 'warning' })
-  await deletePeakShiftingConfig(row.id!)
-  ElMessage.success('已删除')
-  loadConfigs()
+function handleExport() {
+  ElMessage.info('导出功能开发中')
 }
-
-async function getSuggestion() {
-  const line = filters.productionLine || '默认产线'
-  const date = new Date().toISOString().split('T')[0]
-  const res = await getPeakShiftingSuggestion(line, date)
-  suggestion.value = res.data
-  suggestionDialogVisible.value = true
-}
-
-onMounted(() => { loadPlans(); loadConfigs() })
 </script>
 
 <style scoped>
-.peak-shifting-page { padding: 20px; }
-.page-header { margin-bottom: 24px; }
-.page-header h2 { margin: 0 0 8px; font-size: 24px; }
-.page-header p { margin: 0; color: #909399; }
-.filter-bar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
-.pagination { margin-top: 16px; display: flex; justify-content: flex-end; }
+.carbon-cbam { padding: 16px; }
+.header-row { display: flex; justify-content: space-between; align-items: center; }
+.title { font-size: 16px; font-weight: 600; }
+.search-form { margin-bottom: 10px; }
+.pagination-row { margin-top: 16px; display: flex; justify-content: flex-end; }
 </style>
