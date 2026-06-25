@@ -1,0 +1,39 @@
+/* uni.scss */
+
+/* 主色调 */
+$primary: #1a5f3f;
+$primary-light: #2d8b5a;
+$primary-dark: #124a30;
+
+/* 辅助色 */
+$success: #52c41a;
+$warning: #faad14;
+$error: #f5222d;
+$info: #1890ff;
+
+/* 文字颜色 */
+$text-primary: #333333;
+$text-secondary: #666666;
+$text-muted: #999999;
+
+/* 背景色 */
+$bg-base: #f5f7fa;
+$bg-white: #ffffff;
+$bg-card: #ffffff;
+
+/* 边框 */
+$border-color: #e8e8e8;
+$border-radius-sm: 8rpx;
+$border-radius-base: 12rpx;
+$border-radius-lg: 24rpx;
+
+/* 阴影 */
+$shadow-base: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+
+/* 间距 */
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-base: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 48rpx;
