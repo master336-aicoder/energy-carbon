@@ -74,6 +74,12 @@
             </view>
             <text class="action-label">报表查看</text>
           </view>
+          <view class="action-item" @click="goInspect">
+            <view class="action-icon inspect">
+              <uni-icons type="flag" size="32" color="#ffffff"></uni-icons>
+            </view>
+            <text class="action-label">设备巡检</text>
+          </view>
         </view>
       </view>
     </view>
@@ -161,6 +167,10 @@ const goToAlarm = () => {
 
 const goToReport = () => {
   uni.navigateTo({ url: '/pages/report/index' })
+}
+
+const goInspect = () => {
+  uni.navigateTo({ url: '/pages/inspect/index' })
 }
 
 onMounted(() => {
@@ -255,6 +265,9 @@ onShow(() => {
 }
 .action-icon.report {
   background: linear-gradient(135deg, #722ed1, #eb2f96);
+}
+.action-icon.inspect {
+  background: linear-gradient(135deg, #13c2c2, #36cfc9);
 }
 .action-label {
   font-size: 24rpx;

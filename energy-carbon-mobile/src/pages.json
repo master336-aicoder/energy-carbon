@@ -6,64 +6,30 @@
     }
   },
   "pages": [
-    {
-      "path": "pages/login/index",
-      "style": {
-        "navigationBarTitleText": "登录",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/home/index",
-      "style": {
-        "navigationBarTitleText": "首页",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/entry/index",
-      "style": {
-        "navigationBarTitleText": "数据录入"
-      }
-    },
-    {
-      "path": "pages/entry/form",
-      "style": {
-        "navigationBarTitleText": "录入表单"
-      }
-    },
-    {
-      "path": "pages/alarm/index",
-      "style": {
-        "navigationBarTitleText": "告警中心"
-      }
-    },
-    {
-      "path": "pages/alarm/detail",
-      "style": {
-        "navigationBarTitleText": "告警详情"
-      }
-    },
-    {
-      "path": "pages/report/index",
-      "style": {
-        "navigationBarTitleText": "报表查看"
-      }
-    },
-    {
-      "path": "pages/profile/index",
-      "style": {
-        "navigationBarTitleText": "个人中心",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/scan/index",
-      "style": {
-        "navigationBarTitleText": "扫码录入",
-        "navigationStyle": "custom"
-      }
-    }
+    { "path": "pages/login/index", "style": { "navigationBarTitleText": "登录", "navigationStyle": "custom" } },
+    { "path": "pages/home/index", "style": { "navigationBarTitleText": "首页", "navigationStyle": "custom" } },
+    { "path": "pages/entry/index", "style": { "navigationBarTitleText": "数据录入" } },
+    { "path": "pages/entry/form", "style": { "navigationBarTitleText": "录入表单" } },
+    { "path": "pages/entry/purchase", "style": { "navigationBarTitleText": "能源采购录入" } },
+    { "path": "pages/entry/carbon-factor", "style": { "navigationBarTitleText": "碳排放因子录入" } },
+    { "path": "pages/entry/records", "style": { "navigationBarTitleText": "录入记录" } },
+    { "path": "pages/entry/offline", "style": { "navigationBarTitleText": "离线数据" } },
+    { "path": "pages/alarm/index", "style": { "navigationBarTitleText": "告警中心" } },
+    { "path": "pages/alarm/detail", "style": { "navigationBarTitleText": "告警详情" } },
+    { "path": "pages/alarm/settings", "style": { "navigationBarTitleText": "告警设置" } },
+    { "path": "pages/alarm/trend", "style": { "navigationBarTitleText": "告警趋势" } },
+    { "path": "pages/report/index", "style": { "navigationBarTitleText": "报表查看" } },
+    { "path": "pages/report/detail", "style": { "navigationBarTitleText": "报表详情" } },
+    { "path": "pages/inspect/index", "style": { "navigationBarTitleText": "设备巡检" } },
+    { "path": "pages/inspect/execute", "style": { "navigationBarTitleText": "巡检执行" } },
+    { "path": "pages/inspect/history", "style": { "navigationBarTitleText": "巡检历史" } },
+    { "path": "pages/inspect/stats", "style": { "navigationBarTitleText": "巡检统计" } },
+    { "path": "pages/message/index", "style": { "navigationBarTitleText": "消息中心" } },
+    { "path": "pages/profile/index", "style": { "navigationBarTitleText": "个人中心", "navigationStyle": "custom" } },
+    { "path": "pages/profile/favorites", "style": { "navigationBarTitleText": "我的收藏" } },
+    { "path": "pages/profile/stats", "style": { "navigationBarTitleText": "数据统计" } },
+    { "path": "pages/profile/log", "style": { "navigationBarTitleText": "操作日志" } },
+    { "path": "pages/scan/index", "style": { "navigationBarTitleText": "扫码录入", "navigationStyle": "custom" } }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "white",
@@ -76,30 +42,11 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [
-      {
-        "pagePath": "pages/home/index",
-        "text": "首页",
-        "iconPath": "static/tabbar/home.png",
-        "selectedIconPath": "static/tabbar/home-active.png"
-      },
-      {
-        "pagePath": "pages/entry/index",
-        "text": "录入",
-        "iconPath": "static/tabbar/compose.png",
-        "selectedIconPath": "static/tabbar/compose-active.png"
-      },
-      {
-        "pagePath": "pages/alarm/index",
-        "text": "告警",
-        "iconPath": "static/tabbar/notification.png",
-        "selectedIconPath": "static/tabbar/notification-active.png"
-      },
-      {
-        "pagePath": "pages/profile/index",
-        "text": "我的",
-        "iconPath": "static/tabbar/person.png",
-        "selectedIconPath": "static/tabbar/person-active.png"
-      }
+      { "pagePath": "pages/home/index", "text": "首页", "iconPath": "static/tabbar/home.png", "selectedIconPath": "static/tabbar/home-active.png" },
+      { "pagePath": "pages/entry/index", "text": "录入", "iconPath": "static/tabbar/compose.png", "selectedIconPath": "static/tabbar/compose-active.png" },
+      { "pagePath": "pages/alarm/index", "text": "告警", "iconPath": "static/tabbar/notification.png", "selectedIconPath": "static/tabbar/notification-active.png" },
+      { "pagePath": "pages/message/index", "text": "消息", "iconPath": "static/tabbar/message.png", "selectedIconPath": "static/tabbar/message-active.png" },
+      { "pagePath": "pages/profile/index", "text": "我的", "iconPath": "static/tabbar/person.png", "selectedIconPath": "static/tabbar/person-active.png" }
     ]
   },
   "uniIdRouter": {}

@@ -13,6 +13,30 @@
     </view>
 
     <view class="menu-list">
+      <view class="menu-item" @click="goPage('/pages/profile/stats')">
+        <view class="menu-icon">
+          <uni-icons type="chart-bar" size="22" color="#1a5f3f"></uni-icons>
+        </view>
+        <text class="menu-text">数据统计</text>
+        <uni-icons type="right" size="16" color="#cccccc"></uni-icons>
+      </view>
+
+      <view class="menu-item" @click="goPage('/pages/profile/favorites')">
+        <view class="menu-icon">
+          <uni-icons type="star" size="22" color="#1a5f3f"></uni-icons>
+        </view>
+        <text class="menu-text">我的收藏</text>
+        <uni-icons type="right" size="16" color="#cccccc"></uni-icons>
+      </view>
+
+      <view class="menu-item" @click="goPage('/pages/profile/log')">
+        <view class="menu-icon">
+          <uni-icons type="paperplane" size="22" color="#1a5f3f"></uni-icons>
+        </view>
+        <text class="menu-text">操作日志</text>
+        <uni-icons type="right" size="16" color="#cccccc"></uni-icons>
+      </view>
+
       <view class="menu-item" @click="showPasswordDialog = true">
         <view class="menu-icon">
           <uni-icons type="locked" size="22" color="#1a5f3f"></uni-icons>
@@ -34,7 +58,7 @@
           <uni-icons type="info" size="22" color="#1a5f3f"></uni-icons>
         </view>
         <text class="menu-text">关于我们</text>
-        <text class="menu-extra">v1.0.0</text>
+        <text class="menu-extra">v2.0.0</text>
       </view>
     </view>
 
@@ -151,6 +175,10 @@ const handleLogout = () => {
       }
     }
   })
+}
+
+const goPage = (url) => {
+  uni.navigateTo({ url })
 }
 </script>
 

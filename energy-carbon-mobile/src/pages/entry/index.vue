@@ -33,6 +33,43 @@
         </view>
         <uni-icons type="right" size="18" color="#cccccc"></uni-icons>
       </view>
+
+      <view class="entry-card" @click="goPage('/pages/entry/purchase')">
+        <view class="entry-icon purchase">
+          <uni-icons type="cart" size="40" color="#ffffff"></uni-icons>
+        </view>
+        <view class="entry-info">
+          <text class="entry-title">能源采购</text>
+          <text class="entry-desc">录入电/气/水/蒸汽等采购数据</text>
+        </view>
+        <uni-icons type="right" size="18" color="#cccccc"></uni-icons>
+      </view>
+
+      <view class="entry-card" @click="goPage('/pages/entry/carbon-factor')">
+        <view class="entry-icon carbon">
+          <uni-icons type="cloud" size="40" color="#ffffff"></uni-icons>
+        </view>
+        <view class="entry-info">
+          <text class="entry-title">排放因子</text>
+          <text class="entry-desc">录入不同能源碳排放因子值</text>
+        </view>
+        <uni-icons type="right" size="18" color="#cccccc"></uni-icons>
+      </view>
+    </view>
+
+    <view class="quick-actions">
+      <view class="action-item" @click="goPage('/pages/entry/records')">
+        <uni-icons type="list" size="20" color="#1a5f3f"></uni-icons>
+        <text>录入记录</text>
+      </view>
+      <view class="action-item" @click="goPage('/pages/entry/offline')">
+        <uni-icons type="download" size="20" color="#1a5f3f"></uni-icons>
+        <text>离线数据</text>
+      </view>
+      <view class="action-item" @click="goPage('/pages/inspect/index')">
+        <uni-icons type="flag" size="20" color="#1a5f3f"></uni-icons>
+        <text>设备巡检</text>
+      </view>
     </view>
 
     <view class="recent-section">
@@ -84,6 +121,10 @@ const goToForm = (type) => {
   uni.navigateTo({ url: '/pages/entry/form?type=' + type })
 }
 
+const goPage = (url) => {
+  uni.navigateTo({ url })
+}
+
 onMounted(() => {
   loadRecent()
 })
@@ -126,6 +167,30 @@ onShow(() => {
 }
 .entry-icon.meter {
   background: linear-gradient(135deg, #faad14, #ff7a45);
+}
+.entry-icon.purchase {
+  background: linear-gradient(135deg, #722ed1, #b37feb);
+}
+.entry-icon.carbon {
+  background: linear-gradient(135deg, #13c2c2, #36cfc9);
+}
+.quick-actions {
+  display: flex;
+  gap: 16rpx;
+  margin: 24rpx 0;
+}
+.action-item {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  font-size: 24rpx;
+  color: #333;
 }
 .entry-info {
   flex: 1;
