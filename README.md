@@ -148,8 +148,8 @@
 | 开发计划 | [mobile-dev-plan.md](./public/docs/dev-plan/mobile-dev-plan.md) | M1-M5共7周里程碑 |
 | 接口文档(MD) | [mobile-api.md](./public/docs/mobile-api.md) | 完整API接口文档 |
 | 接口文档(HTML) | [mobile-api.html](./public/docs/mobile-api.html) | 交互式API文档页面 |
-| 测试计划 | [mobile-test-plan.md](./public/docs/test-plan/mobile-test-plan.md) | 50个测试用例 |
-| 测试报告 | [mobile-test-report.md](./public/docs/test-report/mobile-test-report.md) | V1.0测试报告(通过率90.91%) |
+| 测试计划 | [mobile-test-plan.md](./public/docs/test-plan/mobile-test-plan.md) | 108个测试用例，覆盖全部页面和按钮，含已修复问题回归验证 |
+| 测试报告 | [mobile-test-report.md](./public/docs/test-report/mobile-test-report.md) | V1.1测试报告（通过率98.15%） |
 
 ### 里程碑（共7周）
 
@@ -323,11 +323,11 @@ npm run dev
 
 ## 许可证
 
-本项目为山东世通国际认证有限公司内部项目，未经授权不得对外传播或用于商业用途。
+本项目为源码猿（个人开发者）内部项目，未经授权不得对外传播或用于商业用途。
 
 ---
 
-**产品归属**：山东世通国际认证有限公司  
+**产品归属**：源码猿（个人开发者）  
 **技术支持**：master336 <master336@163.com>  
 **文档版本**：V1.3  
 **最后更新**：2026-06-25

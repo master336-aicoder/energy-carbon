@@ -49,7 +49,8 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { login, setToken, getUserInfo } from '@/utils/auth.js'
+import { onShow } from '@dcloudio/uni-app'
+import { login, setToken, getUserInfo, isLoggedIn } from '@/utils/auth.js'
 
 const form = reactive({
   username: '',
@@ -57,6 +58,13 @@ const form = reactive({
 })
 
 const loading = ref(false)
+
+// 已登录时自动跳转到首页
+onShow(() => {
+  if (isLoggedIn()) {
+    uni.switchTab({ url: '/pages/home/index' })
+  }
+})
 
 const handleLogin = async () => {
   if (!form.username.trim()) {

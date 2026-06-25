@@ -54,7 +54,8 @@
 </template>
 
 <script setup>
-import { ref, onLoad } from 'vue'
+import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
 
 const alarm = ref({})
