@@ -45,7 +45,7 @@
 | 跨端框架 | UniApp | 4.x | 基于Vue3语法，一套代码输出多端（H5/小程序/App） |
 | 前端框架 | Vue.js | 3.x | 组合式API（Composition API） |
 | 构建工具 | Vite | 5.x | 快速构建与热更新 |
-| UI组件库 | uView UI | 2.x | 专为UniApp设计的高质量UI库 |
+| UI组件库 | uni-ui | 最新 | UniApp官方组件库 |
 | 状态管理 | Pinia | 2.x | Vue3官方推荐状态管理方案 |
 | 图表库 | uCharts | 2.x | 跨端高性能图表，适配ECharts数据格式 |
 | 扫码能力 | uni.scanCode API | — | 调用原生扫码能力 |
@@ -180,24 +180,23 @@
 │   ├── vite.config.ts
 │   ├── tsconfig.json
 │   └── ...
-├── energy-carbon-mobile/              # 移动端项目（UniApp）
-│   ├── src/
-│   │   ├── pages/                     # 页面目录
-│   │   │   ├── home/                  # 首页仪表盘
-│   │   │   ├── entry/                 # 数据录入
-│   │   │   ├── alarm/                 # 告警中心
-│   │   │   ├── report/                # 报表查看
-│   │   │   ├── profile/               # 个人中心
-│   │   │   └── login/                 # 登录注册
-│   │   ├── components/                # 公共组件
-│   │   ├── services/                  # API接口封装
-│   │   ├── stores/                    # Pinia状态管理
-│   │   ├── utils/                     # 工具函数
-│   │   ├── static/                    # 静态资源
-│   │   └── manifest.json              # 应用配置
-│   ├── pages.json                     # 页面路由配置
-│   ├── vite.config.ts
-│   └── package.json
+├── energy-carbon-mobile/              # 移动端项目（UniApp + Vue3）
+│   ├── pages/                         # 页面目录
+│   │   ├── home/                      # 首页仪表盘
+│   │   ├── entry/                     # 数据录入
+│   │   ├── alarm/                     # 告警中心
+│   │   ├── report/                    # 报表查看
+│   │   ├── profile/                   # 个人中心
+│   │   ├── scan/                      # 扫码功能
+│   │   └── login/                     # 登录页
+│   ├── components/                    # 公共组件（kpi-card, nav-bar, chart-line）
+│   ├── utils/                         # 工具函数（request, auth）
+│   ├── static/                        # 静态资源
+│   ├── App.vue                        # 应用入口
+│   ├── main.js                        # Vue3入口
+│   ├── manifest.json                  # 应用配置
+│   ├── pages.json                     # 页面路由 + TabBar配置
+│   └── uni.scss                       # 主题变量
 └── energy-carbon-platform/            # 后端项目（Maven多模块）
     ├── pom.xml
     ├── energy-carbon-admin/           # 启动模块（聚合所有模块）
