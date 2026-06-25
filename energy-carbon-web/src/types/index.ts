@@ -7,16 +7,17 @@ export interface Result<T = unknown> {
 
 /** 分页参数 */
 export interface PageParams {
-  pageNum?: number
-  pageSize?: number
+  current?: number
+  size?: number
 }
 
 /** 分页结果 */
 export interface PageResult<T> {
-  list: T[]
+  records: T[]
   total: number
-  pageNum: number
-  pageSize: number
+  current: number
+  size: number
+  pages: number
 }
 
 /** 用户 */

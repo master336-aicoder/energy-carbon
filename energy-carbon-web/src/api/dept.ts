@@ -19,7 +19,7 @@ export function createDept(data: DeptApi.SaveParams) {
 
 /** 修改部门 */
 export function updateDept(data: DeptApi.SaveParams) {
-  return request.put<DeptApi.SaveResult>('/system/dept', data)
+  return request.put<DeptApi.SaveResult>(`/system/dept/${data.id}`, data)
 }
 
 /** 删除部门 */

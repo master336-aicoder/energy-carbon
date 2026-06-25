@@ -203,7 +203,7 @@ function resetCost() {
 
 async function loadHistory() {
   const res = await getCalculatorHistory({ current: historyPagination.current, size: historyPagination.size, calcType: historyFilter.calcType || undefined })
-  historyData.value = res.data.list
+  historyData.value = res.data.records
   historyPagination.total = res.data.total
 }
 

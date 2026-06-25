@@ -152,7 +152,7 @@ function getProgressStatus(status: string) {
 
 async function loadData() {
   const res = await getGreenFactoryList({ current: pagination.current, size: pagination.size, status: filters.status || undefined, declarationYear: filters.declarationYear || undefined })
-  tableData.value = res.data.list
+  tableData.value = res.data.records
   pagination.total = res.data.total
 }
 

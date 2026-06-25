@@ -193,7 +193,7 @@ function getServiceTypeTag(type: string) {
 async function loadData() {
   try {
     const res: any = await getAiServiceList({ current: pagination.current, size: pagination.size, status: filters.status || undefined, serviceType: filters.serviceType || undefined })
-    const list = res.data?.list || []
+    const list = res.data?.records || []
     const total = res.data?.total || 0
     tableData.value = list
     pagination.total = total

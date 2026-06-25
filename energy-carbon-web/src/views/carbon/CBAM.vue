@@ -196,7 +196,7 @@ async function loadPlans() {
     productionLine: filters.productionLine || undefined,
     startDate: dateRange.value?.[0], endDate: dateRange.value?.[1]
   })
-  planData.value = res.data.list
+  planData.value = res.data.records
   planPagination.total = res.data.total
 }
 

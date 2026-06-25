@@ -130,7 +130,7 @@ function formatFileSize(bytes: number) {
 
 async function loadData() {
   const res = await getAiKnowledgeList({ current: pagination.current, size: pagination.size, docType: filters.docType || undefined })
-  tableData.value = res.data.list
+  tableData.value = res.data.records
   pagination.total = res.data.total
 }
 
@@ -138,7 +138,7 @@ async function doSearch() {
   if (!searchKeyword.value) { loadData(); return }
   const res = await getAiKnowledgeList({ current: 1, size: 50, docType: filters.docType || undefined })
   const keyword = searchKeyword.value.toLowerCase()
-  tableData.value = res.data.list.filter((d: AiKnowledgeDoc) =>
+  tableData.value = res.data.records.filter((d: AiKnowledgeDoc) =>
     d.docName.toLowerCase().includes(keyword) || (d.summary && d.summary.toLowerCase().includes(keyword))
   )
   pagination.total = tableData.value.length

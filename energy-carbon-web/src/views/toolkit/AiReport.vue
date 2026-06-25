@@ -132,7 +132,7 @@ async function createReport() {
 
 async function loadTasks() {
   const res = await getAiReportList({ current: taskPagination.current, size: taskPagination.size, reportType: listFilter.reportType || undefined, status: listFilter.status || undefined })
-  taskData.value = res.data.list
+  taskData.value = res.data.records
   taskPagination.total = res.data.total
 }
 

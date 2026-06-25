@@ -54,19 +54,19 @@
       </el-form>
 
       <el-table :data="tableData" v-loading="loading" border stripe>
-        <el-table-column prop="code" label="设备编码" min-width="120" />
-        <el-table-column prop="name" label="设备名称" min-width="140" />
-        <el-table-column prop="type" label="设备类型" min-width="100">
+        <el-table-column prop="deviceCode" label="设备编码" min-width="120" />
+        <el-table-column prop="deviceName" label="设备名称" min-width="140" />
+        <el-table-column prop="deviceType" label="设备类型" min-width="100">
           <template #default="{ row }">
-            <el-tag>{{ deviceTypeMap[row.type] || row.type }}</el-tag>
+            <el-tag>{{ deviceTypeMap[row.deviceType] || row.deviceType }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="deptName" label="所属部门" min-width="120" />
         <el-table-column prop="manufacturer" label="制造商" min-width="120" />
         <el-table-column prop="model" label="型号" min-width="100" />
-        <el-table-column prop="power" label="功率" min-width="100">
+        <el-table-column prop="powerRating" label="功率" min-width="100">
           <template #default="{ row }">
-            <span v-if="row.power">{{ row.power }} {{ row.powerUnit || 'kW' }}</span>
+            <span v-if="row.powerRating">{{ row.powerRating }} {{ row.powerUnit || 'kW' }}</span>
             <span v-else>-</span>
           </template>
         </el-table-column>
@@ -106,20 +106,20 @@
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="设备编码" prop="code">
-              <el-input v-model="form.code" placeholder="请输入设备编码" />
+            <el-form-item label="设备编码" prop="deviceCode">
+              <el-input v-model="form.deviceCode" placeholder="请输入设备编码" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="设备名称" prop="name">
-              <el-input v-model="form.name" placeholder="请输入设备名称" />
+            <el-form-item label="设备名称" prop="deviceName">
+              <el-input v-model="form.deviceName" placeholder="请输入设备名称" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="设备类型" prop="type">
-              <el-select v-model="form.type" placeholder="请选择设备类型" style="width: 100%">
+            <el-form-item label="设备类型" prop="deviceType">
+              <el-select v-model="form.deviceType" placeholder="请选择设备类型" style="width: 100%">
                 <el-option label="电机" value="motor" />
                 <el-option label="锅炉" value="boiler" />
                 <el-option label="空压机" value="air_compressor" />
@@ -159,7 +159,7 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="功率">
-              <el-input-number v-model="form.power" :min="0" :precision="2" placeholder="请输入功率" style="width: 100%" />
+              <el-input-number v-model="form.powerRating" :min="0" :precision="2" placeholder="请输入功率" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -203,14 +203,14 @@
     <!-- 详情弹窗 -->
     <el-dialog v-model="detailVisible" title="设备详情" width="600px">
       <el-descriptions :column="2" border v-if="currentRow">
-        <el-descriptions-item label="设备编码">{{ currentRow.code }}</el-descriptions-item>
-        <el-descriptions-item label="设备名称">{{ currentRow.name }}</el-descriptions-item>
-        <el-descriptions-item label="设备类型">{{ deviceTypeMap[currentRow.type] || currentRow.type }}</el-descriptions-item>
+        <el-descriptions-item label="设备编码">{{ currentRow.deviceCode }}</el-descriptions-item>
+        <el-descriptions-item label="设备名称">{{ currentRow.deviceName }}</el-descriptions-item>
+        <el-descriptions-item label="设备类型">{{ deviceTypeMap[currentRow.deviceType] || currentRow.deviceType }}</el-descriptions-item>
         <el-descriptions-item label="所属部门">{{ currentRow.deptName }}</el-descriptions-item>
         <el-descriptions-item label="制造商">{{ currentRow.manufacturer || '-' }}</el-descriptions-item>
         <el-descriptions-item label="型号">{{ currentRow.model || '-' }}</el-descriptions-item>
         <el-descriptions-item label="功率">
-          <span v-if="currentRow.power">{{ currentRow.power }} {{ currentRow.powerUnit || 'kW' }}</span>
+          <span v-if="currentRow.powerRating">{{ currentRow.powerRating }} {{ currentRow.powerUnit || 'kW' }}</span>
           <span v-else>-</span>
         </el-descriptions-item>
         <el-descriptions-item label="额定电压">{{ currentRow.voltage ? currentRow.voltage + ' V' : '-' }}</el-descriptions-item>
@@ -303,13 +303,13 @@ const deptTree = ref<any[]>([])
 
 const form = reactive({
   id: null as number | null,
-  code: '',
-  name: '',
-  type: '',
+  deviceCode: '',
+  deviceName: '',
+  deviceType: '',
   deptId: null as number | null,
   manufacturer: '',
   model: '',
-  power: undefined as number | undefined,
+  powerRating: undefined as number | undefined,
   powerUnit: 'kW',
   voltage: undefined as number | undefined,
   current: undefined as number | undefined,
@@ -318,9 +318,9 @@ const form = reactive({
 })
 
 const formRules = {
-  code: [{ required: true, message: '请输入设备编码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入设备名称', trigger: 'blur' }],
-  type: [{ required: true, message: '请选择设备类型', trigger: 'change' }],
+  deviceCode: [{ required: true, message: '请输入设备编码', trigger: 'blur' }],
+  deviceName: [{ required: true, message: '请输入设备名称', trigger: 'blur' }],
+  deviceType: [{ required: true, message: '请选择设备类型', trigger: 'change' }],
   deptId: [{ required: true, message: '请选择所属部门', trigger: 'change' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
@@ -329,15 +329,14 @@ async function fetchList() {
   loading.value = true
   try {
     const res = await getDeviceList({
-      pageNum: pagination.pageNum,
-      pageSize: pagination.pageSize,
-      code: searchForm.code || undefined,
-      name: searchForm.name || undefined,
-      type: searchForm.type || undefined,
+      current: pagination.pageNum,
+      size: pagination.pageSize,
+      deviceName: searchForm.name || undefined,
+      deviceType: searchForm.type || undefined,
       deptId: searchForm.deptId || undefined,
       status: searchForm.status ?? undefined
     })
-    tableData.value = res.data.list
+    tableData.value = res.data.records
     pagination.total = res.data.total
   } finally {
     loading.value = false
@@ -376,13 +375,13 @@ function handleCurrentChange(val: number) {
 
 function resetForm() {
   form.id = null
-  form.code = ''
-  form.name = ''
-  form.type = ''
+  form.deviceCode = ''
+  form.deviceName = ''
+  form.deviceType = ''
   form.deptId = null
   form.manufacturer = ''
   form.model = ''
-  form.power = undefined
+  form.powerRating = undefined
   form.powerUnit = 'kW'
   form.voltage = undefined
   form.current = undefined
@@ -399,13 +398,13 @@ function handleAdd() {
 function handleEdit(row: Device) {
   dialogTitle.value = '编辑设备'
   form.id = row.id
-  form.code = row.code
-  form.name = row.name
-  form.type = row.type
+  form.deviceCode = row.deviceCode
+  form.deviceName = row.deviceName
+  form.deviceType = row.deviceType
   form.deptId = row.deptId
   form.manufacturer = row.manufacturer || ''
   form.model = row.model || ''
-  form.power = row.power
+  form.powerRating = row.powerRating
   form.powerUnit = row.powerUnit || 'kW'
   form.voltage = row.voltage
   form.current = row.current
@@ -453,7 +452,7 @@ async function handleStatusChange(id: number, status: number) {
 }
 
 async function handleDelete(row: Device) {
-  await ElMessageBox.confirm(`确定删除设备 "${row.name}" 吗？`, '提示', { type: 'warning' })
+  await ElMessageBox.confirm(`确定删除设备 "${row.deviceName}" 吗？`, '提示', { type: 'warning' })
   await deleteDevice(row.id)
   ElMessage.success('删除成功')
   fetchList()

@@ -359,7 +359,7 @@ async function fetchDeptTree() {
 
 async function fetchDeviceList() {
   const res = await getDeviceList({ pageNum: 1, pageSize: 9999 })
-  deviceList.value = res.data.list
+  deviceList.value = res.data.records
 }
 
 function handleSearch() {
