@@ -11,12 +11,12 @@
       <el-form :model="searchForm" inline class="search-form">
         <el-form-item label="计量器具">
           <el-select v-model="searchForm.meterId" placeholder="请选择计量器具" clearable filterable style="width: 200px">
-            <el-option v-for="m in meterList" :key="m.id" :label="m.name" :value="m.id" />
+            <el-option v-for="m in meterList" :key="m.id" :label="m.meterName || m.name || m.code" :value="m.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="数据类型">
           <el-select v-model="searchForm.dataType" placeholder="请选择数据类型" clearable style="width: 140px">
-            <el-option v-for="t in dataTypeList" :key="t" :label="t" :value="t" />
+            <el-option v-for="t in dataTypeList" :key="t" :label="dataTypeMap[t] || t" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="开始时间">
@@ -57,9 +57,9 @@
             {{ row.dataValue }} {{ row.unit || '' }}
           </template>
         </el-table-column>
-        <el-table-column prop="dataType" label="数据类型" width="100">
+        <el-table-column prop="dataType" label="数据类型" width="120">
           <template #default="{ row }">
-            <el-tag>{{ row.dataType }}</el-tag>
+            <el-tag>{{ dataTypeMap[row.dataType] || row.dataType }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="记录时间" width="180" />
@@ -94,6 +94,22 @@ const meterList = ref<Meter[]>([])
 const dataTypeList = ref<string[]>([])
 const chartRef = ref<HTMLDivElement>()
 let chartInstance: echarts.ECharts | null = null
+
+const dataTypeMap: Record<string, string> = {
+  power: '功率',
+  voltage: '电压',
+  current: '电流',
+  temperature: '温度',
+  pressure: '压力',
+  flow: '流量',
+  energy: '电量',
+  total_energy: '总电量',
+  active_power: '有功功率',
+  reactive_power: '无功功率',
+  apparent_power: '视在功率',
+  power_factor: '功率因数',
+  frequency: '频率',
+}
 
 const searchForm = reactive({
   meterId: undefined as number | undefined,

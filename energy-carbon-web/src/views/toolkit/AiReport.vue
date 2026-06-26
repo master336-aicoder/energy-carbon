@@ -111,10 +111,10 @@ const taskPagination = reactive({ current: 1, size: 10, total: 0 })
 const reportTypeMap: Record<string, string> = { GREEN_FACTORY: '绿色工厂评价报告', CARBON_FOOTPRINT: '碳足迹报告', VERIFICATION: '核查报告', ENERGY_AUDIT: '能源审计报告' }
 const taskStatusMap: Record<string, string> = { PENDING: '待处理', GENERATING: '生成中', COMPLETED: '已完成', FAILED: '失败' }
 
-function getTaskStatusName(status: string) { return taskStatusMap[status] || status }
+function getTaskStatusName(status: string) { return taskStatusMap[status?.toUpperCase()] || status }
 function getTaskStatusTag(status: string) {
   const map: Record<string, string> = { PENDING: 'warning', GENERATING: 'primary', COMPLETED: 'success', FAILED: 'danger' }
-  return map[status] || 'info'
+  return map[status?.toUpperCase()] || 'info'
 }
 
 async function loadTemplates() {

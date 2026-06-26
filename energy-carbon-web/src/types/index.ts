@@ -177,6 +177,7 @@ export interface Meter {
   id: number
   code: string
   name: string
+  meterName?: string
   type: string
   deviceId?: number
   deviceName?: string

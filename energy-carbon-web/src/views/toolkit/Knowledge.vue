@@ -159,12 +159,18 @@ async function submitUpload() {
   formData.append('uploadUser', uploadForm.uploadUser)
   formData.append('summary', uploadForm.summary)
   if (fileList.value.length > 0) {
-    // Note: In real scenario, need to attach the actual file
+    const file = fileList.value[0]
+    const rawFile = (file as any).raw || file
+    if (rawFile instanceof File) {
+      formData.append('file', rawFile)
+    }
   }
   await uploadAiKnowledge(formData)
   ElMessage.success('上传成功')
-  uploadDialogVisible.value = false
-  loadData()
+  showUploadDialog.value = false
+  fileList.value = []
+  uploadFormRef.value?.resetFields()
+  loadList()
 }
 
 function viewDetail(row: AiKnowledgeDoc) {

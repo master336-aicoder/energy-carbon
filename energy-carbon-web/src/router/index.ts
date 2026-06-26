@@ -294,6 +294,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         meta: { title: '用户管理' },
       },
       {
+        path: 'menu',
+        name: 'SystemMenu',
+        component: () => import('@/views/system/Menu.vue'),
+        meta: { title: '菜单管理' },
+      },
+      {
         path: 'profile',
         name: 'SystemProfile',
         component: () => import('@/views/system/Profile.vue'),

@@ -29,7 +29,7 @@
               {{ child.meta?.title }}
             </el-menu-item>
           </el-sub-menu>
-          <el-menu-item v-else :index="route.path + (route.children?.[0]?.path ? '/' + route.children[0].path : '')">
+          <el-menu-item v-else :index="route.children?.[0]?.path?.startsWith('/') ? route.children[0].path : (route.path + (route.children?.[0]?.path ? '/' + route.children[0].path : ''))">
             <el-icon><component :is="route.meta?.icon || route.children?.[0]?.meta?.icon" /></el-icon>
             <template #title>{{ route.meta?.title || route.children?.[0]?.meta?.title }}</template>
           </el-menu-item>
