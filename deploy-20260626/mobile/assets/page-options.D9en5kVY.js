@@ -1,0 +1,1 @@
+const n=n=>{const o=(()=>{const n={};try{const o=window.location.hash||"",t=o.indexOf("?");if(-1===t)return n;const r=o.substring(t+1);new URLSearchParams(r).forEach((o,t)=>{n[t]=decodeURIComponent(o)})}catch(o){console.warn("解析URL参数失败:",o)}return n})();return o[n]||null};export{n as g};

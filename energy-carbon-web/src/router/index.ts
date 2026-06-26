@@ -310,7 +310,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory('/admin/'),
   routes: constantRoutes,
 })
 
