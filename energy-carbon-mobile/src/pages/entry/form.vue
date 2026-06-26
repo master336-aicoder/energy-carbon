@@ -75,9 +75,10 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
+import { getPageParam } from '@/utils/page-options.js'
 
 const formType = ref('indicator')
 const formTitle = ref('指标录入')
@@ -113,10 +114,10 @@ const minutes = Array.from({length: 60}, (_, i) => String(i).padStart(2, '0') + 
 const dateRange = ref([years, months, days, hours, minutes])
 const dateIndex = ref([2, 5, 24, 8, 0])
 
-onLoad((options) => {
-  if (options.type && typeMap[options.type]) {
-    formType.value = options.type
-    formTitle.value = typeMap[options.type].title
+const initForm = (type) => {
+  if (type && typeMap[type]) {
+    formType.value = type
+    formTitle.value = typeMap[type].title
   }
   if (formType.value === 'meter') {
     loadMeters()
@@ -131,6 +132,16 @@ onLoad((options) => {
     d.getHours(),
     d.getMinutes()
   ]
+}
+
+onLoad((options) => {
+  initForm(options && options.type)
+})
+
+onMounted(() => {
+  // Edge等浏览器H5兼容
+  const type = getPageParam('type')
+  if (type) initForm(type)
 })
 
 const loadMeters = async () => {

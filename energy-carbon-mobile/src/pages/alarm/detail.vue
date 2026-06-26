@@ -55,9 +55,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
+import { getPageParam } from '@/utils/page-options.js'
 
 const alarm = ref({})
 const isHandled = ref(false)
@@ -120,8 +121,16 @@ const handleAlarm = async (val) => {
 }
 
 onLoad((options) => {
-  if (options.id) {
+  if (options && options.id) {
     loadDetail(options.id)
+  }
+})
+
+onMounted(() => {
+  // Edge等浏览器H5兼容：onLoad可能不触发
+  const id = getPageParam('id')
+  if (id) {
+    loadDetail(id)
   }
 })
 </script>

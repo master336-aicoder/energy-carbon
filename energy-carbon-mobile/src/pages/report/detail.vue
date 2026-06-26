@@ -90,6 +90,7 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
+import { getPageParam } from '@/utils/page-options.js'
 
 const safeAreaTop = ref(uni.getSystemInfoSync().statusBarHeight + 44)
 const reportType = ref('energy')
@@ -428,13 +429,23 @@ const handleExport = (format) => {
   // #endif
 }
 
-onLoad((options) => {
-  if (options && options.type) {
-    reportType.value = options.type
+const initReport = (type) => {
+  if (type) {
+    reportType.value = type
   }
   const sysInfo = uni.getSystemInfoSync()
   canvasWidth.value = sysInfo.windowWidth - 48
   loadChartData()
+}
+
+onLoad((options) => {
+  initReport(options && options.type)
+})
+
+onMounted(() => {
+  // Edge等浏览器H5兼容
+  const type = getPageParam('type')
+  if (type) initReport(type)
 })
 </script>
 

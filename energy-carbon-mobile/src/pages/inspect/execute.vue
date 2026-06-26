@@ -95,9 +95,10 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
+import { getPageParam } from '@/utils/page-options.js'
 
 const taskId = ref('')
 const submitting = ref(false)
@@ -237,10 +238,19 @@ const handleSubmit = async () => {
 }
 
 onLoad((options) => {
-  if (options.id) {
+  if (options && options.id) {
     taskId.value = options.id
   }
   loadTaskDetail()
+})
+
+onMounted(() => {
+  // Edge等浏览器H5兼容
+  const id = getPageParam('id')
+  if (id) {
+    taskId.value = id
+    loadTaskDetail()
+  }
 })
 </script>
 
