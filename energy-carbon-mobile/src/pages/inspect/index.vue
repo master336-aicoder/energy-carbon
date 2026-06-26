@@ -69,7 +69,7 @@
           </view>
         </view>
         <view class="task-footer">
-          <text class="task-operator">负责人：{{ item.operator }}</text>
+          <text class="task-operator">负责人：{{ item.inspector || item.operator || '-' }}</text>
           <text class="task-arrow">></text>
         </view>
       </view>

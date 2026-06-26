@@ -105,14 +105,19 @@ const loadRecent = async () => {
   try {
     const res = await request.get('/monitor/meter-record/list', { current: 1, size: 5 })
     if (res.code === 200 && res.data) {
-      recentList.value = res.data.records || []
+      recentList.value = (res.data.records || []).map(item => ({
+        deviceName: item.meterName || item.deviceName || '抄表记录',
+        readingValue: item.consumption !== undefined && item.consumption !== null ? item.consumption : (item.endCode !== undefined && item.endCode !== null ? item.endCode : (item.readingValue || 0)),
+        unit: 'kWh',
+        readingTime: item.recordTime || item.readingTime || item.createTime || ''
+      }))
     }
   } catch (e) {
     // 演示数据
     recentList.value = [
       { deviceName: '1#电表', readingValue: 12560.5, unit: 'kWh', readingTime: '2026-06-25 08:00' },
       { deviceName: '2#电表', readingValue: 8920.3, unit: 'kWh', readingTime: '2026-06-25 08:00' },
-      { deviceName: '总水表', readingValue: 3450.2, unit: 'm³', readingTime: '2026-06-25 08:00' }
+      { deviceName: '总水表', readingValue: 3450.2, unit: 'kWh', readingTime: '2026-06-25 08:00' }
     ]
   }
 }

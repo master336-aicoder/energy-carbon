@@ -71,12 +71,29 @@ const getLevelText = (level) => {
 
 const loadDetail = async (id) => {
   try {
-    const res = await request.get('/alarm/record/list', { current: 1, size: 1, id })
-    if (res.code === 200 && res.data && res.data.records && res.data.records.length > 0) {
-      alarm.value = res.data.records[0]
-      isHandled.value = alarm.value.status === 'handled' || alarm.value.status === 1
+    const res = await request.get('/alarm/record/' + id)
+    if (res.code === 200 && res.data) {
+      const typeMap = { THRESHOLD_EXCEED: '阈值超限', EFFICIENCY_LOW: '效率偏低', COMMUNICATION_ERROR: '通信异常', DEVICE_OFFLINE: '设备离线' }
+      const levelMap = { HIGH: 'high', MEDIUM: 'medium', LOW: 'low', CRITICAL: 'critical' }
+      const item = res.data
+      alarm.value = {
+        id: item.id,
+        title: item.thresholdName || typeMap[item.alarmType] || item.alarmType || '告警',
+        content: item.alarmType ? `告警值: ${item.alarmValue} (阈值: ${item.thresholdValue})` : (item.content || ''),
+        level: levelMap[item.alarmLevel] || item.level || 'low',
+        source: item.meterName || `设备${item.meterId || ''}` || '',
+        status: item.handleStatus === 'PROCESSED' || item.handleStatus === 'handled' || item.handleStatus === '1' || item.handleStatus === 1 ? 1 : 0,
+        createTime: item.alarmTime || item.createTime || '',
+        handler: item.handler || '',
+        handleTime: item.handleTime || '',
+        handleRemark: item.handleRemark || '',
+        alarmValue: item.alarmValue,
+        thresholdValue: item.thresholdValue
+      }
+      isHandled.value = alarm.value.status === 1
     }
   } catch (e) {
+    console.error('加载告警详情失败:', e)
     // 演示数据
     alarm.value = { id, title: '温度过高告警', content: '1#车间温度超过设定阈值35°C', level: 'high', source: '1#温度传感器', status: 0, createTime: '2026-06-25 10:30' }
     isHandled.value = false

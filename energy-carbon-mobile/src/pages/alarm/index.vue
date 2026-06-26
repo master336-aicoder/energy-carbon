@@ -92,7 +92,22 @@ const loadData = async (refresh = true) => {
     }
     const res = await request.get('/alarm/record/list', params)
     if (res.code === 200 && res.data) {
-      const records = res.data.records || []
+      const typeMap = { THRESHOLD_EXCEED: '阈值超限', EFFICIENCY_LOW: '效率偏低', COMMUNICATION_ERROR: '通信异常', DEVICE_OFFLINE: '设备离线' }
+      const levelMap = { HIGH: 'high', MEDIUM: 'medium', LOW: 'low', CRITICAL: 'critical' }
+      const records = (res.data.records || []).map(item => ({
+        id: item.id,
+        title: item.thresholdName || typeMap[item.alarmType] || item.alarmType || '告警',
+        content: item.alarmType ? `告警值: ${item.alarmValue} (阈值: ${item.thresholdValue})` : (item.content || ''),
+        level: levelMap[item.alarmLevel] || item.level || 'low',
+        source: item.meterName || `设备${item.meterId || ''}` || '',
+        status: item.handleStatus === 'PROCESSED' || item.handleStatus === 'handled' || item.handleStatus === '1' || item.handleStatus === 1 ? 1 : 0,
+        createTime: item.alarmTime || item.createTime || '',
+        handler: item.handler || '',
+        handleTime: item.handleTime || '',
+        handleRemark: item.handleRemark || '',
+        alarmValue: item.alarmValue,
+        thresholdValue: item.thresholdValue
+      }))
       if (refresh) {
         alarmList.value = records
       } else {
