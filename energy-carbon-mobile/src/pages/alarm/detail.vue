@@ -38,17 +38,17 @@
       </view>
 
       <view v-if="!isHandled" class="detail-actions">
-        <button class="handle-btn" @click="showHandleDialog = true">处理告警</button>
-      </view>
+      <button class="handle-btn" @click="openHandleDialog">处理告警</button>
+    </view>
     </view>
 
-    <uni-popup ref="popup" type="dialog" v-model:show="showHandleDialog">
+    <uni-popup ref="popup" type="dialog">
       <uni-popup-dialog
         mode="input"
         title="处理告警"
         placeholder="请输入处理备注"
         @confirm="handleAlarm"
-        @close="showHandleDialog = false"
+        @close="closeHandleDialog"
       ></uni-popup-dialog>
     </uni-popup>
   </view>
@@ -62,8 +62,14 @@ import { getPageParam } from '@/utils/page-options.js'
 
 const alarm = ref({})
 const isHandled = ref(false)
-const showHandleDialog = ref(false)
 const popup = ref(null)
+
+const openHandleDialog = () => {
+  popup.value?.open?.()
+}
+const closeHandleDialog = () => {
+  popup.value?.close?.()
+}
 
 const getLevelText = (level) => {
   const map = { high: '高', medium: '中', low: '低', critical: '紧急' }
@@ -122,7 +128,7 @@ const handleAlarm = async (val) => {
     console.error('处理告警失败:', e)
     uni.showToast({ title: '处理失败', icon: 'none' })
   }
-  showHandleDialog.value = false
+  closeHandleDialog()
 }
 
 onLoad((options) => {

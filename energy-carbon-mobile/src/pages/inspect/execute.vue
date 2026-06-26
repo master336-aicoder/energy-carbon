@@ -120,7 +120,10 @@ const loadTaskDetail = async () => {
       taskInfo.deviceName = res.data.deviceName
       taskInfo.templateName = res.data.templateName
       checkItems.value = (res.data.items || []).map(item => ({
-        itemName: item.itemName,
+        itemName: item.itemName || item.name || item.item_name || '未命名项目',
+        itemCode: item.itemCode || item.code || item.item_code || '',
+        checkMethod: item.checkMethod || item.check_method || item.method || '',
+        standardValue: item.standardValue || item.standard_value || item.standard || '',
         result: '',
         description: '',
         photos: [],
