@@ -1,5 +1,6 @@
 <template>
   <view class="log-page">
+    <nav-bar title="操作日志" showBack></nav-bar>
     <!-- 筛选栏 -->
     <view class="filter-row">
       <view class="filter-date" @click="showDateStart = true">

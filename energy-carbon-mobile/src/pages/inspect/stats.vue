@@ -1,5 +1,6 @@
 <template>
   <view class="stats-page">
+    <nav-bar title="巡检统计" showBack></nav-bar>
     <!-- 统计卡片 -->
     <view class="stats-grid">
       <view class="stats-card">

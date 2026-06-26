@@ -8,6 +8,15 @@ export const getUserInfo = () => {
   return request.get('/auth/userinfo')
 }
 
+export const getUserInfoSync = () => {
+  try {
+    const stored = uni.getStorageSync('userInfo')
+    return stored ? JSON.parse(stored) : null
+  } catch (e) {
+    return null
+  }
+}
+
 export const logout = () => {
   return request.post('/auth/logout')
 }

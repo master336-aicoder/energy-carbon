@@ -1,5 +1,6 @@
 <template>
   <view class="favorites-page">
+    <nav-bar title="我的收藏" showBack></nav-bar>
     <!-- Tab切换 -->
     <view class="fav-tabs">
       <view

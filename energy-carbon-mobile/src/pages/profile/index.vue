@@ -100,7 +100,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getUserInfo, logout } from '@/utils/auth.js'
+import { onShow } from '@dcloudio/uni-app'
+import { getUserInfoSync, logout } from '@/utils/auth.js'
 import request from '@/utils/request.js'
 
 const userInfo = ref({})
@@ -112,8 +113,19 @@ const pwdForm = ref({
   confirmPassword: ''
 })
 
+const loadUser = () => {
+  const info = getUserInfoSync()
+  if (info) {
+    userInfo.value = info
+  }
+}
+
 onMounted(() => {
-  userInfo.value = getUserInfo() || {}
+  loadUser()
+})
+
+onShow(() => {
+  loadUser()
 })
 
 const handleChangePassword = async () => {
@@ -125,7 +137,7 @@ const handleChangePassword = async () => {
   pwdLoading.value = true
   try {
     // 调用后端用户更新接口修改密码
-    const user = getUserInfo()
+    const user = getUserInfoSync()
     if (!user || !user.id) {
       uni.showToast({ title: '未获取到用户信息', icon: 'none' })
       return

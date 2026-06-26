@@ -1,5 +1,6 @@
 <template>
   <view class="stats-page">
+    <nav-bar title="数据统计" showBack></nav-bar>
     <!-- 本月录入统计 -->
     <view class="section-card">
       <text class="section-title">本月录入统计</text>

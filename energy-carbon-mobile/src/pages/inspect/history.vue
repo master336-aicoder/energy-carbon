@@ -1,5 +1,6 @@
 <template>
   <view class="history-page">
+    <nav-bar title="巡检历史" showBack></nav-bar>
     <!-- 日期筛选 -->
     <view class="filter-card">
       <view class="filter-row">

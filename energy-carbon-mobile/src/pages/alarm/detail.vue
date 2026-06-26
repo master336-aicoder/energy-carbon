@@ -1,5 +1,6 @@
 <template>
   <view class="detail-page">
+    <nav-bar title="告警详情" showBack></nav-bar>
     <view class="detail-content">
       <view class="detail-header">
         <view class="detail-level" :class="'level-' + (alarm.level || 'low')">

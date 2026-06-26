@@ -1,5 +1,6 @@
 <template>
   <view class="offline-page">
+    <nav-bar title="离线数据管理" showBack></nav-bar>
     <!-- 状态栏 -->
     <view class="status-bar">
       <view class="status-item">

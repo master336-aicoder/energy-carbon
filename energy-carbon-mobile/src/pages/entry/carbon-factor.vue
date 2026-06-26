@@ -1,5 +1,6 @@
 <template>
   <view class="factor-page">
+    <nav-bar title="碳排放因子录入" showBack></nav-bar>
     <!-- 表单 -->
     <view class="form-card">
       <view class="form-title">

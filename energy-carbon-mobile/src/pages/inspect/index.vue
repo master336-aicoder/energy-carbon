@@ -1,5 +1,6 @@
 <template>
   <view class="inspect-page">
+    <nav-bar title="设备巡检" showBack></nav-bar>
     <!-- 统计卡片 -->
     <view class="stat-card">
       <view class="stat-item">

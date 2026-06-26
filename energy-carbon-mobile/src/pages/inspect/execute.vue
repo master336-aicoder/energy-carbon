@@ -1,5 +1,6 @@
 <template>
   <view class="execute-page">
+    <nav-bar title="巡检执行" showBack></nav-bar>
     <!-- 顶部设备信息 -->
     <view class="device-header">
       <view class="device-info">

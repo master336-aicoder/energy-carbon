@@ -1,5 +1,6 @@
 <template>
   <view class="purchase-page">
+    <nav-bar title="能源采购录入" showBack></nav-bar>
     <!-- 表单 -->
     <view class="form-card">
       <view class="form-title">

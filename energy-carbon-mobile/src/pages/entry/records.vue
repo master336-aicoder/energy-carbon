@@ -1,5 +1,6 @@
 <template>
   <view class="records-page">
+    <nav-bar title="录入记录" showBack></nav-bar>
     <!-- Tab切换 -->
     <view class="tab-bar">
       <view
