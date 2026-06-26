@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
 
@@ -153,6 +153,10 @@ const goHistory = () => {
 const goStats = () => {
   uni.navigateTo({ url: '/pages/inspect/stats' })
 }
+
+onMounted(() => {
+  loadTasks()
+})
 
 onShow(() => {
   loadTasks()

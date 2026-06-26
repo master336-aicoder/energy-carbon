@@ -213,7 +213,7 @@ const handleReset = () => {
 
 const loadPurchaseList = async () => {
   try {
-    const res = await request.get('/monitor/energy-purchase/list', { size: 20 })
+    const res = await request.get('/monitor/energy-purchase/list', { current: 1, size: 20 })
     if (res.code === 200 && res.data) {
       purchaseList.value = res.data.records || res.data || []
       return

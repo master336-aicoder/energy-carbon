@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
 
@@ -194,12 +194,50 @@ const revokeRecord = (item) => {
   })
 }
 
+const normalizeRecord = (item, type) => {
+  if (!item) return item
+  const r = { ...item }
+  if (type === 'meter') {
+    r.title = item.meterName || item.title || '抄表记录'
+    r.recordTime = item.recordTime || ''
+    r.typeLabel = '抄表'
+    r.value = item.consumption !== undefined && item.consumption !== null ? String(item.consumption) : (item.endCode !== undefined && item.endCode !== null ? String(item.endCode) : (item.value || ''))
+    r.unit = 'kWh'
+    r.creator = item.operator || item.creator || '系统'
+    r.status = item.status || 'normal'
+  } else if (type === 'indicator') {
+    r.title = item.indicatorName || item.title || '指标录入'
+    r.recordTime = item.recordTime || ''
+    r.typeLabel = item.indicatorType || item.typeLabel || '指标'
+    r.value = item.recordValue !== undefined ? String(item.recordValue) : (item.value || '')
+    r.unit = item.unit || ''
+    r.creator = item.operator || item.creator || '系统'
+  } else if (type === 'output') {
+    r.title = item.productName || item.title || '产量录入'
+    r.recordTime = item.recordTime || ''
+    r.typeLabel = item.productionLine || item.typeLabel || '产量'
+    r.value = item.quantity !== undefined ? String(item.quantity) : (item.value || '')
+    r.unit = item.unit || ''
+    r.creator = item.operator || item.creator || '系统'
+  } else if (type === 'purchase') {
+    r.title = item.energyType || item.title || '采购记录'
+    r.recordTime = item.purchaseDate || item.createTime || ''
+    r.typeLabel = item.energyType || item.typeLabel || '采购'
+    r.value = item.totalAmount !== undefined ? String(item.totalAmount) : (item.quantity !== undefined ? String(item.quantity) : (item.value || ''))
+    r.unit = '元'
+    r.creator = item.operator || item.creator || '系统'
+  }
+  r.status = item.status || 'normal'
+  return r
+}
+
 const loadRecords = async () => {
   const tab = tabs.find(t => t.key === activeTab.value)
   try {
-    const res = await request.get(tab.api, { size: 50 })
+    const res = await request.get(tab.api, { current: 1, size: 50 })
     if (res.code === 200 && res.data) {
-      recordList.value = res.data.records || res.data || []
+      const list = res.data.records || res.data || []
+      recordList.value = list.map(item => normalizeRecord(item, tab.key))
       return
     }
   } catch (e) {
@@ -241,6 +279,10 @@ const closePopup = () => {
   detailPopup.value.close()
   currentDetail.value = null
 }
+
+onMounted(() => {
+  loadRecords()
+})
 
 onShow(() => {
   loadRecords()

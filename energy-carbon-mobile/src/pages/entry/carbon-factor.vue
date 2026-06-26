@@ -92,7 +92,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
 
@@ -211,7 +211,7 @@ const handleReset = () => {
 
 const loadFactorList = async () => {
   try {
-    const res = await request.get('/carbon/emission-factor/list', { size: 50 })
+    const res = await request.get('/carbon/emission-factor/list', { current: 1, size: 50 })
     if (res.code === 200 && res.data) {
       factorList.value = res.data.records || res.data || []
       return
@@ -228,6 +228,10 @@ const loadFactorList = async () => {
     { id: 5, energyType: 'water', energyLabel: '水', factorValue: '0.0003', unit: 'tCO2/吨', sourceLabel: '默认值', effectiveDate: '2026-01-01', remark: '' }
   ]
 }
+
+onMounted(() => {
+  loadFactorList()
+})
 
 onShow(() => {
   loadFactorList()

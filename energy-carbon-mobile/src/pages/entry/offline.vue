@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
 
@@ -257,6 +257,10 @@ const savePendingToLocal = () => {
 const saveFailedToLocal = () => {
   uni.setStorageSync('offline_failed', JSON.stringify(failedList.value.map(i => ({ ...i, syncing: false }))))
 }
+
+onMounted(() => {
+  loadOfflineData()
+})
 
 onShow(() => {
   loadOfflineData()

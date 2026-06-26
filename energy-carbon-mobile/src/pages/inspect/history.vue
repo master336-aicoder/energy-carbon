@@ -92,7 +92,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
 
@@ -147,12 +147,16 @@ const closePopup = () => {
   currentDetail.value = null
 }
 
-onShow(() => {
+onMounted(() => {
   // 默认加载近30天数据
   const now = new Date()
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
   endDate.value = formatDate(now)
   startDate.value = formatDate(thirtyDaysAgo)
+  loadHistory()
+})
+
+onShow(() => {
   loadHistory()
 })
 
