@@ -33,3 +33,4 @@ spring:
         group: dev
         username: nacos
         password: nacos
+        register-enabled: false

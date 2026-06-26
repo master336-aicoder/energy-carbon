@@ -154,7 +154,7 @@ const switchTab = (val) => {
 
 const loadData = async () => {
   try {
-    const res = await request.get('/alarm/record/stats', { days: activeTab.value })
+    const res = await request.get('/alarm/record/statistics', { days: activeTab.value })
     if (res.code === 200 && res.data) {
       trendLabels.value = res.data.trendLabels || []
       trendValues.value = res.data.trendValues || []

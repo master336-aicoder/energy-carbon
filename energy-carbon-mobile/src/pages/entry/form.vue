@@ -99,8 +99,8 @@ const form = reactive({
 })
 
 const typeMap = {
-  indicator: { title: '指标录入', url: '/monitor/indicator/entry' },
-  output: { title: '产量录入', url: '/monitor/output/entry' },
+  indicator: { title: '指标录入', url: '/entry/indicator' },
+  output: { title: '产量录入', url: '/entry/production' },
   meter: { title: '抄表录入', url: '/monitor/meter-record' }
 }
 

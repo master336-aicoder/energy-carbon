@@ -85,7 +85,7 @@ const loadDetail = async (id) => {
 
 const handleAlarm = async (val) => {
   try {
-    const res = await request.post('/alarm/record/handle/' + alarm.value.id, { remark: val })
+    const res = await request.put('/alarm/record/' + alarm.value.id + '/handle', { remark: val })
     if (res.code === 200) {
       uni.showToast({ title: '处理成功', icon: 'success' })
       isHandled.value = true

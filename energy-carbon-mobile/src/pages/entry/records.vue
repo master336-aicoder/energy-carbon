@@ -127,8 +127,8 @@ const recordList = ref([])
 
 const tabs = [
   { key: 'meter', label: '抄表记录', api: '/monitor/meter-record/list' },
-  { key: 'indicator', label: '指标记录', api: '/monitor/indicator/list' },
-  { key: 'output', label: '产量记录', api: '/monitor/output/list' },
+  { key: 'indicator', label: '指标记录', api: '/entry/indicator/list' },
+  { key: 'output', label: '产量记录', api: '/entry/production/list' },
   { key: 'purchase', label: '采购记录', api: '/monitor/energy-purchase/list' }
 ]
 
