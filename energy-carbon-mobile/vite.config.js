@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [uni()],
   server: {
     port: 3001,
+    cors: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
@@ -12,5 +13,8 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
+  },
+  optimizeDeps: {
+    force: true
   }
 })
