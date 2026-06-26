@@ -103,18 +103,23 @@ const loadDetail = async (id) => {
 
 const handleAlarm = async (val) => {
   try {
-    const res = await request.put('/alarm/record/' + alarm.value.id + '/handle', { remark: val })
+    const userInfo = uni.getStorageSync('userInfo') || {}
+    const handlerName = userInfo.username || userInfo.nickname || '当前用户'
+    // 后端使用@RequestParam，需要将参数拼接到URL中
+    const url = `/alarm/record/${alarm.value.id}/handle?handleStatus=PROCESSED&handler=${encodeURIComponent(handlerName)}&handleRemark=${encodeURIComponent(val || '')}`
+    const res = await request.put(url)
     if (res.code === 200) {
       uni.showToast({ title: '处理成功', icon: 'success' })
       isHandled.value = true
       alarm.value.status = 1
       alarm.value.handleRemark = val
-      alarm.value.handler = '当前用户'
+      alarm.value.handler = handlerName
       alarm.value.handleTime = new Date().toLocaleString()
     } else {
       uni.showToast({ title: res.message || '处理失败', icon: 'none' })
     }
   } catch (e) {
+    console.error('处理告警失败:', e)
     uni.showToast({ title: '处理失败', icon: 'none' })
   }
   showHandleDialog.value = false

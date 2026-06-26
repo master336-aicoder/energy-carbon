@@ -41,6 +41,11 @@ const request = (options) => {
         }
       },
       fail: (err) => {
+        // 忽略请求被取消的情况(ERR_ABORTED)，通常发生在页面跳转/组件卸载时
+        if (err && (err.errMsg && err.errMsg.includes('abort')) || (typeof err === 'string' && err.includes('abort'))) {
+          reject(new Error('Request aborted'))
+          return
+        }
         uni.showToast({ title: '网络请求失败', icon: 'none' })
         reject(err)
       }
