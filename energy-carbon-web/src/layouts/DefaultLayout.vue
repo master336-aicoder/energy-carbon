@@ -123,6 +123,21 @@ watch(
  */
 const menuRoutes = computed(() => {
   const allRoutes = router.getRoutes()
+
+  // 提取 Dashboard 看板菜单（根路由的 children 中的 dashboard）
+  const rootRoute = allRoutes.find(r => r.path === '/')
+  let dashboardRoute: any = null
+  if (rootRoute && rootRoute.children) {
+    const dashboard = rootRoute.children.find((c: any) => c.path === 'dashboard' || c.name === 'Dashboard')
+    if (dashboard) {
+      dashboardRoute = {
+        path: '/dashboard',
+        meta: dashboard.meta,
+        children: [dashboard]
+      }
+    }
+  }
+
   // 找到所有使用 DefaultLayout 作为 component 的路由（即有 children 的菜单路由）
   const filtered = allRoutes.filter(r => {
     // 排除动态路由匹配和隐藏路由
@@ -134,11 +149,18 @@ const menuRoutes = computed(() => {
   })
   // 去重：根据 path 去重
   const seen = new Set<string>()
-  return filtered.filter(r => {
+  const result = filtered.filter(r => {
     if (seen.has(r.path)) return false
     seen.add(r.path)
     return true
   })
+
+  // 把 Dashboard 看板菜单加到最前面
+  if (dashboardRoute) {
+    result.unshift(dashboardRoute)
+  }
+
+  return result
 })
 
 function handleCommand(command: string) {
