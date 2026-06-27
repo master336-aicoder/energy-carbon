@@ -52,7 +52,7 @@
         </div>
       </template>
 
-      <el-table :data="tableData" v-loading="loading" border stripe>
+      <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column prop="deviceId" label="设备ID" width="80" />
         <el-table-column prop="deviceName" label="设备名称" min-width="140" />
         <el-table-column prop="deviceType" label="设备类型" width="120">

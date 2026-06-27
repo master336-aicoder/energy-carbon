@@ -49,7 +49,7 @@
         <div ref="chartRef" class="chart"></div>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" border stripe style="margin-top: 20px">
+      <el-table :data="tableData" v-loading="loading" border stripe style="margin-top: 20px; width: 100%">
         <el-table-column prop="dataTime" label="数据时间" width="180" />
         <el-table-column prop="meterName" label="计量器具" width="140" />
         <el-table-column prop="dataValue" label="数据值" width="120">

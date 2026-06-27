@@ -22,7 +22,7 @@
           <el-button @click="resetSearch">重置</el-button>
         </el-form-item>
       </el-form>
-      <el-table :data="tableData" v-loading="loading" border>
+      <el-table :data="tableData" v-loading="loading" border style="width: 100%">
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="noticeTitle" label="公告标题" min-width="200" show-overflow-tooltip />
         <el-table-column prop="noticeType" label="公告类型" width="100" align="center">

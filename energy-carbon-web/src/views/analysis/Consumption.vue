@@ -84,7 +84,7 @@
           <el-button type="primary" size="small" @click="handleExport">导出</el-button>
         </div>
       </template>
-      <el-table :data="tableData" border stripe v-loading="loading">
+      <el-table :data="tableData" border stripe v-loading="loading" style="width: 100%">
         <el-table-column prop="statDate" label="统计日期" width="120" />
         <el-table-column prop="energyUnitName" label="用能单元" min-width="140" />
         <el-table-column prop="energyTypeName" label="能源品种" min-width="120" />

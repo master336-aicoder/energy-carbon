@@ -50,7 +50,7 @@
       <el-col :span="24">
         <el-card>
           <template #header><span>对标分析结果</span></template>
-          <el-table :data="benchmarkData" border stripe>
+          <el-table :data="benchmarkData" border stripe style="width: 100%">
             <el-table-column prop="indicator" label="指标" min-width="160" />
             <el-table-column prop="unitValue" label="本单位值" align="right" width="160" />
             <el-table-column prop="benchmarkValue" label="行业基准值" align="right" width="160" />

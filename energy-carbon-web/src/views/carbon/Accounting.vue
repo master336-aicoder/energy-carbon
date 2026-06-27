@@ -37,7 +37,7 @@
       </el-form>
 
       <!-- 表格 -->
-      <el-table :data="tableData" v-loading="loading" border stripe>
+      <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column type="index" label="序号" width="60" />
         <el-table-column prop="accountingName" label="核算名称" min-width="160" />
         <el-table-column prop="accountingYear" label="核算年份" width="100" />
@@ -135,7 +135,7 @@
 
         <!-- 活动数据录入 -->
         <h4 style="margin:16px 0 8px">活动数据</h4>
-        <el-table :data="activityData" border stripe size="small">
+        <el-table :data="activityData" border stripe size="small" style="width: 100%">
           <el-table-column type="index" label="序号" width="50" />
           <el-table-column prop="activityName" label="活动名称" min-width="120">
             <template #default="{ row, $index }">

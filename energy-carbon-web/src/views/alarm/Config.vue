@@ -41,7 +41,7 @@
         </el-form-item>
       </el-form>
 
-      <el-table :data="tableData" v-loading="loading" border stripe>
+      <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column prop="thresholdName" label="阈值名称" min-width="140" />
         <el-table-column prop="metricType" label="指标类型" width="100">
           <template #default="{ row }">

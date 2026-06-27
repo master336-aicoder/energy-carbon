@@ -30,7 +30,7 @@
       <div ref="chartRef" style="height:320px;margin-bottom:16px"></div>
 
       <!-- 统计表格 -->
-      <el-table :data="tableData" v-loading="loading" border stripe>
+      <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column type="index" label="序号" width="60" />
         <el-table-column prop="statDate" label="统计日期" width="120" />
         <el-table-column prop="reportType" label="报表类型" width="100">

@@ -43,7 +43,7 @@
         </el-form-item>
       </el-form>
 
-      <el-table :data="tableData" v-loading="loading" border stripe>
+      <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column prop="meterName" label="计量器具" width="140" />
         <el-table-column prop="recordTime" label="抄表时间" width="180" />
         <el-table-column prop="startCode" label="起始表码" width="120">
@@ -147,7 +147,7 @@
 
     <!-- 批量录入弹窗 -->
     <el-dialog v-model="batchVisible" title="批量录入抄表" width="650px" destroy-on-close>
-      <el-table :data="batchList" border stripe>
+      <el-table :data="batchList" border stripe style="width: 100%">
         <el-table-column label="计量器具" width="160">
           <template #default="{ $index }">
             <el-select v-model="batchList[$index].meterId" placeholder="选择器具" filterable style="width: 140px">

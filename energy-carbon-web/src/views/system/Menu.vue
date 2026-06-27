@@ -8,7 +8,7 @@
       <div style="margin-bottom: 16px;">
         <el-button type="primary" @click="handleAdd">新增菜单</el-button>
       </div>
-      <el-table v-loading="loading" :data="menuList" row-key="id" :tree-props="{ children: 'children', hasChildren: 'hasChildren' }" border>
+      <el-table v-loading="loading" :data="menuList" row-key="id" :tree-props="{ children: 'children', hasChildren: 'hasChildren' }" border style="width: 100%">
         <el-table-column prop="menuName" label="菜单名称" min-width="160" />
         <el-table-column prop="path" label="路由路径" min-width="160" />
         <el-table-column prop="component" label="组件路径" min-width="200" show-overflow-tooltip />

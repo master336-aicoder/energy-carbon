@@ -47,7 +47,7 @@
           <span>预算明细列表</span>
         </div>
       </template>
-      <el-table :data="tableData" border stripe v-loading="loading">
+      <el-table :data="tableData" border stripe v-loading="loading" style="width: 100%">
         <el-table-column prop="energyUnitName" label="用能单元" min-width="140" />
         <el-table-column prop="budgetYear" label="年度" width="80" />
         <el-table-column prop="budgetTypeName" label="预算类型" width="120" />

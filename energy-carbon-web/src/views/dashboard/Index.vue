@@ -79,7 +79,7 @@
           <el-button type="primary" size="small" @click="exportData">导出</el-button>
         </div>
       </template>
-      <el-table :data="energyData" border stripe>
+      <el-table :data="energyData" border stripe style="width: 100%">
         <el-table-column prop="type" label="能源类型" min-width="150" />
         <el-table-column prop="value" label="用量" align="right" />
         <el-table-column prop="ratio" label="占比(%)" align="right" />

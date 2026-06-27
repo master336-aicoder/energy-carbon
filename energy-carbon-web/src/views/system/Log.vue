@@ -41,7 +41,7 @@
       </el-form>
 
       <!-- 数据表格 -->
-      <el-table :data="tableData" v-loading="loading" border stripe>
+      <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="operName" label="操作人" width="120" align="center" />
         <el-table-column prop="title" label="操作模块" width="150" align="center" />

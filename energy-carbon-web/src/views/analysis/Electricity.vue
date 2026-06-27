@@ -58,7 +58,7 @@
           <el-button type="primary" size="small" @click="handleExport">导出</el-button>
         </div>
       </template>
-      <el-table :data="tableData" border stripe v-loading="loading">
+      <el-table :data="tableData" border stripe v-loading="loading" style="width: 100%">
         <el-table-column prop="statDate" label="日期" width="120" />
         <el-table-column prop="peakPower" label="峰段电量(kWh)" align="right" width="140">
           <template #default="{ row }">{{ Number(row.peakPower).toLocaleString() }}</template>

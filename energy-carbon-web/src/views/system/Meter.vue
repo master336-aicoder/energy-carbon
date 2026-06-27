@@ -62,7 +62,7 @@
         </el-form-item>
       </el-form>
 
-      <el-table :data="tableData" v-loading="loading" border stripe>
+      <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column prop="meterCode" label="器具编码" min-width="120" />
         <el-table-column prop="meterName" label="器具名称" min-width="140" />
         <el-table-column prop="meterType" label="器具类型" min-width="100">

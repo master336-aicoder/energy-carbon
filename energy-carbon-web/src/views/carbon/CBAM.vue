@@ -26,7 +26,7 @@
         </el-form-item>
       </el-form>
 
-      <el-table :data="tableData" v-loading="loading" border stripe>
+      <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="declarationNo" label="申报编号" width="150" align="center" />
         <el-table-column prop="declarationYear" label="申报年份" width="100" align="center" />
