@@ -141,6 +141,27 @@ public class AuthController {
     }
 
     /**
+     * 刷新 Token
+     * 使用 refreshToken 换取新的 accessToken
+     */
+    @PostMapping("/refresh")
+    public Result<Map<String, Object>> refresh(@RequestBody Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            return Result.error("refreshToken不能为空");
+        }
+        try {
+            String newAccessToken = JwtUtils.refreshToken(refreshToken);
+            Map<String, Object> result = new HashMap<>();
+            result.put("accessToken", newAccessToken);
+            result.put("expiresIn", 7200);
+            return Result.ok(result);
+        } catch (Exception e) {
+            return Result.error("Token刷新失败：" + e.getMessage());
+        }
+    }
+
+    /**
      * 用户登出
      * 清除登录状态（Token黑名单等逻辑可在此扩展）
      *

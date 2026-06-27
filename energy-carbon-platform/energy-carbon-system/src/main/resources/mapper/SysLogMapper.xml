@@ -20,11 +20,15 @@
         <result column="error_msg" property="errorMsg"/>
         <result column="oper_time" property="operTime"/>
         <result column="cost_time" property="costTime"/>
+        <result column="browser" property="browser"/>
+        <result column="os" property="os"/>
+        <result column="referer" property="referer"/>
+        <result column="user_agent" property="userAgent"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, title, business_type, method, request_method, oper_name, oper_url, oper_ip, oper_location,
-        oper_param, json_result, status, error_msg, oper_time, cost_time
+        oper_param, json_result, status, error_msg, oper_time, cost_time, browser, os, referer, user_agent
     </sql>
 
     <select id="selectList" resultMap="BaseResultMap">

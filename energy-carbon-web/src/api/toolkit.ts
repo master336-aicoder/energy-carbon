@@ -23,11 +23,11 @@ export const setElectricityPriceStatus = (id: number, status: number) => request
 export const deleteElectricityPrice = (id: number) => request.delete(`/toolkit/electricity-price/${id}`)
 export interface ElectricityPrice { id: number; priceName: string; priceType: string; price: number; status: number }
 
-// --- 旧API兼容（削峰填谷配置） ---
-export const getPeakShiftingConfigList = (params?: any) => request.get('/toolkit/peak-shifting-config/list', { params })
-export const addPeakShiftingConfig = (data: any) => request.post('/toolkit/peak-shifting-config', data)
-export const updatePeakShiftingConfig = (id: number, data: any) => request.put(`/toolkit/peak-shifting-config/${id}`, data)
-export const deletePeakShiftingConfig = (id: number) => request.delete(`/toolkit/peak-shifting-config/${id}`)
+// 削峰填谷配置
+export const getPeakShiftingConfigList = (params?: any) => request.get('/toolkit/peak-shifting/config/list', { params })
+export const addPeakShiftingConfig = (data: any) => request.post('/toolkit/peak-shifting/config', data)
+export const updatePeakShiftingConfig = (id: number, data: any) => request.put(`/toolkit/peak-shifting/config/${id}`, data)
+export const deletePeakShiftingConfig = (id: number) => request.delete(`/toolkit/peak-shifting/config/${id}`)
 export const getPeakShiftingSuggestion = () => request.get('/toolkit/peak-shifting/suggestion')
 export interface PeakShifting { id: number; planName: string; planDate: string; status: number }
 export interface PeakShiftingConfig { id: number; configName: string; peakHours: string; offPeakHours: string }

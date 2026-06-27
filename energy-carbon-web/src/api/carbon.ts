@@ -54,7 +54,7 @@ export const getCbamDetail = (id: number) => request.get(`/carbon/cbam/${id}`)
 export const createCbam = (data: any) => request.post('/carbon/cbam', data)
 export const updateCbam = (id: number, data: any) => request.put(`/carbon/cbam/${id}`, data)
 export const deleteCbam = (id: number) => request.delete(`/carbon/cbam/${id}`)
-export const submitCbam = (id: number) => request.post(`/carbon/cbam/${id}/submit`)
+export const submitCbam = (id: number) => request.put(`/carbon/cbam/${id}/submit`)
 
 // --- 旧API兼容（碳核算） ---
 export const getAccountingList = (params?: any) => request.get('/carbon/accounting/list', { params })
