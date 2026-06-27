@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -278,6 +279,23 @@ public class CarbonAccountingController {
     }
 
     /**
+     * 获取所有核算的排放报告汇总列表
+     *
+     * @return 排放报告汇总列表
+     */
+    @ApiOperation("获取所有排放报告汇总")
+    @GetMapping("/report")
+    public Result<List<EmissionReportDTO>> getReportAll() {
+        List<CarbonAccounting> accountings = accountingService.list();
+        List<EmissionReportDTO> reports = new ArrayList<>();
+        for (CarbonAccounting accounting : accountings) {
+            EmissionReportDTO report = buildEmissionReport(accounting);
+            reports.add(report);
+        }
+        return Result.ok(reports);
+    }
+
+    /**
      * 获取排放报告数据
      * 按范围一、范围二、范围三分类统计排放量及占比
      *
@@ -291,9 +309,20 @@ public class CarbonAccountingController {
         if (accounting == null) {
             return Result.error("核算记录不存在");
         }
+        EmissionReportDTO report = buildEmissionReport(accounting);
+        return Result.ok(report);
+    }
+
+    /**
+     * 构建排放报告DTO
+     *
+     * @param accounting 核算实体
+     * @return 排放报告DTO
+     */
+    private EmissionReportDTO buildEmissionReport(CarbonAccounting accounting) {
         List<CarbonAccountingDetail> details = detailService.list(
                 new LambdaQueryWrapper<CarbonAccountingDetail>()
-                        .eq(CarbonAccountingDetail::getAccountingId, id));
+                        .eq(CarbonAccountingDetail::getAccountingId, accounting.getId()));
 
         EmissionReportDTO report = new EmissionReportDTO();
         report.setAccountingId(accounting.getId());
@@ -331,7 +360,7 @@ public class CarbonAccountingController {
             report.setScope3Percent(BigDecimal.ZERO);
         }
 
-        return Result.ok(report);
+        return report;
     }
 
     /**

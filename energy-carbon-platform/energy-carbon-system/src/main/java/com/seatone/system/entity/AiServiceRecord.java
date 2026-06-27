@@ -1,42 +1,44 @@
 package com.seatone.system.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.seatone.common.base.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("ai_service_record")
-public class AiServiceRecord {
+public class AiServiceRecord extends BaseEntity {
 
-    private Long id;
-
+    /**
+     * 服务名称
+     */
     private String serviceName;
 
-    private String serviceType;
+    /**
+     * 联系人姓名
+     */
+    private String contactName;
 
-    private String applicant;
+    /**
+     * 联系人电话
+     */
+    private String contactPhone;
 
-    private String contact;
+    /**
+     * 预约日期
+     */
+    private LocalDate appointmentDate;
 
-    private String description;
-
-    private LocalDate expectedDate;
-
+    /**
+     * 状态（如：PENDING-待处理，CONFIRMED-已确认，CANCELLED-已取消）
+     */
     private String status;
 
-    private String result;
-
+    /**
+     * 备注
+     */
     private String remark;
-
-    private LocalDateTime createTime;
-
-    private LocalDateTime updateTime;
-
-    private Long createBy;
-
-    private Long updateBy;
-
-    private Integer deleted;
 }

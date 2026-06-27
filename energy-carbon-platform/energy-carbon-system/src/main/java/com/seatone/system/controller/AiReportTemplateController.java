@@ -5,12 +5,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.seatone.common.result.PageResult;
 import com.seatone.common.result.Result;
 import com.seatone.system.entity.AiReportTemplate;
-import com.seatone.system.mapper.AiReportTemplateMapper;
+import com.seatone.system.service.AiReportTemplateService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Api(tags = "报告模板管理")
 @RestController
@@ -18,7 +20,14 @@ import org.springframework.web.bind.annotation.*;
 public class AiReportTemplateController {
 
     @Autowired
-    private AiReportTemplateMapper aiReportTemplateMapper;
+    private AiReportTemplateService aiReportTemplateService;
+
+    @ApiOperation("查询所有报告模板（不分页）")
+    @GetMapping("/all")
+    public Result<List<AiReportTemplate>> all() {
+        List<AiReportTemplate> list = aiReportTemplateService.list();
+        return Result.ok(list);
+    }
 
     @ApiOperation("分页查询列表")
     @GetMapping("/list")
@@ -37,14 +46,14 @@ public class AiReportTemplateController {
             wrapper.eq(AiReportTemplate::getStatus, status);
         }
         wrapper.orderByDesc(AiReportTemplate::getCreateTime);
-        Page<AiReportTemplate> resultPage = aiReportTemplateMapper.selectPage(page, wrapper);
+        Page<AiReportTemplate> resultPage = aiReportTemplateService.page(page, wrapper);
         return Result.ok(PageResult.of(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal(), resultPage.getRecords()));
     }
 
     @ApiOperation("详情")
     @GetMapping("/{id}")
     public Result<AiReportTemplate> detail(@ApiParam("ID") @PathVariable Long id) {
-        AiReportTemplate entity = aiReportTemplateMapper.selectById(id);
+        AiReportTemplate entity = aiReportTemplateService.getById(id);
         if (entity == null) {
             return Result.error("记录不存在");
         }
@@ -54,7 +63,7 @@ public class AiReportTemplateController {
     @ApiOperation("新增")
     @PostMapping
     public Result<Void> add(@RequestBody AiReportTemplate entity) {
-        aiReportTemplateMapper.insert(entity);
+        aiReportTemplateService.save(entity);
         return Result.ok();
     }
 
@@ -62,14 +71,14 @@ public class AiReportTemplateController {
     @PutMapping("/{id}")
     public Result<Void> update(@ApiParam("ID") @PathVariable Long id, @RequestBody AiReportTemplate entity) {
         entity.setId(id);
-        aiReportTemplateMapper.updateById(entity);
+        aiReportTemplateService.updateById(entity);
         return Result.ok();
     }
 
     @ApiOperation("删除")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@ApiParam("ID") @PathVariable Long id) {
-        aiReportTemplateMapper.deleteById(id);
+        aiReportTemplateService.removeById(id);
         return Result.ok();
     }
 }
