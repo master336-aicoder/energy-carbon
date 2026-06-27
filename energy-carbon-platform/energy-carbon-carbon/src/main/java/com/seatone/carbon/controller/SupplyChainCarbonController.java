@@ -14,6 +14,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,7 +69,7 @@ public class SupplyChainCarbonController {
 
     @ApiOperation("新增供应链碳足迹")
     @PostMapping
-    public Result<Void> add(@RequestBody SupplyChainCarbonDTO dto) {
+    public Result<Void> add(@RequestBody @Valid SupplyChainCarbonDTO dto) {
         SupplyChainCarbon entity = new SupplyChainCarbon();
         BeanUtils.copyProperties(dto, entity);
         entity.setId(null);

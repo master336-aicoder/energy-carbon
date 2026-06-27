@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <el-card>
+    <el-card style="width: 100%">
       <template #header>
         <div class="card-header">
           <span class="card-title">报告模板</span>
@@ -148,7 +148,7 @@ onMounted(fetchList)
 </script>
 
 <style scoped lang="scss">
-.page-container { padding: 10px; }
+.page-container { padding: 10px; width: 100%; box-sizing: border-box; }
 .search-form { margin-bottom: 20px; }
 .pagination { margin-top: 20px; justify-content: flex-end; }
 </style>

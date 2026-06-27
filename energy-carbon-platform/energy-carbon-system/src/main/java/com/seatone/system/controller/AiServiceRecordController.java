@@ -12,6 +12,8 @@ import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @Api(tags = "AI服务预约管理")
 @RestController
 @RequestMapping("/ai/service-record")
@@ -22,7 +24,7 @@ public class AiServiceRecordController {
 
     @ApiOperation("新增服务预约记录")
     @PostMapping
-    public Result<Void> add(@RequestBody AiServiceRecord entity) {
+    public Result<Void> add(@RequestBody @Valid AiServiceRecord entity) {
         if (entity.getStatus() == null) {
             entity.setStatus("PENDING");
         }

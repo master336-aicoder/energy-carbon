@@ -14,6 +14,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,7 +65,7 @@ public class CarbonVerificationController {
 
     @ApiOperation("新增碳核查")
     @PostMapping
-    public Result<Void> add(@RequestBody CarbonVerificationDTO dto) {
+    public Result<Void> add(@RequestBody @Valid CarbonVerificationDTO dto) {
         CarbonVerification entity = new CarbonVerification();
         BeanUtils.copyProperties(dto, entity);
         entity.setId(null);

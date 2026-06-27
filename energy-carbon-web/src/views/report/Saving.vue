@@ -136,7 +136,7 @@ function renderChart(data: any[]) {
 </script>
 
 <style scoped>
-.report-saving { padding: 16px; }
+.report-saving { padding: 16px; width: 100%; box-sizing: border-box; }
 .header-row { display: flex; justify-content: space-between; align-items: center; }
 .title { font-size: 16px; font-weight: 600; }
 .search-form { margin-bottom: 10px; }

@@ -7,8 +7,8 @@
         </div>
       </template>
       <el-form :inline="true" class="search-form">
-        <el-form-item label="公告标题">
-          <el-input v-model="searchForm.noticeTitle" placeholder="请输入公告标题" clearable />
+        <el-form-item label="公告ID">
+          <el-input v-model="searchForm.noticeId" placeholder="请输入公告ID" clearable />
         </el-form-item>
         <el-form-item label="下发类型">
           <el-select v-model="searchForm.dispatchType" placeholder="请选择" clearable style="width: 140px">
@@ -26,7 +26,7 @@
 
       <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column type="index" label="序号" width="60" />
-        <el-table-column prop="noticeTitle" label="公告标题" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="noticeId" label="公告ID" min-width="200" show-overflow-tooltip />
         <el-table-column prop="dispatchType" label="下发类型" width="100">
           <template #default="{ row }">
             <el-tag :type="dispatchTypeMap[row.dispatchType]?.type">{{ dispatchTypeMap[row.dispatchType]?.label }}</el-tag>
@@ -64,7 +64,7 @@ const dispatchTypeMap: Record<number, { label: string; type: string }> = {
 
 const loading = ref(false)
 const tableData = ref([])
-const searchForm = reactive({ noticeTitle: '', dispatchType: undefined as number | undefined })
+const searchForm = reactive({ noticeId: undefined as number | undefined, dispatchType: undefined as number | undefined })
 const pagination = reactive({ pageNum: 1, pageSize: 10, total: 0 })
 
 async function fetchList() {
@@ -72,7 +72,7 @@ async function fetchList() {
   try {
     const res = await getDispatchList({
       current: pagination.pageNum, size: pagination.pageSize,
-      noticeTitle: searchForm.noticeTitle, dispatchType: searchForm.dispatchType,
+      noticeId: searchForm.noticeId, dispatchType: searchForm.dispatchType,
     })
     tableData.value = res.data?.records || []
     pagination.total = res.data?.total || 0
@@ -81,7 +81,7 @@ async function fetchList() {
 }
 
 function handleSearch() { pagination.pageNum = 1; fetchList() }
-function handleReset() { searchForm.noticeTitle = ''; searchForm.dispatchType = undefined; handleSearch() }
+function handleReset() { searchForm.noticeId = undefined; searchForm.dispatchType = undefined; handleSearch() }
 function handleSizeChange(val: number) { pagination.pageSize = val; fetchList() }
 function handleCurrentChange(val: number) { pagination.pageNum = val; fetchList() }
 

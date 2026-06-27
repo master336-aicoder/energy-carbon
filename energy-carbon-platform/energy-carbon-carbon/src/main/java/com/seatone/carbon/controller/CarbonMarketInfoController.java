@@ -14,6 +14,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,7 +61,7 @@ public class CarbonMarketInfoController {
 
     @ApiOperation("发布市场信息")
     @PostMapping
-    public Result<Void> add(@RequestBody CarbonMarketInfoDTO dto) {
+    public Result<Void> add(@RequestBody @Valid CarbonMarketInfoDTO dto) {
         CarbonMarketInfo entity = new CarbonMarketInfo();
         BeanUtils.copyProperties(dto, entity);
         entity.setId(null);

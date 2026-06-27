@@ -14,6 +14,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +70,7 @@ public class IotDeviceController {
 
     @ApiOperation("新增设备")
     @PostMapping
-    public Result<Void> add(@RequestBody IotDeviceDTO dto) {
+    public Result<Void> add(@RequestBody @Valid IotDeviceDTO dto) {
         IotDevice device = new IotDevice();
         BeanUtils.copyProperties(dto, device);
         device.setId(null);

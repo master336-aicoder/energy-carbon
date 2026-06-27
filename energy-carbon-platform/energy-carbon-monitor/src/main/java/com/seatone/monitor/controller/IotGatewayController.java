@@ -14,6 +14,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,7 +73,7 @@ public class IotGatewayController {
 
     @ApiOperation("新增网关")
     @PostMapping
-    public Result<Void> add(@RequestBody IotGatewayDTO dto) {
+    public Result<Void> add(@RequestBody @Valid IotGatewayDTO dto) {
         IotGateway gateway = new IotGateway();
         BeanUtils.copyProperties(dto, gateway);
         gateway.setId(null);

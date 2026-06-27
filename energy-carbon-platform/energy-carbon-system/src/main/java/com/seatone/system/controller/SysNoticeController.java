@@ -16,6 +16,8 @@ import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 import java.util.List;
 
 /**
@@ -90,7 +92,7 @@ public class SysNoticeController {
      */
     @ApiOperation("新增公告")
     @PostMapping
-    public Result<Void> add(@RequestBody SysNotice notice) {
+    public Result<Void> add(@RequestBody @Valid SysNotice notice) {
         noticeService.save(notice);
         return Result.ok();
     }

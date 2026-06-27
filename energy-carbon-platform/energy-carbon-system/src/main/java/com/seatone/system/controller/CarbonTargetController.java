@@ -12,6 +12,8 @@ import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @Api(tags = "双碳目标管理")
 @RestController
 @RequestMapping("/carbon/target")
@@ -53,7 +55,7 @@ public class CarbonTargetController {
 
     @ApiOperation("新增")
     @PostMapping
-    public Result<Void> add(@RequestBody CarbonTarget entity) {
+    public Result<Void> add(@RequestBody @Valid CarbonTarget entity) {
         carbonTargetMapper.insert(entity);
         return Result.ok();
     }

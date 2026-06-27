@@ -32,9 +32,9 @@ export function getRealtimeData(params: RealtimeParams) {
   return request.get<Result<RealTimeData>>('/monitor/realtime/list', { params })
 }
 
-/** 获取历史数据 */
+/** 获取历史数据（后端返回分页结构） */
 export function getHistoryData(params: HistoryParams) {
-  return request.get<Result<RealTimeData[]>>('/monitor/history/list', { params })
+  return request.get<Result<any>>('/monitor/history/list', { params })
 }
 
 /** 获取设备树 */

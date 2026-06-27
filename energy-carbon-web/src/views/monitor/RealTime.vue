@@ -322,7 +322,15 @@ async function fetchHistoryData(meterId: number) {
       endTime,
       interval: '1m'
     })
-    updateChart(res.data)
+    const pageData = res.data as any
+    const records = pageData?.records || []
+    // 后端返回 dataTime / dataValue，映射为前端需要的 timestamp / value
+    const mapped = records.map((item: any) => ({
+      timestamp: item.dataTime || item.timestamp,
+      value: item.dataValue != null ? Number(item.dataValue) : (item.value || 0),
+      unit: item.unit
+    }))
+    updateChart(mapped)
   } catch {
     ElMessage.error('获取历史数据失败')
   }

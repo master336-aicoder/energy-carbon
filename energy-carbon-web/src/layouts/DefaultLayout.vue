@@ -145,7 +145,7 @@ async function loadMessages() {
 
 function handleNoticeCommand(command: string | number) {
   if (command === 'more') {
-    router.push('/alarm/my-message')
+    router.push('/system/my-message')
   } else if (typeof command === 'string' && command.startsWith('view:')) {
     const id = parseInt(command.replace('view:', ''))
     noticeDialogId.value = id

@@ -17,6 +17,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -77,7 +79,7 @@ public class CbamDeclarationController {
 
     @ApiOperation("新增CBAM申报")
     @PostMapping
-    public Result<Void> add(@RequestBody CbamDeclarationDTO dto) {
+    public Result<Void> add(@RequestBody @Valid CbamDeclarationDTO dto) {
         CbamDeclaration entity = new CbamDeclaration();
         BeanUtils.copyProperties(dto, entity);
         entity.setId(null);

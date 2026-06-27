@@ -8,8 +8,8 @@
         </div>
       </template>
       <el-form :inline="true" class="search-form">
-        <el-form-item label="基准名称">
-          <el-input v-model="searchForm.baselineName" placeholder="请输入基准名称" clearable />
+        <el-form-item label="基准类型">
+          <el-input v-model="searchForm.baselineType" placeholder="请输入基准类型" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
@@ -19,16 +19,12 @@
 
       <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column type="index" label="序号" width="60" />
-        <el-table-column prop="baselineName" label="基准名称" width="160" />
-        <el-table-column prop="baselineYear" label="基准年份" width="120" />
-        <el-table-column prop="energyType" label="能源类型" width="120" />
+        <el-table-column prop="energyUnitId" label="用能单元ID" width="120" />
+        <el-table-column prop="startDate" label="开始日期" width="140" />
+        <el-table-column prop="endDate" label="结束日期" width="140" />
         <el-table-column prop="baselineValue" label="基准值" width="120" />
-        <el-table-column prop="unit" label="单位" width="100" />
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '正常' : '停用' }}</el-tag>
-          </template>
-        </el-table-column>
+        <el-table-column prop="baselineType" label="基准类型" width="140" show-overflow-tooltip />
+        <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
@@ -51,26 +47,23 @@
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
       <el-form :model="form" label-width="100px">
-        <el-form-item label="基准名称">
-          <el-input v-model="form.baselineName" placeholder="请输入基准名称" />
+        <el-form-item label="用能单元ID">
+          <el-input-number v-model="form.energyUnitId" :min="1" />
         </el-form-item>
-        <el-form-item label="基准年份">
-          <el-input-number v-model="form.baselineYear" :min="2000" :max="2100" />
+        <el-form-item label="开始日期">
+          <el-date-picker v-model="form.startDate" type="date" placeholder="选择开始日期" value-format="YYYY-MM-DD" />
         </el-form-item>
-        <el-form-item label="能源类型">
-          <el-input v-model="form.energyType" placeholder="请输入能源类型" />
+        <el-form-item label="结束日期">
+          <el-date-picker v-model="form.endDate" type="date" placeholder="选择结束日期" value-format="YYYY-MM-DD" />
         </el-form-item>
         <el-form-item label="基准值">
           <el-input-number v-model="form.baselineValue" :precision="2" />
         </el-form-item>
-        <el-form-item label="单位">
-          <el-input v-model="form.unit" placeholder="请输入单位" />
+        <el-form-item label="基准类型">
+          <el-input v-model="form.baselineType" placeholder="请输入基准类型" />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-radio-group v-model="form.status">
-            <el-radio :label="1">正常</el-radio>
-            <el-radio :label="0">停用</el-radio>
-          </el-radio-group>
+        <el-form-item label="备注">
+          <el-input v-model="form.remark" type="textarea" :rows="2" placeholder="请输入备注" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -89,19 +82,19 @@ import { getBaselineList, createBaseline, updateBaseline, deleteBaseline } from 
 const loading = ref(false)
 const tableData = ref([])
 
-const searchForm = reactive({ baselineName: '' })
+const searchForm = reactive({ baselineType: '' })
 const pagination = reactive({ pageNum: 1, pageSize: 10, total: 0 })
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('新增基准')
 const form = reactive({
   id: undefined as number | undefined,
-  baselineName: '',
-  baselineYear: new Date().getFullYear(),
-  energyType: '',
+  energyUnitId: undefined as number | undefined,
+  startDate: '',
+  endDate: '',
   baselineValue: 0,
-  unit: '',
-  status: 1
+  baselineType: '',
+  remark: ''
 })
 
 async function fetchList() {
@@ -110,7 +103,7 @@ async function fetchList() {
     const res: any = await getBaselineList({
       current: pagination.pageNum,
       size: pagination.pageSize,
-      baselineName: searchForm.baselineName,
+      baselineType: searchForm.baselineType,
     })
     const data = res.data || {}
     tableData.value = data.records || []
@@ -123,13 +116,13 @@ async function fetchList() {
 }
 
 function handleSearch() { pagination.pageNum = 1; fetchList() }
-function handleReset() { searchForm.baselineName = ''; handleSearch() }
+function handleReset() { searchForm.baselineType = ''; handleSearch() }
 function handleSizeChange(val: number) { pagination.pageSize = val; fetchList() }
 function handleCurrentChange(val: number) { pagination.pageNum = val; fetchList() }
 
 function handleAdd() {
   dialogTitle.value = '新增基准'
-  Object.assign(form, { id: undefined, baselineName: '', baselineYear: new Date().getFullYear(), energyType: '', baselineValue: 0, unit: '', status: 1 })
+  Object.assign(form, { id: undefined, energyUnitId: undefined, startDate: '', endDate: '', baselineValue: 0, baselineType: '', remark: '' })
   dialogVisible.value = true
 }
 

@@ -90,6 +90,7 @@
         :data="tableData"
         v-loading="loading"
         border stripe
+        style="width: 100%"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="50" />

@@ -4,16 +4,20 @@
       <template #header>
         <div class="card-header">
           <span class="card-title">碳资产市场</span>
-          <el-button type="primary" @click="handleAdd">新增交易</el-button>
+          <el-button type="primary" @click="handleAdd">新增信息</el-button>
         </div>
       </template>
       <el-form :inline="true" class="search-form">
-        <el-form-item label="交易类型">
-          <el-select v-model="searchForm.tradeType" placeholder="请选择交易类型" clearable>
-            <el-option label="碳配额" value="quota" />
-            <el-option label="CCER" value="ccer" />
-            <el-option label="绿证" value="green" />
+        <el-form-item label="信息分类">
+          <el-select v-model="searchForm.infoCategory" placeholder="请选择信息分类" clearable>
+            <el-option label="政策" value="POLICY" />
+            <el-option label="市场" value="MARKET" />
+            <el-option label="价格" value="PRICE" />
+            <el-option label="预测" value="FORECAST" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="信息标题">
+          <el-input v-model="searchForm.infoTitle" placeholder="请输入信息标题" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
@@ -23,13 +27,17 @@
 
       <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column type="index" label="序号" width="60" />
-        <el-table-column prop="tradeType" label="交易类型" width="120" />
-        <el-table-column prop="tradeDate" label="交易日期" width="140" />
-        <el-table-column prop="tradeVolume" label="交易量" width="120" />
-        <el-table-column prop="tradePrice" label="交易价格" width="120" />
-        <el-table-column prop="totalAmount" label="交易总额" width="140" />
-        <el-table-column prop="buyer" label="买方" width="140" />
-        <el-table-column prop="seller" label="卖方" width="140" />
+        <el-table-column prop="infoTitle" label="信息标题" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="infoCategory" label="信息分类" width="120">
+          <template #default="{ row }">
+            <el-tag :type="infoCategoryMap[row.infoCategory]?.type">
+              {{ infoCategoryMap[row.infoCategory]?.label || row.infoCategory }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="content" label="内容" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="source" label="来源" width="140" show-overflow-tooltip />
+        <el-table-column prop="publishDate" label="发布日期" width="140" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '正常' : '停用' }}</el-tag>
@@ -57,27 +65,25 @@
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
       <el-form :model="form" label-width="100px">
-        <el-form-item label="交易类型">
-          <el-select v-model="form.tradeType" placeholder="请选择交易类型">
-            <el-option label="碳配额" value="quota" />
-            <el-option label="CCER" value="ccer" />
-            <el-option label="绿证" value="green" />
+        <el-form-item label="信息标题">
+          <el-input v-model="form.infoTitle" placeholder="请输入信息标题" />
+        </el-form-item>
+        <el-form-item label="信息分类">
+          <el-select v-model="form.infoCategory" placeholder="请选择信息分类">
+            <el-option label="政策" value="POLICY" />
+            <el-option label="市场" value="MARKET" />
+            <el-option label="价格" value="PRICE" />
+            <el-option label="预测" value="FORECAST" />
           </el-select>
         </el-form-item>
-        <el-form-item label="交易日期">
-          <el-date-picker v-model="form.tradeDate" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" />
+        <el-form-item label="内容">
+          <el-input v-model="form.content" type="textarea" :rows="3" placeholder="请输入内容" />
         </el-form-item>
-        <el-form-item label="交易量">
-          <el-input-number v-model="form.tradeVolume" :precision="2" />
+        <el-form-item label="来源">
+          <el-input v-model="form.source" placeholder="请输入来源" />
         </el-form-item>
-        <el-form-item label="交易价格">
-          <el-input-number v-model="form.tradePrice" :precision="2" />
-        </el-form-item>
-        <el-form-item label="买方">
-          <el-input v-model="form.buyer" placeholder="请输入买方" />
-        </el-form-item>
-        <el-form-item label="卖方">
-          <el-input v-model="form.seller" placeholder="请输入卖方" />
+        <el-form-item label="发布日期">
+          <el-date-picker v-model="form.publishDate" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" />
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
@@ -99,22 +105,28 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getMarketList, createMarket, updateMarket, deleteMarket } from '@/api/carbon'
 
+const infoCategoryMap: Record<string, { label: string; type: string }> = {
+  POLICY: { label: '政策', type: 'primary' },
+  MARKET: { label: '市场', type: 'success' },
+  PRICE: { label: '价格', type: 'warning' },
+  FORECAST: { label: '预测', type: 'info' },
+}
+
 const loading = ref(false)
 const tableData = ref([])
 
-const searchForm = reactive({ tradeType: '' })
+const searchForm = reactive({ infoCategory: '', infoTitle: '' })
 const pagination = reactive({ pageNum: 1, pageSize: 10, total: 0 })
 
 const dialogVisible = ref(false)
-const dialogTitle = ref('新增交易')
+const dialogTitle = ref('新增信息')
 const form = reactive({
   id: undefined as number | undefined,
-  tradeType: '',
-  tradeDate: '',
-  tradeVolume: 0,
-  tradePrice: 0,
-  buyer: '',
-  seller: '',
+  infoTitle: '',
+  infoCategory: '',
+  content: '',
+  source: '',
+  publishDate: '',
   status: 1
 })
 
@@ -124,7 +136,8 @@ async function fetchList() {
     const res: any = await getMarketList({
       current: pagination.pageNum,
       size: pagination.pageSize,
-      tradeType: searchForm.tradeType,
+      infoCategory: searchForm.infoCategory,
+      infoTitle: searchForm.infoTitle,
     })
     const data = res.data || {}
     tableData.value = data.records || []
@@ -137,18 +150,18 @@ async function fetchList() {
 }
 
 function handleSearch() { pagination.pageNum = 1; fetchList() }
-function handleReset() { searchForm.tradeType = ''; handleSearch() }
+function handleReset() { searchForm.infoCategory = ''; searchForm.infoTitle = ''; handleSearch() }
 function handleSizeChange(val: number) { pagination.pageSize = val; fetchList() }
 function handleCurrentChange(val: number) { pagination.pageNum = val; fetchList() }
 
 function handleAdd() {
-  dialogTitle.value = '新增交易'
-  Object.assign(form, { id: undefined, tradeType: '', tradeDate: '', tradeVolume: 0, tradePrice: 0, buyer: '', seller: '', status: 1 })
+  dialogTitle.value = '新增信息'
+  Object.assign(form, { id: undefined, infoTitle: '', infoCategory: '', content: '', source: '', publishDate: '', status: 1 })
   dialogVisible.value = true
 }
 
 function handleEdit(row: any) {
-  dialogTitle.value = '编辑交易'
+  dialogTitle.value = '编辑信息'
   Object.assign(form, row)
   dialogVisible.value = true
 }
