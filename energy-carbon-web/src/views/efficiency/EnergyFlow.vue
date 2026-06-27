@@ -48,48 +48,26 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import echarts from '@/utils/echarts'
 import { ElMessage } from 'element-plus'
+import request from '@/utils/request'
 
-const unitTree = ref([{ id: 1, deptName: '一分厂' }, { id: 2, deptName: '二分厂' }, { id: 3, deptName: '三分厂' }])
-const queryParams = ref({ energyUnitId: 1 as number | undefined, startDate: undefined as string | undefined, endDate: undefined as string | undefined })
+const unitTree = ref<any[]>([])
+const queryParams = ref({ energyUnitId: undefined as number | undefined, startDate: undefined as string | undefined, endDate: undefined as string | undefined })
 const dateRange = ref<string[]>([])
 const loading = ref(false)
 const tableData = ref<Array<Record<string, unknown>>>([])
 const sankeyChartRef = ref<HTMLDivElement>()
 let sankeyChart: echarts.ECharts | null = null
 
-// 模拟能流数据（桑基图节点和连接）
-const sankeyData = {
-  nodes: [
-    { name: '外购电力' }, { name: '外购天然气' }, { name: '外购蒸汽' }, { name: '外购水' },
-    { name: '配电系统' }, { name: '锅炉系统' }, { name: '换热系统' },
-    { name: '生产线A' }, { name: '生产线B' }, { name: '照明系统' }, { name: '空调系统' },
-    { name: '产品A' }, { name: '产品B' }, { name: '损耗' }
-  ],
-  links: [
-    { source: '外购电力', target: '配电系统', value: 8000 },
-    { source: '外购天然气', target: '锅炉系统', value: 5000 },
-    { source: '外购蒸汽', target: '换热系统', value: 3000 },
-    { source: '外购水', target: '锅炉系统', value: 1000 },
-    { source: '配电系统', target: '生产线A', value: 3500 },
-    { source: '配电系统', target: '生产线B', value: 2500 },
-    { source: '配电系统', target: '照明系统', value: 800 },
-    { source: '配电系统', target: '空调系统', value: 1200 },
-    { source: '锅炉系统', target: '生产线A', value: 3000 },
-    { source: '锅炉系统', target: '生产线B', value: 2000 },
-    { source: '锅炉系统', target: '损耗', value: 1000 },
-    { source: '换热系统', target: '生产线A', value: 1500 },
-    { source: '换热系统', target: '生产线B', value: 1000 },
-    { source: '换热系统', target: '损耗', value: 500 },
-    { source: '生产线A', target: '产品A', value: 6000 },
-    { source: '生产线A', target: '损耗', value: 2000 },
-    { source: '生产线B', target: '产品B', value: 4000 },
-    { source: '生产线B', target: '损耗', value: 1500 },
-    { source: '照明系统', target: '损耗', value: 800 },
-    { source: '空调系统', target: '损耗', value: 1200 }
-  ]
+const sankeyData = ref({ nodes: [] as any[], links: [] as any[] })
+
+async function loadDeptTree() {
+  try {
+    const res = await request.get('/system/dept/tree')
+    unitTree.value = res.data || []
+  } catch (e) { console.error(e) }
 }
 
-function handleSearch() {
+async function handleSearch() {
   if (dateRange.value && dateRange.value.length === 2) {
     queryParams.value.startDate = dateRange.value[0]
     queryParams.value.endDate = dateRange.value[1]
@@ -97,13 +75,24 @@ function handleSearch() {
     queryParams.value.startDate = undefined
     queryParams.value.endDate = undefined
   }
-  initSankeyChart()
-  buildTableData()
+  loading.value = true
+  try {
+    const res = await request.get('/efficiency/energy-flow', { params: queryParams.value })
+    const data = res.data || {}
+    sankeyData.value.nodes = data.nodes || []
+    sankeyData.value.links = data.links || []
+    initSankeyChart()
+    buildTableData()
+  } catch (e) {
+    ElMessage.error('加载能流数据失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 function handleReset() {
   dateRange.value = []
-  queryParams.value = { energyUnitId: 1, startDate: undefined, endDate: undefined }
+  queryParams.value = { energyUnitId: undefined, startDate: undefined, endDate: undefined }
   handleSearch()
 }
 
@@ -112,7 +101,7 @@ function initSankeyChart() {
   if (!sankeyChart) sankeyChart = echarts.init(sankeyChartRef.value)
 
   // 计算总能量
-  const totalValue = sankeyData.links.filter(l =>
+  const totalValue = sankeyData.value.links.filter(l =>
     l.source.startsWith('外购')
   ).reduce((s, l) => s + l.value, 0)
 
@@ -136,13 +125,13 @@ function initSankeyChart() {
       nodeWidth: 20,
       nodeGap: 12,
       draggable: true,
-      data: sankeyData.nodes.map(n => ({
+      data: sankeyData.value.nodes.map(n => ({
         ...n,
         itemStyle: {
           color: getNodeColor(n.name)
         }
       })),
-      links: sankeyData.links.map(l => ({
+      links: sankeyData.value.links.map(l => ({
         ...l,
         lineStyle: {
           color: 'source',
@@ -175,11 +164,11 @@ function getNodeColor(name: string): string {
 }
 
 function buildTableData() {
-  const totalValue = sankeyData.links.filter(l =>
+  const totalValue = sankeyData.value.links.filter(l =>
     l.source.startsWith('外购')
   ).reduce((s, l) => s + l.value, 0)
 
-  tableData.value = sankeyData.links.map(l => ({
+  tableData.value = sankeyData.value.links.map(l => ({
     source: l.source,
     target: l.target,
     value: l.value,
@@ -193,8 +182,8 @@ function handleExport() {
 }
 
 onMounted(() => {
-  initSankeyChart()
-  buildTableData()
+  loadDeptTree()
+  handleSearch()
   window.addEventListener('resize', () => sankeyChart?.resize())
 })
 onUnmounted(() => { sankeyChart?.dispose() })

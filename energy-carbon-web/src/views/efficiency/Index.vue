@@ -87,8 +87,23 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import echarts from '@/utils/echarts'
 import { getEfficiencyTrend, getEfficiencyIntensity, getBenchmarkAnalysis } from '@/api/analysis'
+import { getDeptTree } from '@/api/dept'
 
-const unitTree = ref([{ id: 1, deptName: '一分厂' }, { id: 2, deptName: '二分厂' }, { id: 3, deptName: '三分厂' }])
+const unitTree = ref<any[]>([])
+
+async function loadUnitTree() {
+  try {
+    const res = await getDeptTree()
+    const depts = res.data || []
+    unitTree.value = depts.map((d: any) => ({
+      id: d.deptId || d.id,
+      deptName: d.deptName || d.name,
+      children: d.children?.map((c: any) => ({ id: c.deptId || c.id, deptName: c.deptName || c.name })) || []
+    }))
+  } catch {
+    unitTree.value = []
+  }
+}
 const queryParams = ref({ energyUnitId: 1 as number | undefined, startDate: undefined as string | undefined, endDate: undefined as string | undefined })
 const dateRange = ref<string[]>([])
 const indicatorType = ref('intensity')
@@ -206,6 +221,7 @@ function renderTrendChart(dates: string[], intensity: number[]) {
 }
 
 onMounted(() => {
+  loadUnitTree()
   fetchIntensity()
   fetchTrend()
   fetchBenchmark()

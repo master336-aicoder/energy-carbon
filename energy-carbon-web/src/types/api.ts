@@ -167,3 +167,72 @@ export namespace AuthApi {
     captchaImage: string
   }> {}
 }
+
+/** 操作日志 API 类型 */
+export namespace LogApi {
+  export interface LogItem {
+    id: number
+    title?: string
+    businessType?: number
+    requestMethod?: string
+    operName?: string
+    operUrl?: string
+    operIp?: string
+    operLocation?: string
+    operParam?: string
+    status?: number
+    errorMsg?: string
+    operTime?: string
+    costTime?: number
+    browser?: string
+    os?: string
+    referer?: string
+    userAgent?: string
+  }
+
+  export interface ListParams extends PageParams {
+    operName?: string
+    title?: string
+    businessType?: number
+    status?: number
+    startTime?: string
+    endTime?: string
+  }
+
+  export type ListResult = Result<PageResult<LogItem>>
+}
+
+/** 通知公告 API 类型 */
+export namespace NoticeApi {
+  export interface NoticeItem {
+    id: number
+    noticeTitle: string
+    noticeType?: number
+    noticeContent?: string
+    status: number
+    remark?: string
+    createTime?: string
+    updateTime?: string
+  }
+
+  export interface ListParams extends PageParams {
+    noticeTitle?: string
+    noticeType?: number
+    status?: number
+  }
+
+  export type ListResult = Result<PageResult<NoticeItem>>
+  export type DetailResult = Result<NoticeItem>
+  export type SaveResult = Result<NoticeItem>
+  export type DeleteResult = Result<null>
+  export type UnreadListResult = Result<NoticeItem[]>
+
+  export interface SaveParams {
+    id?: number
+    noticeTitle: string
+    noticeType?: number
+    noticeContent?: string
+    status: number
+    remark?: string
+  }
+}

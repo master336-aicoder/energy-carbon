@@ -7,10 +7,10 @@
         <img src="/favicon.svg" alt="logo" v-else style="width: 32px;">
       </div>
       <el-menu
-        :default-active="$route.path"
+        :default-active="activeMenu"
         :collapse="appStore.sidebarCollapsed"
         :collapse-transition="false"
-        router
+        :router="true"
         background-color="#1a1a2e"
         text-color="#b8c5d6"
         active-text-color="#0d9488"
@@ -18,19 +18,20 @@
         <template v-for="route in menuRoutes" :key="route.path">
           <el-sub-menu v-if="route.children && route.children.length > 1" :index="route.path">
             <template #title>
-              <el-icon><component :is="route.meta?.icon" /></el-icon>
+              <DynamicIcon :name="route.meta?.icon" />
               <span>{{ route.meta?.title }}</span>
             </template>
             <el-menu-item
               v-for="child in route.children"
               :key="child.path"
-              :index="route.path + '/' + child.path"
+              :index="child.path"
             >
-              {{ child.meta?.title }}
+              <DynamicIcon v-if="child.meta?.icon" :name="child.meta.icon" />
+              <span>{{ child.meta?.title }}</span>
             </el-menu-item>
           </el-sub-menu>
-          <el-menu-item v-else :index="route.children?.[0]?.path?.startsWith('/') ? route.children[0].path : (route.path + (route.children?.[0]?.path ? '/' + route.children[0].path : ''))">
-            <el-icon><component :is="route.meta?.icon || route.children?.[0]?.meta?.icon" /></el-icon>
+          <el-menu-item v-else :index="route.path">
+            <DynamicIcon :name="route.meta?.icon || route.children?.[0]?.meta?.icon" />
             <template #title>{{ route.meta?.title || route.children?.[0]?.meta?.title }}</template>
           </el-menu-item>
         </template>
@@ -46,6 +47,35 @@
           <breadcrumb />
         </div>
         <div class="header-right">
+          <el-dropdown @command="handleNoticeCommand" trigger="click" class="notice-dropdown">
+            <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="notice-badge">
+              <el-icon :size="20" class="notice-icon"><Bell /></el-icon>
+            </el-badge>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <div class="notice-header">我的消息</div>
+                <el-dropdown-item v-for="msg in recentMessages" :key="msg.id" :command="'view:' + msg.id">
+                  <div class="notice-item">
+                    <div class="notice-title">{{ msg.title }}</div>
+                    <div class="notice-time">{{ msg.createTime }}</div>
+                  </div>
+                </el-dropdown-item>
+                <el-dropdown-item v-if="recentMessages.length === 0" disabled>
+                  <div class="notice-item">暂无未读消息</div>
+                </el-dropdown-item>
+                <el-dropdown-item divided command="more">
+                  <div class="notice-more">查看更多</div>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <NoticeDetailDialog
+            v-model="noticeDialogVisible"
+            :itemId="noticeDialogId"
+            mode="message"
+            :messageList="recentMessages"
+            @read="handleMessageRead"
+          />
           <el-dropdown @command="handleCommand">
             <span class="user-info">
               <el-avatar :size="32" :src="userStore.userInfo?.avatar" v-if="userStore.userInfo?.avatar">
@@ -79,17 +109,61 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
-import { User } from '@element-plus/icons-vue'
+import { User, Bell } from '@element-plus/icons-vue'
 import Breadcrumb from '@/components/Breadcrumb.vue'
+import DynamicIcon from '@/components/DynamicIcon.vue'
+import { getUnreadMessageCount, getMessageList, markMessageRead } from '@/api/message'
+import NoticeDetailDialog from '@/components/NoticeDetailDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const appStore = useAppStore()
+
+// 我的消息
+const unreadCount = ref(0)
+const recentMessages = ref<any[]>([])
+const noticeDialogVisible = ref(false)
+const noticeDialogId = ref<number | undefined>(undefined)
+
+async function loadMessages() {
+  try {
+    const countRes = await getUnreadMessageCount()
+    unreadCount.value = countRes.data || 0
+    if (unreadCount.value > 0) {
+      const listRes = await getMessageList({ current: 1, size: 5, readStatus: 0 })
+      recentMessages.value = listRes.data?.records || []
+    } else {
+      recentMessages.value = []
+    }
+  } catch (e) { /* 静默 */ }
+}
+
+function handleNoticeCommand(command: string | number) {
+  if (command === 'more') {
+    router.push('/alarm/my-message')
+  } else if (typeof command === 'string' && command.startsWith('view:')) {
+    const id = parseInt(command.replace('view:', ''))
+    noticeDialogId.value = id
+    noticeDialogVisible.value = true
+  }
+}
+
+function handleMessageRead(messageId: number) {
+  const idx = recentMessages.value.findIndex((m: any) => m.id === messageId)
+  if (idx >= 0) {
+    recentMessages.value.splice(idx, 1)
+  }
+  unreadCount.value = Math.max(0, unreadCount.value - 1)
+}
+
+onMounted(() => {
+  loadMessages()
+})
 
 // keep-alive 缓存的组件名称列表
 const cachedViews = ref<string[]>([])
@@ -118,50 +192,64 @@ watch(
 
 /**
  * 菜单路由
- * 从 router.getRoutes() 获取所有已注册路由，过滤出使用 DefaultLayout 的路由
- * 这些路由的 children 即为菜单项
+ * 从 userStore.userInfo.menus（后端API返回的SysMenu数组）中构建侧边栏菜单树
+ * 不再从 router.getRoutes() 获取，路由定义和菜单显示独立管理
  */
 const menuRoutes = computed(() => {
-  const allRoutes = router.getRoutes()
+  const userMenus = userStore.userInfo?.menus || []
+  if (!userMenus || userMenus.length === 0) {
+    return []
+  }
 
-  // 提取 Dashboard 看板菜单（根路由的 children 中的 dashboard）
-  const rootRoute = allRoutes.find(r => r.path === '/')
-  let dashboardRoute: any = null
-  if (rootRoute && rootRoute.children) {
-    const dashboard = rootRoute.children.find((c: any) => c.path === 'dashboard' || c.name === 'Dashboard')
-    if (dashboard) {
-      dashboardRoute = {
-        path: '/dashboard',
-        meta: dashboard.meta,
-        children: [dashboard]
-      }
+  // 如果是字符串 "/" 表示超级管理员（兼容旧版），返回空
+  if (userMenus.length === 1 && typeof userMenus[0] === 'string' && userMenus[0] === '/') {
+    return []
+  }
+
+  // 从后端菜单数据构建菜单树
+  const menuTree = buildSidebarMenus(userMenus)
+  return menuTree
+})
+
+/**
+ * 从后端 SysMenu 列表构建侧边栏菜单树
+ */
+function buildSidebarMenus(menus: any[]): any[] {
+  // 1. 找到所有顶级菜单（parent_id = 0）
+  const topLevelMenus = menus.filter((m: any) => m.parentId === 0)
+
+  // 2. Dashboard 特殊处理：放在最前面
+  const dashboard = menus.find((m: any) => m.path === '/dashboard' || m.path === '/index')
+  const result: any[] = []
+
+  if (dashboard) {
+    result.push({
+      path: '/dashboard',
+      meta: { title: dashboard.menuName || '首页', icon: dashboard.icon || 'Odometer' },
+      children: [{ path: '/dashboard', meta: { title: dashboard.menuName || '首页' } }]
+    })
+  }
+
+  // 3. 构建目录级菜单（menuType=1 为目录，单独子菜单也显示）
+  topLevelMenus.filter((m: any) => m.path !== '/dashboard' && m.path !== '/index').forEach((dir: any) => {
+    const children = menus
+      .filter((m: any) => m.parentId === dir.id && m.status === 1)
+      .map((child: any) => ({
+        path: child.path || '',
+        meta: { title: child.menuName || '', icon: child.icon || '' }
+      }))
+
+    if (children.length > 0) {
+      result.push({
+        path: dir.path || '',
+        meta: { title: dir.menuName || '', icon: dir.icon || '' },
+        children
+      })
     }
-  }
-
-  // 找到所有使用 DefaultLayout 作为 component 的路由（即有 children 的菜单路由）
-  const filtered = allRoutes.filter(r => {
-    // 排除动态路由匹配和隐藏路由
-    if (r.meta?.hidden) return false
-    // 排除根路由 '/'（首页在 constantRoutes 中单独处理）
-    if (r.path === '/') return false
-    // 只取顶层菜单路由（path 以 / 开头且不在 children 中的）
-    return r.children && r.children.length > 0 && !r.path.includes(':') && r.path.startsWith('/')
   })
-  // 去重：根据 path 去重
-  const seen = new Set<string>()
-  const result = filtered.filter(r => {
-    if (seen.has(r.path)) return false
-    seen.add(r.path)
-    return true
-  })
-
-  // 把 Dashboard 看板菜单加到最前面
-  if (dashboardRoute) {
-    result.unshift(dashboardRoute)
-  }
 
   return result
-})
+}
 
 function handleCommand(command: string) {
   if (command === 'logout') {
@@ -204,6 +292,12 @@ function handleCommand(command: string) {
 
   .el-menu {
     border-right: none;
+
+    .el-sub-menu {
+      .el-menu-item {
+        padding-left: 50px !important;
+      }
+    }
   }
 }
 
@@ -229,6 +323,51 @@ function handleCommand(command: string) {
     }
   }
 
+  .notice-dropdown {
+    margin-right: 20px;
+    cursor: pointer;
+
+    .notice-icon {
+      color: #606266;
+
+      &:hover {
+        color: #0d9488;
+      }
+    }
+  }
+
+  .notice-header {
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #303133;
+    border-bottom: 1px solid #ebeef5;
+  }
+
+  .notice-item {
+    max-width: 240px;
+
+    .notice-title {
+      font-size: 13px;
+      color: #606266;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .notice-time {
+      font-size: 12px;
+      color: #909399;
+      margin-top: 2px;
+    }
+  }
+
+  .notice-more {
+    text-align: center;
+    color: #0d9488;
+    font-size: 13px;
+  }
+
   .user-info {
     cursor: pointer;
     display: flex;
@@ -244,6 +383,6 @@ function handleCommand(command: string) {
 
 .main-content {
   background: #f0f2f5;
-  padding: 20px;
+  padding: 10px;
 }
 </style>

@@ -4,9 +4,12 @@
       <template #header>
         <span>个人中心</span>
       </template>
-      <el-form :model="form" label-width="100px" style="max-width: 500px">
+      <el-form :model="form" label-width="100px" style="max-width: 500px" v-loading="loading">
         <el-form-item label="用户名">
           <el-input v-model="form.username" disabled />
+        </el-form-item>
+        <el-form-item label="所属部门">
+          <el-input v-model="form.deptName" disabled placeholder="暂无部门" />
         </el-form-item>
         <el-form-item label="昵称">
           <el-input v-model="form.nickname" placeholder="请输入昵称" />
@@ -48,14 +51,18 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import request from '@/utils/request'
 
 const userStore = useUserStore()
+const loading = ref(false)
 
 const form = ref({
+  id: 0,
   username: '',
   nickname: '',
   phone: '',
-  email: ''
+  email: '',
+  deptName: '',
 })
 
 const pwdForm = ref({
@@ -64,9 +71,36 @@ const pwdForm = ref({
   confirmPassword: ''
 })
 
-onMounted(() => {
-  form.value.username = userStore.username || ''
-  form.value.nickname = userStore.nickname || ''
+onMounted(async () => {
+  // 从 store 获取基本信息
+  if (userStore.userInfo) {
+    form.value.username = userStore.userInfo.username || ''
+    form.value.nickname = userStore.userInfo.nickname || ''
+    form.value.deptName = userStore.userInfo.deptName || ''
+    form.value.phone = userStore.userInfo.phone || ''
+    form.value.email = userStore.userInfo.email || ''
+  }
+  // 从 API 获取完整信息（包含 deptName）
+  try {
+    loading.value = true
+    const userId = userStore.userInfo?.id
+    if (userId) {
+      const res: any = await request.get(`/system/user/${userId}`)
+      const data = res.data
+      if (data) {
+        form.value.id = data.id
+        form.value.username = data.username || form.value.username
+        form.value.nickname = data.nickname || form.value.nickname
+        form.value.phone = data.phone || ''
+        form.value.email = data.email || ''
+        form.value.deptName = data.deptName || ''
+      }
+    }
+  } catch (e) {
+    console.error('Failed to fetch user info:', e)
+  } finally {
+    loading.value = false
+  }
 })
 
 function handleSave() {

@@ -15,7 +15,14 @@ export const useUserStore = defineStore('user', () => {
   const token = ref<string>(localStorage.getItem('token') || '')
 
   /** 用户信息对象 */
-  const userInfo = ref<UserInfo | null>(null)
+  const userInfo = ref<UserInfo | null>((() => {
+    try {
+      const stored = localStorage.getItem('userInfo')
+      return stored ? JSON.parse(stored) : null
+    } catch {
+      return null
+    }
+  })())
 
   // ==================== Getters ====================
 
@@ -52,6 +59,9 @@ export const useUserStore = defineStore('user', () => {
         username: data.username || '',
         nickname: data.nickname || data.username || '',
         avatar: data.avatar || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        deptName: data.deptName || '',
         roles: data.roles || [],
         permissions: data.permissions || [],
         menus: data.menus || [],
@@ -68,6 +78,11 @@ export const useUserStore = defineStore('user', () => {
   /** 设置用户信息 */
   const setUserInfo = (info: UserInfo | null) => {
     userInfo.value = info
+    if (info) {
+      localStorage.setItem('userInfo', JSON.stringify(info))
+    } else {
+      localStorage.removeItem('userInfo')
+    }
   }
 
   /** 用户登出 */

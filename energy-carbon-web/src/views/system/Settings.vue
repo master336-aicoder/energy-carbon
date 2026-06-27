@@ -64,13 +64,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { getConfigList, updateConfig, createConfig } from '@/api/config'
 
 const activeTab = ref('basic')
 
 const basicForm = ref({
-  siteName: '能碳数智化平台',
+  siteName: '',
   siteLogo: '',
   language: 'zh-CN'
 })
@@ -87,17 +88,99 @@ const notificationForm = ref({
   emailAddress: ''
 })
 
+const configMap = ref<Record<string, { id?: number; configValue?: string }>>({})
+
+const basicKeyMap: Record<string, string> = {
+  siteName: 'site_name',
+  siteLogo: 'logo_url',
+  language: 'default_language'
+}
+
+const securityKeyMap: Record<string, string> = {
+  tokenExpire: 'token_expire',
+  minPasswordLength: 'min_password_length',
+  maxLoginAttempts: 'max_login_attempts'
+}
+
+const notificationKeyMap: Record<string, string> = {
+  alarmEnabled: 'alarm_enabled',
+  emailEnabled: 'email_enabled',
+  emailAddress: 'email_address'
+}
+
+async function fetchConfigList() {
+  try {
+    const res: any = await getConfigList({ current: 1, size: 999 })
+    const records = res?.data?.records || []
+    const map: Record<string, { id?: number; configValue?: string }> = {}
+    records.forEach((item: any) => {
+      map[item.configKey] = { id: item.id, configValue: item.configValue }
+    })
+    configMap.value = map
+    applyConfigToForms()
+  } catch (error) {
+    ElMessage.error('获取配置失败')
+  }
+}
+
+function applyConfigToForms() {
+  Object.entries(basicKeyMap).forEach(([formKey, configKey]) => {
+    const cfg = configMap.value[configKey]
+    if (cfg && cfg.configValue !== undefined) {
+      (basicForm.value as any)[formKey] = cfg.configValue
+    }
+  })
+  Object.entries(securityKeyMap).forEach(([formKey, configKey]) => {
+    const cfg = configMap.value[configKey]
+    if (cfg && cfg.configValue !== undefined) {
+      let val: any = cfg.configValue
+      if (!isNaN(Number(val))) val = Number(val)
+      ;(securityForm.value as any)[formKey] = val
+    }
+  })
+  Object.entries(notificationKeyMap).forEach(([formKey, configKey]) => {
+    const cfg = configMap.value[configKey]
+    if (cfg && cfg.configValue !== undefined) {
+      let val: any = cfg.configValue
+      if (val === 'true') val = true
+      if (val === 'false') val = false
+      ;(notificationForm.value as any)[formKey] = val
+    }
+  })
+}
+
+async function saveConfigs(formData: any, keyMap: Record<string, string>) {
+  try {
+    for (const [formKey, configKey] of Object.entries(keyMap)) {
+      const value = formData[formKey]
+      const cfg = configMap.value[configKey]
+      const payload = { configKey, configValue: String(value) } as any
+      if (cfg && cfg.id) {
+        await updateConfig(cfg.id, payload)
+      } else {
+        await createConfig(payload)
+      }
+    }
+    ElMessage.success('保存成功')
+    fetchConfigList()
+  } catch (error) {
+    ElMessage.error('保存失败')
+  }
+}
+
 function handleSaveBasic() {
-  ElMessage.success('基本设置保存成功')
+  saveConfigs(basicForm.value, basicKeyMap)
 }
 
 function handleSaveSecurity() {
-  ElMessage.success('安全设置保存成功')
+  saveConfigs(securityForm.value, securityKeyMap)
 }
 
 function handleSaveNotification() {
-  ElMessage.success('通知设置保存成功')
+  saveConfigs(notificationForm.value, notificationKeyMap)
 }
+
+onMounted(fetchConfigList)
 </script>
 
 <style scoped lang="scss">

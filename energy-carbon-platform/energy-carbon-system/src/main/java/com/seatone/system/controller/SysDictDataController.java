@@ -5,75 +5,71 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.seatone.common.result.PageResult;
 import com.seatone.common.result.Result;
 import com.seatone.system.entity.SysDictData;
-import com.seatone.system.service.SysDictDataService;
+import com.seatone.system.mapper.SysDictDataMapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Api(tags = "字典数据管理")
 @RestController
-@RequestMapping("/system/dictData")
+@RequestMapping("/system/dict-data")
 public class SysDictDataController {
 
     @Autowired
-    private SysDictDataService dictDataService;
+    private SysDictDataMapper sysDictDataMapper;
 
-    @ApiOperation("分页查询字典数据")
+    @ApiOperation("分页查询列表")
     @GetMapping("/list")
     public Result<PageResult<SysDictData>> list(
             @ApiParam("页码") @RequestParam(defaultValue = "1") Long current,
             @ApiParam("每页条数") @RequestParam(defaultValue = "10") Long size,
-            @ApiParam("字典类型") @RequestParam(required = false) String dictType) {
+            @ApiParam("关键词") @RequestParam(required = false) String keyword,
+            @ApiParam("状态") @RequestParam(required = false) Integer status
+    ) {
         Page<SysDictData> page = new Page<>(current, size);
         LambdaQueryWrapper<SysDictData> wrapper = new LambdaQueryWrapper<>();
-        if (dictType != null && !dictType.isEmpty()) {
-            wrapper.eq(SysDictData::getDictType, dictType);
+        if (keyword != null && !keyword.isEmpty()) {
+            wrapper.like(SysDictData::getDictLabel, keyword);
         }
-        wrapper.orderByAsc(SysDictData::getSort);
-        Page<SysDictData> resultPage = dictDataService.page(page, wrapper);
+        if (status != null) {
+            wrapper.eq(SysDictData::getStatus, status);
+        }
+        wrapper.orderByDesc(SysDictData::getCreateTime);
+        Page<SysDictData> resultPage = sysDictDataMapper.selectPage(page, wrapper);
         return Result.ok(PageResult.of(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal(), resultPage.getRecords()));
     }
 
-    @ApiOperation("根据字典类型查询数据")
-    @GetMapping("/type/{dictType}")
-    public Result<List<SysDictData>> getByType(@ApiParam("字典类型") @PathVariable String dictType) {
-        List<SysDictData> list = dictDataService.listByDictType(dictType);
-        return Result.ok(list);
-    }
-
-    @ApiOperation("根据ID查询字典数据")
+    @ApiOperation("详情")
     @GetMapping("/{id}")
-    public Result<SysDictData> getById(@ApiParam("字典数据ID") @PathVariable Long id) {
-        SysDictData dictData = dictDataService.getById(id);
-        if (dictData == null) {
-            return Result.error("字典数据不存在");
+    public Result<SysDictData> detail(@ApiParam("ID") @PathVariable Long id) {
+        SysDictData entity = sysDictDataMapper.selectById(id);
+        if (entity == null) {
+            return Result.error("记录不存在");
         }
-        return Result.ok(dictData);
+        return Result.ok(entity);
     }
 
-    @ApiOperation("新增字典数据")
+    @ApiOperation("新增")
     @PostMapping
-    public Result<Void> add(@RequestBody SysDictData dictData) {
-        dictDataService.save(dictData);
+    public Result<Void> add(@RequestBody SysDictData entity) {
+        sysDictDataMapper.insert(entity);
         return Result.ok();
     }
 
-    @ApiOperation("修改字典数据")
+    @ApiOperation("修改")
     @PutMapping("/{id}")
-    public Result<Void> update(@ApiParam("字典数据ID") @PathVariable Long id, @RequestBody SysDictData dictData) {
-        dictData.setId(id);
-        dictDataService.updateById(dictData);
+    public Result<Void> update(@ApiParam("ID") @PathVariable Long id, @RequestBody SysDictData entity) {
+        entity.setId(id);
+        sysDictDataMapper.updateById(entity);
         return Result.ok();
     }
 
-    @ApiOperation("删除字典数据")
+    @ApiOperation("删除")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@ApiParam("字典数据ID") @PathVariable Long id) {
-        dictDataService.removeById(id);
+    public Result<Void> delete(@ApiParam("ID") @PathVariable Long id) {
+        sysDictDataMapper.deleteById(id);
         return Result.ok();
     }
 }

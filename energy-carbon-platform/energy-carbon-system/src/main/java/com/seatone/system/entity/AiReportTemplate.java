@@ -1,29 +1,18 @@
 package com.seatone.system.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.seatone.common.base.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("ai_report_template")
-public class AiReportTemplate {
-
-    private Long id;
+public class AiReportTemplate extends BaseEntity {
 
     private String templateName;
-
-    private String reportType;
-
-    private String templateContent;
-
-    private String variables;
-
+    private String templateType;
+    private String description;
     private Integer status;
-
-    private LocalDateTime createTime;
-
-    private LocalDateTime updateTime;
-
-    private Integer deleted;
 }

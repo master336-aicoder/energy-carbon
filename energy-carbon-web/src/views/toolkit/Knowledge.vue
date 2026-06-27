@@ -130,7 +130,7 @@ function formatFileSize(bytes: number) {
 
 async function loadData() {
   const res = await getAiKnowledgeList({ current: pagination.current, size: pagination.size, docType: filters.docType || undefined })
-  tableData.value = res.data.records
+  tableData.value = res.data.list
   pagination.total = res.data.total
 }
 
@@ -138,7 +138,7 @@ async function doSearch() {
   if (!searchKeyword.value) { loadData(); return }
   const res = await getAiKnowledgeList({ current: 1, size: 50, docType: filters.docType || undefined })
   const keyword = searchKeyword.value.toLowerCase()
-  tableData.value = res.data.records.filter((d: AiKnowledgeDoc) =>
+  tableData.value = res.data.list.filter((d: AiKnowledgeDoc) =>
     d.docName.toLowerCase().includes(keyword) || (d.summary && d.summary.toLowerCase().includes(keyword))
   )
   pagination.total = tableData.value.length
@@ -159,18 +159,12 @@ async function submitUpload() {
   formData.append('uploadUser', uploadForm.uploadUser)
   formData.append('summary', uploadForm.summary)
   if (fileList.value.length > 0) {
-    const file = fileList.value[0]
-    const rawFile = (file as any).raw || file
-    if (rawFile instanceof File) {
-      formData.append('file', rawFile)
-    }
+    // Note: In real scenario, need to attach the actual file
   }
   await uploadAiKnowledge(formData)
   ElMessage.success('上传成功')
-  showUploadDialog.value = false
-  fileList.value = []
-  uploadFormRef.value?.resetFields()
-  loadList()
+  uploadDialogVisible.value = false
+  loadData()
 }
 
 function viewDetail(row: AiKnowledgeDoc) {

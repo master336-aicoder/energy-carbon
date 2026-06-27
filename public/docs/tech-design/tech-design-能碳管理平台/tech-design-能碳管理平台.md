@@ -2,7 +2,7 @@
 
 技术设计文档（Technical Design Document）
 
-前端：Vue 3 + Element Plus 后端：Spring Boot 2.x + JDK 1.8 编制日期：2026年6月22日
+前端：Vue 3 + Element Plus 后端：Spring Boot 2.x + JDK 1.8 编制日期：2026年6月27日
 
 ## 目录
 
@@ -245,35 +245,60 @@ HTTP客户端，统一封装请求拦截、响应拦截、错误处理。
 
 ### 3.3 路由与菜单设计
 
-路由结构对应需求文档中的菜单层级，采用动态路由加载方式，根据用户权限动态生成可访问的菜单。
-    
-    
-    // 路由配置示例
-    const routes = [
+路由结构对应需求文档中的菜单层级，采用动态路由加载方式，根据用户权限动态生成可访问的菜单。平台共包含 **9个一级菜单、56个功能页面**。
+
+#### 菜单结构总览
+
+| 一级菜单 | 二级菜单数量 | 页面文件 |
+|----------|-------------|----------|
+| 首页 | 1 | `dashboard/Index.vue` |
+| 系统管理 | 11 | `system/User.vue`, `system/Role.vue`, `system/Menu.vue`, `system/Unit.vue`, `system/Dict.vue`, `system/Notice.vue`, `system/Settings.vue`, `system/Log.vue`, `system/Device.vue`, `system/Meter.vue`, `system/Profile.vue` |
+| 在线监测 | 9 | `monitor/Data.vue`, `monitor/Device.vue`, `monitor/RealTime.vue`, `monitor/History.vue`, `monitor/DeviceCompare.vue`, `monitor/TimeCompare.vue`, `monitor/MeterReading.vue`, `monitor/StatusMonitor.vue`, `monitor/WorkShift.vue` |
+| 报警管理 | 3 | `alarm/Config.vue`, `alarm/Record.vue` |
+| 碳排放管理 | 8 | `carbon/Accounting.vue`, `carbon/Factor.vue`, `carbon/Asset.vue`, `carbon/CBAM.vue`, `carbon/Footprint.vue`, `carbon/SupplyChain.vue`, `carbon/Verification.vue`, `carbon/Market.vue` |
+| 统计报表 | 7 | `report/Energy.vue`, `report/Summary.vue`, `report/Cost.vue`, `report/Saving.vue`, `report/Baseline.vue`, `report/Indicator.vue`, `report/Production.vue` |
+| 分析管理 | 5 | `analysis/Consumption.vue`, `analysis/Electricity.vue`, `analysis/Efficiency.vue`, `analysis/Budget.vue`, `analysis/Benchmark.vue` |
+| AI智能服务 | 4 | `ai/Service.vue`, `toolkit/Knowledge.vue`, `toolkit/AiReport.vue`, `ai/ReportTemplate.vue` |
+| 能碳工具包 | 4 | `toolkit/ElectricityPrice.vue`, `toolkit/PeakShifting.vue`, `toolkit/GreenFactory.vue`, `toolkit/Calculator.vue` |
+
+#### 路由配置示例
+
+```typescript
+const routes = [
+  {
+    path: '/',
+    component: DefaultLayout,
+    redirect: '/dashboard',
+    children: [
+      { path: 'dashboard', component: () => import('@/views/dashboard/Index.vue'), meta: { title: '首页' } },
       {
-        path: '/',
-        component: DefaultLayout,
-        redirect: '/dashboard',
+        path: 'monitor',
+        meta: { title: '在线监测' },
         children: [
-          { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/Index.vue'), meta: { title: '首页' } },
-          { path: 'dual-carbon', name: 'DualCarbon', component: () => import('@/views/dualCarbon/Index.vue'), meta: { title: '双碳考核' } },
-          {
-            path: 'monitor',
-            meta: { title: '在线监测' },
-            children: [
-              { path: 'realtime', component: () => import('@/views/monitor/RealTime.vue'), meta: { title: '实时数据' } },
-              { path: 'history', component: () => import('@/views/monitor/History.vue'), meta: { title: '历史数据' } },
-              { path: 'device-compare', component: () => import('@/views/monitor/DeviceCompare.vue'), meta: { title: '设备对标' } },
-              { path: 'time-compare', component: () => import('@/views/monitor/TimeCompare.vue'), meta: { title: '时间对标' } },
-              { path: 'meter-reading', component: () => import('@/views/monitor/MeterReading.vue'), meta: { title: '计量抄表' } },
-              { path: 'status', component: () => import('@/views/monitor/StatusMonitor.vue'), meta: { title: '状态监测' } }
-            ]
-          },
-          // ... 其他模块
+          { path: 'data', component: () => import('@/views/monitor/Data.vue'), meta: { title: '监测数据' } },
+          { path: 'device', component: () => import('@/views/monitor/Device.vue'), meta: { title: '设备管理' } },
+          { path: 'realtime', component: () => import('@/views/monitor/RealTime.vue'), meta: { title: '实时数据' } },
+          { path: 'history', component: () => import('@/views/monitor/History.vue'), meta: { title: '历史数据' } },
+          { path: 'device-compare', component: () => import('@/views/monitor/DeviceCompare.vue'), meta: { title: '设备对标' } },
+          { path: 'time-compare', component: () => import('@/views/monitor/TimeCompare.vue'), meta: { title: '时段对标' } },
+          { path: 'meter-reading', component: () => import('@/views/monitor/MeterReading.vue'), meta: { title: '计量抄表' } },
+          { path: 'status', component: () => import('@/views/monitor/StatusMonitor.vue'), meta: { title: '状态监测' } },
+          { path: 'work-shift', component: () => import('@/views/monitor/WorkShift.vue'), meta: { title: '班组管理' } }
         ]
       },
-      { path: '/login', component: () => import('@/views/auth/Login.vue'), meta: { public: true } }
+      // ... 其他模块
     ]
+  },
+  { path: '/login', component: () => import('@/views/auth/Login.vue'), meta: { public: true } }
+]
+```
+
+#### 动态菜单与RBAC
+
+- 侧边栏菜单从后端 `/auth/userinfo` 接口获取 `menus` 字段，动态构建菜单树
+- 超级管理员（roleId=1）自动拥有全部菜单权限
+- 菜单数据存储于 `sys_menu` 表，通过 `sys_role_menu` 关联角色与菜单
+- 前端 `DefaultLayout.vue` 的 `buildSidebarMenus` 函数负责将后端菜单数据转换为 `el-menu` 可用的树形结构
     
 
 ### 3.4 状态管理设计
@@ -318,6 +343,8 @@ StatCard| KPI统计卡片| title, value, unit, trend, color
 TrendChart| 趋势折线图| data, xAxis, series, title  
 PieChart| 占比饼图| data, title, legendPosition  
 UnitTree| 用能单元树| data, defaultExpanded, onSelect  
+DynamicIcon| 动态图标加载| name（支持 Element Plus 图标名或 `custom-*` 自定义 SVG）  
+NoticeBanner| 首页通知滚动横幅| noticeList（通知数组）  
   
 ### 3.6 API封装与请求拦截
     
@@ -614,7 +641,119 @@ DTO| 请求参数封装、响应数据封装| 使用@Valid校验
     }
     
 
-#### 4.4.3 AI报告生成模块
+#### 4.4.3 操作日志模块
+
+基于 Spring AOP 实现无侵入式操作日志记录，通过自定义 `@Log` 注解标记需要记录的 Controller 方法。
+
+```java
+// 日志注解
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Log {
+    String title();
+    int businessType() default 0; // 0其他 1新增 2修改 3删除 4查询 5导出
+}
+
+// AOP 拦截器
+@Aspect
+@Component
+public class LogAspect {
+    @Autowired
+    private SysLogService sysLogService;
+
+    private static final ThreadLocal<Long> START_TIME = new ThreadLocal<>();
+    private static final ThreadLocal<SysLog> LOG_THREAD_LOCAL = new ThreadLocal<>();
+
+    @Before("@annotation(com.seatone.system.annotation.Log)")
+    public void doBefore(JoinPoint joinPoint) {
+        START_TIME.set(System.currentTimeMillis());
+        SysLog sysLog = new SysLog();
+        sysLog.setOperTime(LocalDateTime.now());
+        // 记录请求信息、操作人、请求参数...
+        LOG_THREAD_LOCAL.set(sysLog);
+    }
+
+    @AfterReturning(pointcut = "@annotation(com.seatone.system.annotation.Log)", returning = "result")
+    public void doAfterReturning(Object result) {
+        SysLog sysLog = LOG_THREAD_LOCAL.get();
+        sysLog.setCostTime(System.currentTimeMillis() - START_TIME.get());
+        sysLog.setStatus(0);
+        sysLog.setJsonResult(JSON.toJSONString(result));
+        sysLogService.addLog(sysLog);
+        clearThreadLocal();
+    }
+
+    @AfterThrowing(pointcut = "@annotation(com.seatone.system.annotation.Log)", throwing = "ex")
+    public void doAfterThrowing(Exception ex) {
+        SysLog sysLog = LOG_THREAD_LOCAL.get();
+        sysLog.setCostTime(System.currentTimeMillis() - START_TIME.get());
+        sysLog.setStatus(1);
+        sysLog.setErrorMsg(ex.getMessage());
+        sysLogService.addLog(sysLog);
+        clearThreadLocal();
+    }
+}
+```
+
+#### 4.4.4 通知公告模块
+
+通知公告支持富文本编辑（WangEditor），首页以滚动横幅形式展示未读公告，顶部导航栏显示未读数量角标。
+
+```java
+@RestController
+@RequestMapping("/api/system/notice")
+public class SysNoticeController {
+
+    @GetMapping("/list")
+    public Result<PageResult<SysNotice>> list(NoticeQueryDTO query) {
+        return Result.ok(noticeService.list(query));
+    }
+
+    @GetMapping("/unread")
+    public Result<List<SysNotice>> unread() {
+        return Result.ok(noticeService.getUnreadList());
+    }
+
+    @PostMapping
+    public Result<Void> add(@RequestBody @Valid SysNotice notice) {
+        noticeService.add(notice);
+        return Result.ok();
+    }
+
+    @PutMapping("/{id}")
+    public Result<Void> update(@PathVariable Long id, @RequestBody SysNotice notice) {
+        noticeService.update(id, notice);
+        return Result.ok();
+    }
+
+    @DeleteMapping("/{id}")
+    public Result<Void> delete(@PathVariable Long id) {
+        noticeService.delete(id);
+        return Result.ok();
+    }
+}
+```
+
+前端首页通知滚动实现：
+
+```vue
+<div v-if="noticeList.length > 0" class="notice-banner">
+  <el-icon class="notice-icon"><Bell /></el-icon>
+  <div class="notice-scroll-wrapper">
+    <div class="notice-scroll-content" :style="scrollStyle">
+      <div v-for="(notice, index) in noticeList" :key="index" class="notice-item">
+        <el-tag size="small" :type="notice.noticeType === 1 ? 'primary' : 'warning'">
+          {{ notice.noticeType === 1 ? '通知' : '公告' }}
+        </el-tag>
+        <span class="notice-title">{{ notice.noticeTitle }}</span>
+        <span class="notice-time">{{ notice.createTime }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+#### 4.4.5 AI报告生成模块
 
 AI模块作为代理服务，调用大模型API生成各类报告，需要处理异步生成和结果缓存。
     
@@ -1120,7 +1259,87 @@ MinIO| 对象存储| 报告文件、凭证附件、导入模板
     ) COMMENT='报警记录表';
     
 
-#### 5.3.5 InfluxDB时序数据设计
+#### 5.3.5 系统管理扩展表
+
+```sql
+-- 操作日志记录表
+CREATE TABLE sys_log (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+    title VARCHAR(255) DEFAULT '' COMMENT '操作模块标题',
+    business_type INT DEFAULT 0 COMMENT '业务类型（0其他 1新增 2修改 3删除 4查询 5导出）',
+    method VARCHAR(500) DEFAULT '' COMMENT '请求方法',
+    request_method VARCHAR(10) DEFAULT '' COMMENT '请求方式（GET/POST/PUT/DELETE）',
+    oper_name VARCHAR(50) DEFAULT '' COMMENT '操作人员',
+    oper_url VARCHAR(500) DEFAULT '' COMMENT '请求URL',
+    oper_ip VARCHAR(128) DEFAULT '' COMMENT '操作IP地址',
+    oper_location VARCHAR(255) DEFAULT '' COMMENT '操作地点',
+    oper_param TEXT COMMENT '请求参数',
+    json_result TEXT COMMENT '返回结果',
+    status INT DEFAULT 0 COMMENT '操作状态（0正常 1异常）',
+    error_msg TEXT COMMENT '错误消息',
+    oper_time DATETIME DEFAULT NULL COMMENT '操作时间',
+    cost_time BIGINT DEFAULT 0 COMMENT '消耗时间（毫秒）',
+    PRIMARY KEY (id),
+    KEY idx_oper_time (oper_time),
+    KEY idx_oper_name (oper_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志记录表';
+
+-- 通知公告表
+CREATE TABLE sys_notice (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '公告ID',
+    notice_title VARCHAR(255) NOT NULL COMMENT '公告标题',
+    notice_type INT DEFAULT 1 COMMENT '公告类型（1通知 2公告）',
+    notice_content TEXT COMMENT '公告内容（富文本HTML）',
+    status INT DEFAULT 1 COMMENT '状态（0停用 1启用）',
+    create_by BIGINT DEFAULT NULL COMMENT '创建者',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_by BIGINT DEFAULT NULL COMMENT '更新者',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    remark VARCHAR(500) DEFAULT '' COMMENT '备注',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知公告表';
+```
+
+#### 5.3.6 通知下发与用户消息扩展表
+
+```sql
+-- 通知公告下发记录表
+CREATE TABLE sys_notice_dispatch (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    notice_id BIGINT NOT NULL,
+    dispatch_type INT DEFAULT 1 COMMENT '下发类型(1全部 2机构 3角色 4用户)',
+    target_name VARCHAR(500) DEFAULT '' COMMENT '下发目标名称',
+    create_by BIGINT DEFAULT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_notice_id (notice_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知公告下发记录表';
+
+-- 用户消息表（个人信箱）
+CREATE TABLE sys_user_message (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    notice_id BIGINT DEFAULT NULL,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(255) DEFAULT '',
+    content TEXT,
+    notice_type INT DEFAULT 1,
+    read_status INT DEFAULT 0 COMMENT '0未读 1已读',
+    read_time DATETIME DEFAULT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_user_id (user_id),
+    KEY idx_read_status (read_status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户消息表';
+```
+
+**下发流程**：
+1. 管理员在通知公告管理页点击"下发"，选择下发范围（全部/机构/角色/用户）
+2. 后端根据下发类型解析目标用户集合（机构→查 `sys_user.dept_id`；角色→查 `sys_user_role`）
+3. 为每个目标用户插入一条 `sys_user_message` 记录（冗余 title/content/noticeType）
+4. 同时插入一条 `sys_notice_dispatch` 下发记录
+5. 用户在"我的消息"页面或右上角铃铛处看到未读消息，点击查看时自动标记已读
+
+#### 5.3.7 InfluxDB时序数据设计
     
     
     -- InfluxDB Measurement设计
@@ -1287,6 +1506,23 @@ URL前缀| /api/{module}
 /api/system/unit/tree| GET| 用能单元树  
 /api/system/device/list| GET| 设备列表  
 /api/system/meter/list| GET| 计量器具列表  
+/api/system/log/list| GET| 操作日志列表  
+/api/system/notice/list| GET| 通知公告列表（分页）
+/api/system/notice/{id}| GET| 公告详情
+/api/system/notice| POST| 发布公告
+/api/system/notice/{id}| PUT| 更新公告
+/api/system/notice/{id}| DELETE| 删除公告
+/api/system/notice/{id}/dispatch| POST| 下发通知公告
+/api/system/notice/dispatch/list| GET| 下发记录列表（分页）
+
+#### 我的消息模块
+
+接口| 方法| 说明
+---|---|---
+/api/system/message/list| GET| 当前用户消息列表（分页，支持readStatus过滤）
+/api/system/message/unread/count| GET| 当前用户未读消息数量
+/api/system/message/{id}| GET| 消息详情
+/api/system/message/{id}/read| POST| 标记消息已读
   
 ## 7\. 部署架构
 

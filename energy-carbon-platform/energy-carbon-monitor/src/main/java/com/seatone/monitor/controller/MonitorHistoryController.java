@@ -13,7 +13,9 @@ import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,10 +45,10 @@ public class MonitorHistoryController {
             wrapper.eq(MonitorHistoryData::getDataType, dataType);
         }
         if (startTime != null && !startTime.isEmpty()) {
-            wrapper.ge(MonitorHistoryData::getDataTime, LocalDateTime.parse(startTime));
+            wrapper.ge(MonitorHistoryData::getDataTime, parseDateTime(startTime));
         }
         if (endTime != null && !endTime.isEmpty()) {
-            wrapper.le(MonitorHistoryData::getDataTime, LocalDateTime.parse(endTime));
+            wrapper.le(MonitorHistoryData::getDataTime, parseDateTime(endTime));
         }
         wrapper.orderByDesc(MonitorHistoryData::getDataTime);
         Page<MonitorHistoryData> resultPage = historyDataService.page(page, wrapper);
@@ -66,8 +68,8 @@ public class MonitorHistoryController {
         if (dataType != null && !dataType.isEmpty()) {
             wrapper.eq(MonitorHistoryData::getDataType, dataType);
         }
-        wrapper.ge(MonitorHistoryData::getDataTime, LocalDateTime.parse(startTime));
-        wrapper.le(MonitorHistoryData::getDataTime, LocalDateTime.parse(endTime));
+        wrapper.ge(MonitorHistoryData::getDataTime, parseDateTime(startTime));
+        wrapper.le(MonitorHistoryData::getDataTime, parseDateTime(endTime));
         wrapper.orderByAsc(MonitorHistoryData::getDataTime);
         List<MonitorHistoryData> list = historyDataService.list(wrapper);
         List<MonitorHistoryDataDTO> records = list.stream().map(this::convertToDTO).collect(Collectors.toList());
@@ -95,5 +97,14 @@ public class MonitorHistoryController {
         dto.setUnit(entity.getUnit());
         dto.setCreateTime(entity.getCreateTime());
         return dto;
+    }
+
+    private LocalDateTime parseDateTime(String dateTimeStr) {
+        if (dateTimeStr == null || dateTimeStr.isEmpty()) return null;
+        try {
+            return LocalDateTime.parse(dateTimeStr);
+        } catch (Exception e) {
+            return Instant.parse(dateTimeStr).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        }
     }
 }

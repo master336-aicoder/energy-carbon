@@ -109,7 +109,7 @@ const rules = {
 
 async function loadData() {
   const res = await getElectricityPriceList({ current: pagination.current, size: pagination.size })
-  tableData.value = res.data.records
+  tableData.value = res.data.list
   pagination.total = res.data.total
 }
 

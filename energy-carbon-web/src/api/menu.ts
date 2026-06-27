@@ -19,7 +19,7 @@ export function createMenu(data: MenuApi.SaveParams) {
 
 /** 修改菜单 */
 export function updateMenu(data: MenuApi.SaveParams) {
-  return request.put<MenuApi.SaveResult>('/system/menu', data)
+  return request.put<MenuApi.SaveResult>(`/system/menu/${data.id}`, data)
 }
 
 /** 删除菜单 */

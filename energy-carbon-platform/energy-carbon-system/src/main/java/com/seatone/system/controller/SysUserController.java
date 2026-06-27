@@ -6,9 +6,13 @@ import com.seatone.common.result.PageResult;
 import com.seatone.common.result.Result;
 import com.seatone.system.dto.AssignRoleDTO;
 import com.seatone.system.dto.UserDTO;
+import com.seatone.system.entity.SysDept;
+import com.seatone.system.entity.SysRole;
 import com.seatone.system.entity.SysUser;
+import com.seatone.system.mapper.SysDeptMapper;
 import com.seatone.system.service.SysUserRoleService;
 import com.seatone.system.service.SysUserService;
+import com.seatone.system.vo.RoleVO;
 import com.seatone.system.vo.UserVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -44,6 +48,12 @@ public class SysUserController {
      */
     @Autowired
     private SysUserRoleService userRoleService;
+
+    /**
+     * 部门Mapper
+     */
+    @Autowired
+    private SysDeptMapper sysDeptMapper;
 
     /**
      * 密码加密器
@@ -94,7 +104,15 @@ public class SysUserController {
         if (user == null) {
             return Result.error("用户不存在");
         }
-        return Result.ok(convertToVO(user));
+        UserVO vo = convertToVO(user);
+        // 查询用户关联的角色列表
+        List<SysRole> roles = userService.getUserRoles(id);
+        vo.setRoles(roles.stream().map(r -> {
+            RoleVO roleVO = new RoleVO();
+            BeanUtils.copyProperties(r, roleVO);
+            return roleVO;
+        }).collect(Collectors.toList()));
+        return Result.ok(vo);
     }
 
     /**
@@ -208,6 +226,17 @@ public class SysUserController {
     private UserVO convertToVO(SysUser user) {
         UserVO vo = new UserVO();
         BeanUtils.copyProperties(user, vo);
+        // 查询部门名称
+        if (user.getDeptId() != null) {
+            try {
+                SysDept dept = sysDeptMapper.selectById(user.getDeptId());
+                if (dept != null) {
+                    vo.setDeptName(dept.getDeptName());
+                }
+            } catch (Exception e) {
+                vo.setDeptName("");
+            }
+        }
         return vo;
     }
 }

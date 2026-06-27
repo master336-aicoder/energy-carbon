@@ -81,6 +81,24 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/monitor/DeviceCompare.vue'),
         meta: { title: '设备对比' },
       },
+      {
+        path: 'data',
+        name: 'MonitorData',
+        component: () => import('@/views/monitor/Data.vue'),
+        meta: { title: '监测数据', icon: 'DataLine' },
+      },
+      {
+        path: 'device',
+        name: 'MonitorDevice',
+        component: () => import('@/views/monitor/Device.vue'),
+        meta: { title: '设备管理', icon: 'Cpu' },
+      },
+      {
+        path: 'work-shift',
+        name: 'WorkShift',
+        component: () => import('@/views/monitor/WorkShift.vue'),
+        meta: { title: '班组管理', icon: 'UserFilled' },
+      },
     ],
   },
   {
@@ -99,6 +117,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'AlarmRecord',
         component: () => import('@/views/alarm/Record.vue'),
         meta: { title: '告警记录' },
+      },
+      {
+        path: 'notice',
+        name: 'AlarmNotice',
+        component: () => import('@/views/alarm/Notice.vue'),
+        meta: { title: '告警通知', icon: 'Message' },
       },
     ],
   },
@@ -124,6 +148,18 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'AnalysisBudget',
         component: () => import('@/views/analysis/Budget.vue'),
         meta: { title: '预算管理' },
+      },
+      {
+        path: 'efficiency',
+        name: 'AnalysisEfficiency',
+        component: () => import('@/views/analysis/Efficiency.vue'),
+        meta: { title: '能效分析', icon: 'Lightning' },
+      },
+      {
+        path: 'benchmark',
+        name: 'AnalysisBenchmark',
+        component: () => import('@/views/analysis/Benchmark.vue'),
+        meta: { title: '对标库', icon: 'Aim' },
       },
     ],
   },
@@ -168,6 +204,30 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/carbon/SupplyChain.vue'),
         meta: { title: '供应链碳' },
       },
+      {
+        path: 'verification',
+        name: 'CarbonVerification',
+        component: () => import('@/views/carbon/Verification.vue'),
+        meta: { title: '碳核查', icon: 'Checked' },
+      },
+      {
+        path: 'market',
+        name: 'CarbonMarket',
+        component: () => import('@/views/carbon/Market.vue'),
+        meta: { title: '碳市场', icon: 'ShoppingCart' },
+      },
+      {
+        path: 'report',
+        name: 'CarbonReport',
+        component: () => import('@/views/carbon/Report.vue'),
+        meta: { title: '碳报告', icon: 'Document' },
+      },
+      {
+        path: 'target',
+        name: 'CarbonTarget',
+        component: () => import('@/views/carbon/Target.vue'),
+        meta: { title: '碳目标', icon: 'Aim' },
+      },
     ],
   },
   {
@@ -198,6 +258,30 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'ReportSummary',
         component: () => import('@/views/report/Summary.vue'),
         meta: { title: '汇总报表' },
+      },
+      {
+        path: 'baseline',
+        name: 'ReportBaseline',
+        component: () => import('@/views/report/Baseline.vue'),
+        meta: { title: '基准能耗', icon: 'TrendCharts' },
+      },
+      {
+        path: 'indicator',
+        name: 'ReportIndicator',
+        component: () => import('@/views/report/Indicator.vue'),
+        meta: { title: '指标录入', icon: 'Edit' },
+      },
+      {
+        path: 'production',
+        name: 'ReportProduction',
+        component: () => import('@/views/report/Production.vue'),
+        meta: { title: '产量录入', icon: 'Document' },
+      },
+      {
+        path: 'schedule',
+        name: 'ReportSchedule',
+        component: () => import('@/views/report/Schedule.vue'),
+        meta: { title: '报表调度', icon: 'Timer' },
       },
     ],
   },
@@ -234,6 +318,25 @@ export const asyncRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/ai',
+    redirect: '/ai/service',
+    meta: { title: 'AI服务', icon: 'MagicStick' },
+    children: [
+      {
+        path: 'service',
+        name: 'AiService',
+        component: () => import('@/views/ai/Service.vue'),
+        meta: { title: '服务预约', icon: 'Service' },
+      },
+      {
+        path: 'report-template',
+        name: 'AiReportTemplate',
+        component: () => import('@/views/ai/ReportTemplate.vue'),
+        meta: { title: '报告模板', icon: 'DocumentCopy' },
+      },
+    ],
+  },
+  {
     path: '/toolkit',
     redirect: '/toolkit/ai-report',
     meta: { title: '工具箱', icon: 'Suitcase' },
@@ -255,6 +358,24 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'ToolkitKnowledge',
         component: () => import('@/views/toolkit/Knowledge.vue'),
         meta: { title: 'AI知识库' },
+      },
+      {
+        path: 'peak-shifting',
+        name: 'ToolkitPeakShifting',
+        component: () => import('@/views/toolkit/PeakShifting.vue'),
+        meta: { title: '错峰排产', icon: 'Timer' },
+      },
+      {
+        path: 'green-factory',
+        name: 'ToolkitGreenFactory',
+        component: () => import('@/views/toolkit/GreenFactory.vue'),
+        meta: { title: '绿色工厂', icon: 'OfficeBuilding' },
+      },
+      {
+        path: 'calculator',
+        name: 'ToolkitCalculator',
+        component: () => import('@/views/toolkit/Calculator.vue'),
+        meta: { title: '能碳计算器', icon: 'Calculator' },
       },
     ],
   },
@@ -311,6 +432,36 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/system/Settings.vue'),
         meta: { title: '系统设置', hidden: true },
       },
+      {
+        path: 'dict',
+        name: 'SystemDict',
+        component: () => import('@/views/system/Dict.vue'),
+        meta: { title: '字典管理', icon: 'Collection' },
+      },
+      {
+        path: 'notice',
+        name: 'SystemNotice',
+        component: () => import('@/views/alarm/Notice.vue'),
+        meta: { title: '通知公告', icon: 'Bell' },
+      },
+      {
+        path: 'log',
+        name: 'SystemLog',
+        component: () => import('@/views/system/Log.vue'),
+        meta: { title: '操作日志', icon: 'DocumentChecked' },
+      },
+      {
+        path: 'notice-dispatch',
+        name: 'SystemNoticeDispatch',
+        component: () => import('@/views/alarm/NoticeDispatch.vue'),
+        meta: { title: '下发记录', icon: 'Promotion' },
+      },
+      {
+        path: 'my-message',
+        name: 'SystemMyMessage',
+        component: () => import('@/views/alarm/MyMessage.vue'),
+        meta: { title: '我的消息', icon: 'Message' },
+      },
     ],
   },
 ]
@@ -343,6 +494,10 @@ router.beforeEach(async (to, _from, next) => {
         next()
       } else {
         try {
+          // 如果有 token 但没有 userInfo，先恢复用户信息
+          if (!userStore.userInfo) {
+            await userStore.fetchUserInfo()
+          }
           // 加载所有动态路由（作为根路由 '/' 的 children 挂载）
           asyncRoutes.forEach((route) => router.addRoute('Layout', route))
           // 添加 404 兜底路由（必须在动态路由之后添加）

@@ -1498,6 +1498,50 @@ INSERT INTO carbon_asset (id, asset_type, asset_name, asset_code, quantity, unit
 (1, 'QUOTA', '2026年度碳配额', 'QUOTA-2026-001', 15000.0000, 'tCO2', '2026-01-01', '2026-12-31', '政府分配', 0.00, 'AVAILABLE', '政府免费分配碳配额'),
 (2, 'CCER', '风电项目CCER', 'CCER-2026-001', 5000.0000, 'tCO2', '2026-03-15', '2028-03-14', '自愿减排交易', 350000.00, 'AVAILABLE', '风电项目自愿减排量');
 
+-- 58. sys_log
+DROP TABLE IF EXISTS sys_log;
+CREATE TABLE sys_log (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+    title VARCHAR(255) DEFAULT '' COMMENT '操作模块标题',
+    business_type INT DEFAULT 0 COMMENT '业务类型（0其他 1新增 2修改 3删除 4查询 5导出）',
+    method VARCHAR(500) DEFAULT '' COMMENT '请求方法',
+    request_method VARCHAR(10) DEFAULT '' COMMENT '请求方式（GET/POST/PUT/DELETE）',
+    oper_name VARCHAR(50) DEFAULT '' COMMENT '操作人员',
+    oper_url VARCHAR(500) DEFAULT '' COMMENT '请求URL',
+    oper_ip VARCHAR(128) DEFAULT '' COMMENT '操作IP地址',
+    oper_location VARCHAR(255) DEFAULT '' COMMENT '操作地点',
+    oper_param TEXT COMMENT '请求参数',
+    json_result TEXT COMMENT '返回结果',
+    status INT DEFAULT 0 COMMENT '操作状态（0正常 1异常）',
+    error_msg TEXT COMMENT '错误消息',
+    oper_time DATETIME DEFAULT NULL COMMENT '操作时间',
+    cost_time BIGINT DEFAULT 0 COMMENT '消耗时间（毫秒）',
+    PRIMARY KEY (id),
+    KEY idx_oper_time (oper_time),
+    KEY idx_oper_name (oper_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志记录表';
+
+-- 15. 通知公告表
+DROP TABLE IF EXISTS sys_notice;
+CREATE TABLE sys_notice (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '公告ID',
+    notice_title VARCHAR(255) NOT NULL COMMENT '公告标题',
+    notice_type INT DEFAULT 1 COMMENT '公告类型（1通知 2公告）',
+    notice_content TEXT COMMENT '公告内容（富文本HTML）',
+    status INT DEFAULT 1 COMMENT '状态（0停用 1启用）',
+    create_by BIGINT DEFAULT NULL COMMENT '创建者',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_by BIGINT DEFAULT NULL COMMENT '更新者',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    remark VARCHAR(500) DEFAULT '' COMMENT '备注',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知公告表';
+
+INSERT INTO sys_notice (notice_title, notice_type, notice_content, status, remark) VALUES
+('系统升级通知', 1, '<p>系统将于今晚22:00进行升级维护，预计耗时2小时。</p>', 1, ''),
+('能耗超标预警', 1, '<p>本月综合能耗较上月增长15%，请重点关注高耗能设备。</p>', 1, ''),
+('碳核查通知', 2, '<p>年度碳排放核查工作将于下月启动，请提前准备相关资料。</p>', 1, '');
+
 -- ============================================================
 -- 初始化完成
 -- 默认管理员账号: admin / 123456

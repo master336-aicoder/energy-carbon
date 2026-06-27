@@ -15,14 +15,14 @@
         <el-table-column prop="permission" label="权限标识" min-width="160" />
         <el-table-column prop="icon" label="图标" width="80" align="center">
           <template #default="{ row }">
-            <el-icon v-if="row.icon"><component :is="row.icon" /></el-icon>
+            <DynamicIcon v-if="row.icon" :name="row.icon" />
             <span v-else>-</span>
           </template>
         </el-table-column>
         <el-table-column prop="menuType" label="类型" width="80" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.menuType === 'M'" type="primary">目录</el-tag>
-            <el-tag v-else-if="row.menuType === 'C'" type="success">菜单</el-tag>
+            <el-tag v-if="row.menuType === 1" type="primary">目录</el-tag>
+            <el-tag v-else-if="row.menuType === 2" type="success">菜单</el-tag>
             <el-tag v-else type="info">按钮</el-tag>
           </template>
         </el-table-column>
@@ -51,9 +51,9 @@
         </el-form-item>
         <el-form-item label="菜单类型" prop="menuType">
           <el-radio-group v-model="form.menuType">
-            <el-radio label="M">目录</el-radio>
-            <el-radio label="C">菜单</el-radio>
-            <el-radio label="F">按钮</el-radio>
+            <el-radio :label="1">目录</el-radio>
+            <el-radio :label="2">菜单</el-radio>
+            <el-radio :label="3">按钮</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="路由路径" prop="path">
@@ -66,7 +66,12 @@
           <el-input v-model="form.permission" placeholder="请输入权限标识" />
         </el-form-item>
         <el-form-item label="图标">
-          <el-input v-model="form.icon" placeholder="请输入图标名称" />
+          <el-select v-model="form.icon" clearable placeholder="请选择图标" style="width: 100%;">
+            <el-option v-for="icon in iconList" :key="icon" :label="icon" :value="icon">
+              <DynamicIcon :name="icon" style="margin-right: 8px;" />
+              <span>{{ icon }}</span>
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="显示排序" prop="sort">
           <el-input-number v-model="form.sort" :min="0" />
@@ -91,6 +96,18 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getMenuList, getMenuTree, createMenu, updateMenu, deleteMenu } from '@/api/menu'
+import DynamicIcon from '@/components/DynamicIcon.vue'
+
+/** Element Plus 图标列表 */
+const iconList = [
+  'Odometer', 'Setting', 'User', 'UserFilled', 'Monitor', 'TrendCharts',
+  'AlarmClock', 'Document', 'Collection', 'Cpu', 'OfficeBuilding',
+  'Edit', 'Delete', 'Plus', 'Search', 'View', 'Lock', 'Unlock',
+  'Message', 'Bell', 'Calendar', 'PieChart', 'DataLine', 'Grid',
+  'Sunny', 'Cloudy', 'Lightning', 'FirstAidKit', 'ShoppingCart',
+  'House', 'MapLocation', 'Histogram', 'Reading', 'Timer',
+  'custom-icon-1', 'custom-icon-2', 'custom-icon-3',
+]
 
 const loading = ref(false)
 const menuList = ref<any[]>([])
@@ -103,7 +120,7 @@ const form = reactive({
   id: undefined as number | undefined,
   parentId: undefined as number | undefined,
   menuName: '',
-  menuType: 'C',
+  menuType: 2 as number,
   path: '',
   component: '',
   permission: '',
@@ -135,7 +152,7 @@ function resetForm() {
   form.id = undefined
   form.parentId = undefined
   form.menuName = ''
-  form.menuType = 'C'
+  form.menuType = 2
   form.path = ''
   form.component = ''
   form.permission = ''

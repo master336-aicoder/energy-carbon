@@ -915,6 +915,20 @@ export interface CarbonMarketInfo {
   updateTime?: string
 }
 
+// ========== 通知公告 ==========
+
+/** 通知公告 */
+export interface Notice {
+  id: number
+  noticeTitle: string
+  noticeType: number
+  noticeContent?: string
+  status: number
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
+
 // ==================== CBAM申报模块类型 ====================
 
 /** CBAM申报 */

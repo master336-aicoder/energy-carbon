@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seatone.system.mapper.SysNoticeReadMapper">
+
+    <!-- 查询该用户未读的启用公告 -->
+    <select id="selectUnreadList" resultType="com.seatone.system.entity.SysNotice">
+        SELECT n.* FROM sys_notice n
+        LEFT JOIN sys_notice_read r ON n.id = r.notice_id AND r.user_id = #{userId}
+        WHERE n.status = 1 AND r.id IS NULL
+        ORDER BY n.create_time DESC
+    </select>
+
+    <!-- 统计该用户未读公告数 -->
+    <select id="countUnread" resultType="int">
+        SELECT COUNT(*) FROM sys_notice n
+        LEFT JOIN sys_notice_read r ON n.id = r.notice_id AND r.user_id = #{userId}
+        WHERE n.status = 1 AND r.id IS NULL
+    </select>
+
+    <!-- 查询是否已读 -->
+    <select id="selectReadStatus" resultType="int">
+        SELECT COUNT(*) FROM sys_notice_read
+        WHERE notice_id = #{noticeId} AND user_id = #{userId}
+    </select>
+
+</mapper>

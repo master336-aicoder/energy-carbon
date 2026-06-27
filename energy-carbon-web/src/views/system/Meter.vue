@@ -212,12 +212,12 @@
     <!-- 详情弹窗 -->
     <el-dialog v-model="detailVisible" title="器具详情" width="600px">
       <el-descriptions :column="2" border v-if="currentRow">
-        <el-descriptions-item label="器具编码">{{ currentRow.meterCode }}</el-descriptions-item>
-        <el-descriptions-item label="器具名称">{{ currentRow.meterName }}</el-descriptions-item>
-        <el-descriptions-item label="器具类型">{{ meterTypeMap[currentRow.meterType] || currentRow.meterType }}</el-descriptions-item>
+        <el-descriptions-item label="器具编码">{{ currentRow.code }}</el-descriptions-item>
+        <el-descriptions-item label="器具名称">{{ currentRow.name }}</el-descriptions-item>
+        <el-descriptions-item label="器具类型">{{ meterTypeMap[currentRow.type] || currentRow.type }}</el-descriptions-item>
         <el-descriptions-item label="关联设备">{{ currentRow.deviceName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="所属部门">{{ currentRow.deptName }}</el-descriptions-item>
-        <el-descriptions-item label="精度等级">{{ currentRow.accuracyClass || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="精度等级">{{ currentRow.accuracy || '-' }}</el-descriptions-item>
         <el-descriptions-item label="量程">
           <span v-if="currentRow.rangeMin !== undefined && currentRow.rangeMax !== undefined">
             {{ currentRow.rangeMin }} ~ {{ currentRow.rangeMax }} {{ currentRow.rangeUnit || '' }}
@@ -314,12 +314,12 @@ const deviceList = ref<Device[]>([])
 
 const form = reactive({
   id: null as number | null,
-  meterCode: '',
-  meterName: '',
-  meterType: '',
+  code: '',
+  name: '',
+  type: '',
   deviceId: null as number | null,
   deptId: null as number | null,
-  accuracyClass: '',
+  accuracy: '',
   rangeMin: undefined as number | undefined,
   rangeMax: undefined as number | undefined,
   rangeUnit: '',
@@ -359,7 +359,7 @@ async function fetchDeptTree() {
 
 async function fetchDeviceList() {
   const res = await getDeviceList({ pageNum: 1, pageSize: 9999 })
-  deviceList.value = res.data.records
+  deviceList.value = res.data.list
 }
 
 function handleSearch() {
@@ -390,12 +390,12 @@ function handleCurrentChange(val: number) {
 
 function resetForm() {
   form.id = null
-  form.meterCode = ''
-  form.meterName = ''
-  form.meterType = ''
+  form.code = ''
+  form.name = ''
+  form.type = ''
   form.deviceId = null
   form.deptId = null
-  form.accuracyClass = ''
+  form.accuracy = ''
   form.rangeMin = undefined
   form.rangeMax = undefined
   form.rangeUnit = ''
@@ -412,12 +412,12 @@ function handleAdd() {
 function handleEdit(row: Meter) {
   dialogTitle.value = '编辑器具'
   form.id = row.id
-  form.meterCode = row.meterCode
-  form.meterName = row.meterName
-  form.meterType = row.meterType
+  form.code = row.code
+  form.name = row.name
+  form.type = row.type
   form.deviceId = row.deviceId || null
   form.deptId = row.deptId
-  form.accuracyClass = row.accuracyClass || ''
+  form.accuracy = row.accuracy || ''
   form.rangeMin = row.rangeMin
   form.rangeMax = row.rangeMax
   form.rangeUnit = row.rangeUnit || ''
@@ -465,7 +465,7 @@ async function handleStatusChange(id: number, status: number) {
 }
 
 async function handleDelete(row: Meter) {
-  await ElMessageBox.confirm(`确定删除计量器具 "${row.meterName}" 吗？`, '提示', { type: 'warning' })
+  await ElMessageBox.confirm(`确定删除计量器具 "${row.name}" 吗？`, '提示', { type: 'warning' })
   await deleteMeter(row.id)
   ElMessage.success('删除成功')
   fetchList()

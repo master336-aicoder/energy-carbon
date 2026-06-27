@@ -144,7 +144,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
-import { getAiServiceList, addAiService, cancelAiService, deleteAiService, type AiServiceRecord } from '@/api/ai'
+import { getAiServiceList, addAiService, cancelAiService, deleteAiServiceRecord, type AiServiceRecord } from '@/api/ai'
 
 const tableData = ref<AiServiceRecord[]>([])
 const addDialogVisible = ref(false)
@@ -193,7 +193,7 @@ function getServiceTypeTag(type: string) {
 async function loadData() {
   try {
     const res: any = await getAiServiceList({ current: pagination.current, size: pagination.size, status: filters.status || undefined, serviceType: filters.serviceType || undefined })
-    const list = res.data?.records || []
+    const list = res.data?.list || []
     const total = res.data?.total || 0
     tableData.value = list
     pagination.total = total
@@ -240,7 +240,7 @@ async function cancelRecord(row: AiServiceRecord) {
 
 async function deleteRecord(row: AiServiceRecord) {
   await ElMessageBox.confirm('确定要删除该记录吗？', '提示', { type: 'warning' })
-  await deleteAiService(row.id!)
+  await deleteAiServiceRecord(row.id!)
   ElMessage.success('已删除')
   loadData()
 }

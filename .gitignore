@@ -27,3 +27,33 @@ Thumbs.db
 # Backup files
 *.bak
 *.backup
+
+# Build artifacts
+target/
+dist/
+node_modules/
+META-INF/
+*.jar
+*.war
+*.zip
+tar.gz
+*.tar.gz
+
+# Deployment packages
+deploy/
+deploy-package/
+deploy-package.zip
+admin-dist*.tar.gz
+mobile-dist*.tar.gz
+
+# Logs
+logs/
+*.log
+backend.err
+backend.log
+
+# Other
+test-report.html
+test-report.md
+mock_data.sql
+energy-carbon-platform-build/

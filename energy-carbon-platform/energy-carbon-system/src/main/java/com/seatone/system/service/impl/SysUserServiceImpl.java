@@ -1,10 +1,13 @@
 package com.seatone.system.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.seatone.system.entity.SysRole;
 import com.seatone.system.entity.SysUser;
 import com.seatone.system.mapper.SysUserMapper;
 import com.seatone.system.service.SysUserService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * 用户服务实现类
@@ -26,5 +29,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public SysUser getByUsername(String username) {
         return baseMapper.selectByUsername(username);
+    }
+
+    @Override
+    public List<SysRole> getUserRoles(Long userId) {
+        return baseMapper.selectRolesByUserId(userId);
     }
 }

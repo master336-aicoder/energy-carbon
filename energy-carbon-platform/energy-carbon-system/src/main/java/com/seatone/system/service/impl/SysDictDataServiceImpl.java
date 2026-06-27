@@ -16,6 +16,6 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
     @Override
     @CacheableCustom(prefix = "dict:type", key = "#dictType", ttl = 30, description = "字典数据按类型缓存")
     public List<SysDictData> listByDictType(String dictType) {
-        return baseMapper.selectByDictType(dictType);
+        return baseMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SysDictData>().eq("dict_type", dictType));
     }
 }

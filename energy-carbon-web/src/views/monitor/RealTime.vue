@@ -246,49 +246,8 @@ async function fetchDeviceTree() {
     const res = await getDeviceTree()
     deviceTree.value = res.data
   } catch (error) {
-    // 使用模拟数据
-    deviceTree.value = [
-      {
-        id: 1,
-        name: '生产车间A',
-        type: 'unit',
-        children: [
-          {
-            id: 11,
-            name: '电机-001',
-            type: 'device',
-            children: [
-              { id: 111, name: '电能表-001', type: 'meter', data: { status: 1, value: 125.6 } },
-              { id: 112, name: '电能表-002', type: 'meter', data: { status: 1, value: 89.3 } }
-            ]
-          },
-          {
-            id: 12,
-            name: '空压机-001',
-            type: 'device',
-            children: [
-              { id: 121, name: '电能表-003', type: 'meter', data: { status: 1, value: 210.5 } }
-            ]
-          }
-        ]
-      },
-      {
-        id: 2,
-        name: '生产车间B',
-        type: 'unit',
-        children: [
-          {
-            id: 21,
-            name: '锅炉-001',
-            type: 'device',
-            children: [
-              { id: 211, name: '燃气表-001', type: 'meter', data: { status: 1, value: 45.2 } },
-              { id: 212, name: '蒸汽表-001', type: 'meter', data: { status: 0, value: 0 } }
-            ]
-          }
-        ]
-      }
-    ]
+    ElMessage.error('获取设备树失败')
+    deviceTree.value = []
   }
 }
 
@@ -306,48 +265,46 @@ function handleNodeClick(data: DeviceTreeNode) {
 async function fetchRealtimeData(meterId: number) {
   try {
     const res = await getRealtimeData({ meterId, dataType: dataType.value })
-    updateRealtimeCards(res.data)
+    const pageData = res.data as any
+    const records = pageData?.records || []
+    if (records.length > 0) {
+      updateRealtimeCards(records)
+    } else {
+      realtimeDataList.value = []
+    }
     lastUpdateTime.value = new Date().toLocaleTimeString()
   } catch {
-    // 模拟数据
-    updateRealtimeCards({
-      id: meterId,
-      dataType: dataType.value,
-      value: Math.random() * 200 + 50,
-      unit: dataTypeUnit.value,
-      timestamp: new Date().toISOString()
-    } as RealTimeData)
-    lastUpdateTime.value = new Date().toLocaleTimeString()
+    ElMessage.error('获取实时数据失败')
   }
 }
 
 // 更新实时卡片
-function updateRealtimeCards(data: RealTimeData) {
-  const baseValue = data.value || 0
+function updateRealtimeCards(records: any[]) {
+  const first = records[0] || {}
+  const unit = first.unit || dataTypeUnit.value
   realtimeDataList.value = [
     {
       label: '当前' + dataTypeLabel.value,
-      value: baseValue,
-      unit: data.unit || dataTypeUnit.value,
-      color: '#409eff',
-      trend: Math.random() * 10 - 5
+      value: first.realValue || first.collectValue || 0,
+      unit: unit,
+      color: '#409eff'
     },
     {
       label: '最大值',
-      value: baseValue * 1.2,
-      unit: data.unit || dataTypeUnit.value,
+      value: first.maxValue || Math.max(...records.map((r: any) => r.realValue || r.collectValue || 0)),
+      unit: unit,
       color: '#67c23a'
     },
     {
       label: '最小值',
-      value: baseValue * 0.8,
-      unit: data.unit || dataTypeUnit.value,
+      value: first.minValue || Math.min(...records.map((r: any) => r.realValue || r.collectValue || 0)),
+      unit: unit,
       color: '#e6a23c'
     },
     {
       label: '平均值',
-      value: baseValue * 0.95,
-      unit: data.unit || dataTypeUnit.value,
+      value: first.avgValue || (records.reduce((sum: number, r: any) => sum + (r.realValue || r.collectValue || 0), 0) / records.length),
+      unit: unit,
       color: '#909399'
     }
   ]
@@ -367,30 +324,8 @@ async function fetchHistoryData(meterId: number) {
     })
     updateChart(res.data)
   } catch {
-    // 模拟数据
-    const mockData = generateMockHistoryData()
-    updateChart(mockData)
+    ElMessage.error('获取历史数据失败')
   }
-}
-
-// 生成模拟历史数据
-function generateMockHistoryData(): RealTimeData[] {
-  const data: RealTimeData[] = []
-  const now = new Date()
-  const { startTime } = getTimeRange()
-  const start = new Date(startTime)
-  const interval = (now.getTime() - start.getTime()) / 60
-
-  for (let i = 0; i < 60; i++) {
-    const time = new Date(start.getTime() + interval * i)
-    data.push({
-      dataType: dataType.value,
-      value: Math.random() * 100 + 50 + Math.sin(i / 10) * 20,
-      unit: dataTypeUnit.value,
-      timestamp: time.toISOString()
-    })
-  }
-  return data
 }
 
 // 更新图表

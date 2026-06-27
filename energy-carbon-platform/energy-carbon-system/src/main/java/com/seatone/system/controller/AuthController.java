@@ -1,8 +1,13 @@
 package com.seatone.system.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.seatone.common.result.Result;
 import com.seatone.common.utils.JwtUtils;
+import com.seatone.system.annotation.Log;
+import com.seatone.system.entity.SysMenu;
+import com.seatone.system.entity.SysRole;
 import com.seatone.system.entity.SysUser;
+import com.seatone.system.service.SysMenuService;
 import com.seatone.system.service.SysUserService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 认证控制器
@@ -32,6 +38,11 @@ public class AuthController {
     private final SysUserService userService;
 
     /**
+     * 菜单服务
+     */
+    private final SysMenuService menuService;
+
+    /**
      * 密码加密器
      */
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -43,6 +54,7 @@ public class AuthController {
      * @param dto 登录请求参数
      * @return 包含 accessToken、refreshToken、expiresIn 的登录结果
      */
+    @Log(title = "用户登录", businessType = 4)
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody @Valid LoginDTO dto) {
         SysUser user = userService.getByUsername(dto.getUsername());
@@ -86,8 +98,25 @@ public class AuthController {
                 userinfo.put("avatar", user.getAvatar());
                 userinfo.put("phone", user.getPhone());
                 userinfo.put("email", user.getEmail());
-                userinfo.put("roles", Collections.singletonList("admin"));
-                userinfo.put("permissions", Collections.singletonList("*"));
+                // 从数据库查询用户角色和权限菜单
+                List<SysRole> roles = userService.getUserRoles(user.getId());
+                List<Long> roleIds = roles.stream().map(SysRole::getId).collect(Collectors.toList());
+                userinfo.put("roles", roles.stream().map(SysRole::getRoleCode).collect(Collectors.toList()));
+                // 如果是超级管理员（角色id为1），返回所有菜单路径（用path='/'标识）
+                boolean isAdmin = roleIds.stream().anyMatch(id -> id.equals(1L));
+                if (isAdmin) {
+                    userinfo.put("permissions", Collections.singletonList("*"));
+                    List<SysMenu> allMenus = menuService.list(new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getStatus, 1).orderByAsc(SysMenu::getSort));
+                    userinfo.put("menus", allMenus);
+                } else {
+                    // 查询用户有权访问的菜单
+                    List<SysMenu> menus = menuService.getUserRouteMenus(user.getId());
+                    userinfo.put("menus", menus);
+                    userinfo.put("permissions", menus.stream()
+                        .map(SysMenu::getPermission)
+                        .filter(p -> p != null && !p.isEmpty())
+                        .collect(Collectors.toList()));
+                }
                 return Result.ok(userinfo);
             }
         }
@@ -96,6 +125,7 @@ public class AuthController {
         userinfo.put("username", "guest");
         userinfo.put("nickname", "访客");
         userinfo.put("permissions", new String[]{});
+        userinfo.put("menus", Collections.emptyList());
         return Result.ok(userinfo);
     }
 
