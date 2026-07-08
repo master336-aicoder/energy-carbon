@@ -17,8 +17,8 @@
         <el-card shadow="never" class="chart-card">
           <template #header>
             <div class="chart-header">
-              <span class="chart-title">月度总排放量趋势</span>
-              <span class="chart-subtitle">按创建时间月统计 (tCO2e)</span>
+              <span class="chart-title">季度总排放量趋势</span>
+          <span class="chart-subtitle">按年-季度统计 (tCO2e)</span>
             </div>
           </template>
           <div ref="monthBarRef" class="chart-container"></div>
@@ -314,18 +314,20 @@ async function loadDashboardData() {
       scopeMap[scope] = (scopeMap[scope] || 0) + Number(item.totalEmission || 0)
     })
 
-    // 按创建月份汇总
-    const monthMap: Record<string, number> = {}
+    // 按年-季度汇总
+    const quarterMap: Record<string, number> = {}
     list.forEach((item: any) => {
       const date = item.createTime ? new Date(item.createTime) : null
       if (date) {
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-        monthMap[monthKey] = (monthMap[monthKey] || 0) + Number(item.totalEmission || 0)
+        const year = date.getFullYear()
+        const quarter = Math.ceil((date.getMonth() + 1) / 3)
+        const quarterKey = `${year}-Q${quarter}`
+        quarterMap[quarterKey] = (quarterMap[quarterKey] || 0) + Number(item.totalEmission || 0)
       }
     })
-    const sortedMonths = Object.keys(monthMap).sort()
-    // 最多展示最近 12 个月
-    const recentMonths = sortedMonths.slice(-12)
+    const sortedQuarters = Object.keys(quarterMap).sort()
+    // 最多展示最近 8 个季度
+    const recentQuarters = sortedQuarters.slice(-8)
 
     // TOP5
     top5Data.value = [...list]
@@ -334,7 +336,7 @@ async function loadDashboardData() {
 
     await nextTick()
     renderScopePie(scopeMap)
-    renderMonthBar(recentMonths, monthMap)
+    renderQuarterBar(recentQuarters, quarterMap)
   } catch (e) { console.error(e) }
 }
 
@@ -366,7 +368,7 @@ function renderScopePie(scopeMap: Record<string, number>) {
   window.addEventListener('resize', () => scopePieChart?.resize())
 }
 
-function renderMonthBar(months: string[], monthMap: Record<string, number>) {
+function renderQuarterBar(quarters: string[], quarterMap: Record<string, number>) {
   if (!monthBarRef.value) return
   monthBarChart?.dispose()
   monthBarChart = echarts.init(monthBarRef.value)
@@ -375,9 +377,12 @@ function renderMonthBar(months: string[], monthMap: Record<string, number>) {
     grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
     xAxis: {
       type: 'category',
-      data: months.map(m => m.slice(5) + '月'),
+      data: quarters.map(q => {
+        const [year, qStr] = q.split('-')
+        return `${year}年${qStr}`
+      }),
       axisLine: { lineStyle: { color: '#cbd5e1' } },
-      axisLabel: { color: '#64748b' }
+      axisLabel: { color: '#64748b', rotate: 30 }
     },
     yAxis: {
       type: 'value',
@@ -389,7 +394,7 @@ function renderMonthBar(months: string[], monthMap: Record<string, number>) {
     },
     series: [{
       type: 'bar',
-      data: months.map(m => Number(monthMap[m] || 0).toFixed(2)),
+      data: quarters.map(q => Number(quarterMap[q] || 0).toFixed(2)),
       barWidth: '50%',
       itemStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [

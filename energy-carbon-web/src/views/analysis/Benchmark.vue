@@ -22,6 +22,22 @@
         </el-form-item>
       </el-form>
 
+      <!-- 图表看板 -->
+      <el-row :gutter="20" class="chart-row">
+        <el-col :xs="24" :lg="12">
+          <el-card>
+            <template #header><span>对标雷达图</span></template>
+            <div ref="radarChartRef" style="height: 350px"></div>
+          </el-card>
+        </el-col>
+        <el-col :xs="24" :lg="12">
+          <el-card>
+            <template #header><span>差距分析</span></template>
+            <div ref="gapChartRef" style="height: 350px"></div>
+          </el-card>
+        </el-col>
+      </el-row>
+
       <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column type="index" label="序号" width="60" />
         <el-table-column prop="benchmarkName" label="对标名称" width="160" />
@@ -97,8 +113,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import echarts from '@/utils/echarts'
 import { getBenchmarkList, createBenchmark, updateBenchmark, deleteBenchmark } from '@/api/efficiency'
 import { getDeptList } from '@/api/dept'
 
@@ -123,6 +140,11 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('新增对标')
 const form = reactive({ id: undefined, benchmarkName: '', industry: '', unitId: undefined, benchmarkValue: 0, unit: '', ourValue: 0, gap: 0, status: 1 })
 
+const radarChartRef = ref<HTMLDivElement>()
+const gapChartRef = ref<HTMLDivElement>()
+let radarChart: echarts.ECharts | null = null
+let gapChart: echarts.ECharts | null = null
+
 async function fetchList() {
   loading.value = true
   try {
@@ -136,7 +158,67 @@ async function fetchList() {
   }
 }
 
-function handleSearch() { pagination.pageNum = 1; fetchList() }
+async function fetchChartData() {
+  try {
+    const res = await getBenchmarkList({ current: 1, size: 9999, ...searchForm })
+    const list = (res.data.records || res.data.list || []) as Array<{
+      benchmarkName: string
+      industry: string
+      benchmarkValue: number
+      ourValue: number
+      gap: number
+    }>
+    initRadarChart(list)
+    initGapChart(list)
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+function initRadarChart(list: Array<{ benchmarkName: string; industry: string; benchmarkValue: number; ourValue: number }>) {
+  if (!radarChartRef.value) return
+  if (!radarChart) radarChart = echarts.init(radarChartRef.value)
+  const indicator = list.map(item => ({ name: item.benchmarkName, max: Math.max(item.benchmarkValue, item.ourValue) * 1.2 || 1 }))
+  radarChart.setOption({
+    tooltip: { trigger: 'item' },
+    legend: { data: ['对标值', '我方值'], bottom: 0 },
+    radar: {
+      indicator,
+      radius: '65%',
+      center: ['50%', '45%']
+    },
+    series: [{
+      type: 'radar',
+      data: [
+        { value: list.map(item => item.benchmarkValue), name: '对标值', itemStyle: { color: '#3b82f6' }, areaStyle: { opacity: 0.2 } },
+        { value: list.map(item => item.ourValue), name: '我方值', itemStyle: { color: '#10b981' }, areaStyle: { opacity: 0.2 } }
+      ]
+    }]
+  })
+}
+
+function initGapChart(list: Array<{ benchmarkName: string; gap: number }>) {
+  if (!gapChartRef.value) return
+  if (!gapChart) gapChart = echarts.init(gapChartRef.value)
+  const names = list.map(item => item.benchmarkName)
+  const values = list.map(item => Number(item.gap) || 0)
+  gapChart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: names, axisLabel: { interval: 0, rotate: 30 } },
+    yAxis: { type: 'value' },
+    series: [{
+      type: 'bar',
+      data: values,
+      itemStyle: {
+        color: (params: any) => Number(params.value) >= 0 ? '#ef4444' : '#10b981',
+        borderRadius: [4, 4, 0, 0]
+      }
+    }]
+  })
+}
+
+function handleSearch() { pagination.pageNum = 1; fetchList(); fetchChartData() }
 function handleReset() { searchForm.benchmarkName = ''; searchForm.unitId = undefined; handleSearch() }
 function handleSizeChange(val) { pagination.pageSize = val; fetchList() }
 function handleCurrentChange(val) { pagination.pageNum = val; fetchList() }
@@ -182,11 +264,22 @@ async function handleDelete(row) {
 onMounted(() => {
   loadUnitList()
   fetchList()
+  nextTick(() => fetchChartData())
+  window.addEventListener('resize', () => {
+    radarChart?.resize()
+    gapChart?.resize()
+  })
+})
+
+onUnmounted(() => {
+  radarChart?.dispose()
+  gapChart?.dispose()
 })
 </script>
 
 <style scoped lang="scss">
 .page-container { padding: 10px; }
 .search-form { margin-bottom: 20px; }
+.chart-row { margin-bottom: 20px; }
 .pagination { margin-top: 20px; justify-content: flex-end; }
 </style>

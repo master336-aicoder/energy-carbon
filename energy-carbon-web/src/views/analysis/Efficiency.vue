@@ -22,6 +22,22 @@
         </el-form-item>
       </el-form>
 
+      <!-- 图表看板 -->
+      <el-row :gutter="20" class="chart-row">
+        <el-col :xs="24" :lg="16">
+          <el-card>
+            <template #header><span>能效值 vs 标准值</span></template>
+            <div ref="barChartRef" style="height: 350px"></div>
+          </el-card>
+        </el-col>
+        <el-col :xs="24" :lg="8">
+          <el-card>
+            <template #header><span>状态分布</span></template>
+            <div ref="pieChartRef" style="height: 350px"></div>
+          </el-card>
+        </el-col>
+      </el-row>
+
       <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
         <el-table-column type="index" label="序号" width="60" />
         <el-table-column prop="analysisName" label="分析名称" width="140" />
@@ -92,8 +108,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import echarts from '@/utils/echarts'
 import { getEfficiencyAnalysisList, createEfficiencyAnalysis, updateEfficiencyAnalysis, deleteEfficiencyAnalysis } from '@/api/efficiency'
 import { getDeptList } from '@/api/dept'
 
@@ -118,6 +135,11 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('新增记录')
 const form = reactive({ id: undefined as number | undefined, analysisName: '', deviceName: '', efficiencyValue: 0, unit: '', standardValue: 0, unitId: undefined as number | undefined, status: 1 })
 
+const barChartRef = ref<HTMLDivElement>()
+const pieChartRef = ref<HTMLDivElement>()
+let barChart: echarts.ECharts | null = null
+let pieChart: echarts.ECharts | null = null
+
 async function fetchList() {
   loading.value = true
   try {
@@ -131,7 +153,62 @@ async function fetchList() {
   }
 }
 
-function handleSearch() { pagination.pageNum = 1; fetchList() }
+async function fetchChartData() {
+  try {
+    const res = await getEfficiencyAnalysisList({ current: 1, size: 9999, ...searchForm })
+    const list = (res.data.records || res.data.list || []) as Array<{
+      analysisName: string
+      efficiencyValue: number
+      standardValue: number
+      status: number
+    }>
+    initBarChart(list)
+    initPieChart(list)
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+function initBarChart(list: Array<{ analysisName: string; efficiencyValue: number; standardValue: number }>) {
+  if (!barChartRef.value) return
+  if (!barChart) barChart = echarts.init(barChartRef.value)
+  const names = list.map(item => item.analysisName)
+  barChart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['能效值', '标准值'], bottom: 0 },
+    grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
+    xAxis: { type: 'category', data: names, axisLabel: { interval: 0, rotate: 30 } },
+    yAxis: { type: 'value' },
+    series: [
+      { type: 'bar', name: '能效值', data: list.map(item => item.efficiencyValue), itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] } },
+      { type: 'bar', name: '标准值', data: list.map(item => item.standardValue), itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] } }
+    ]
+  })
+}
+
+function initPieChart(list: Array<{ status: number }>) {
+  if (!pieChartRef.value) return
+  if (!pieChart) pieChart = echarts.init(pieChartRef.value)
+  const normal = list.filter(item => item.status === 1).length
+  const abnormal = list.length - normal
+  pieChart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    legend: { orient: 'vertical', left: 'left' },
+    series: [{
+      type: 'pie',
+      radius: ['40%', '70%'],
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+      label: { show: false },
+      emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold' } },
+      data: [
+        { name: '正常', value: normal, itemStyle: { color: '#10b981' } },
+        { name: '异常', value: abnormal, itemStyle: { color: '#ef4444' } }
+      ]
+    }]
+  })
+}
+
+function handleSearch() { pagination.pageNum = 1; fetchList(); fetchChartData() }
 function handleReset() { searchForm.analysisName = ''; searchForm.unitId = undefined; handleSearch() }
 function handleSizeChange(val: number) { pagination.pageSize = val; fetchList() }
 function handleCurrentChange(val: number) { pagination.pageNum = val; fetchList() }
@@ -177,11 +254,22 @@ async function handleDelete(row: any) {
 onMounted(() => {
   loadUnitList()
   fetchList()
+  nextTick(() => fetchChartData())
+  window.addEventListener('resize', () => {
+    barChart?.resize()
+    pieChart?.resize()
+  })
+})
+
+onUnmounted(() => {
+  barChart?.dispose()
+  pieChart?.dispose()
 })
 </script>
 
 <style scoped lang="scss">
 .page-container { padding: 10px; }
 .search-form { margin-bottom: 20px; }
+.chart-row { margin-bottom: 20px; }
 .pagination { margin-top: 20px; justify-content: flex-end; }
 </style>

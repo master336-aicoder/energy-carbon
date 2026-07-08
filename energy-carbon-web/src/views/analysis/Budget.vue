@@ -19,6 +19,22 @@
       </el-form>
     </el-card>
 
+    <!-- 图表看板 -->
+    <el-row :gutter="20" class="chart-row">
+      <el-col :xs="24" :lg="8">
+        <el-card>
+          <template #header><span>预算类型分布</span></template>
+          <div ref="typePieChartRef" style="height: 320px"></div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :lg="16">
+        <el-card>
+          <template #header><span>各用能单元完成率</span></template>
+          <div ref="rateBarChartRef" style="height: 320px"></div>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <!-- 预算执行汇总卡片 -->
     <el-row :gutter="20" class="summary-row">
       <el-col :xs="24" :sm="12" v-for="item in budgetSummary" :key="item.budgetYear + item.budgetType">
@@ -105,8 +121,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import echarts from '@/utils/echarts'
 import { getBudgetList, createBudget, updateBudget, deleteBudget, getBudgetSummaryByYear } from '@/api/analysis'
 import type { BudgetListParams, AnalysisEnergyBudget } from '@/api/analysis'
 
@@ -117,6 +134,10 @@ const pageSize = ref(10)
 const total = ref(0)
 const tableData = ref<AnalysisEnergyBudget[]>([])
 const budgetSummary = ref<Array<Record<string, unknown>>>([])
+const typePieChartRef = ref<HTMLDivElement>()
+const rateBarChartRef = ref<HTMLDivElement>()
+let typePieChart: echarts.ECharts | null = null
+let rateBarChart: echarts.ECharts | null = null
 const dialogVisible = ref(false)
 const dialogType = ref<'add' | 'edit'>('add')
 const formRef = ref()
@@ -141,6 +162,7 @@ function handleSearch() {
   pageNum.value = 1
   fetchData()
   fetchSummary()
+  fetchChartData()
 }
 
 async function fetchData() {
@@ -150,6 +172,61 @@ async function fetchData() {
     tableData.value = res.data.records
     total.value = res.data.total
   } catch { /* empty */ } finally { loading.value = false }
+}
+
+async function fetchChartData() {
+  try {
+    const res = await getBudgetList({ ...queryParams.value, current: 1, size: 9999 })
+    const list = res.data.records || []
+    initTypePieChart(list)
+    initRateBarChart(list)
+  } catch { /* empty */ }
+}
+
+function initTypePieChart(list: AnalysisEnergyBudget[]) {
+  if (!typePieChartRef.value) return
+  if (!typePieChart) typePieChart = echarts.init(typePieChartRef.value)
+  const energyCount = list.filter(item => item.budgetType === 'ENERGY').length
+  const carbonCount = list.filter(item => item.budgetType === 'CARBON').length
+  typePieChart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    legend: { orient: 'vertical', left: 'left' },
+    series: [{
+      type: 'pie',
+      radius: ['40%', '70%'],
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+      label: { show: false },
+      emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold' } },
+      data: [
+        { name: '能耗预算', value: energyCount, itemStyle: { color: '#3b82f6' } },
+        { name: '碳排放预算', value: carbonCount, itemStyle: { color: '#10b981' } }
+      ]
+    }]
+  })
+}
+
+function initRateBarChart(list: AnalysisEnergyBudget[]) {
+  if (!rateBarChartRef.value) return
+  if (!rateBarChart) rateBarChart = echarts.init(rateBarChartRef.value)
+  const data = list.map(item => ({
+    name: item.energyUnitName || '未知单元',
+    value: Number(item.completionRate) || 0
+  }))
+  rateBarChart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: '{b}: {c}%' },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
+    yAxis: { type: 'category', data: data.map(item => item.name), inverse: true },
+    series: [{
+      type: 'bar',
+      data: data.map(item => item.value),
+      itemStyle: {
+        color: (params: any) => Number(params.value) >= 100 ? '#ef4444' : '#3b82f6',
+        borderRadius: [0, 4, 4, 0]
+      },
+      label: { show: true, position: 'right', formatter: '{c}%' }
+    }]
+  })
 }
 
 async function fetchSummary() {
@@ -209,12 +286,23 @@ async function handleDelete(row: AnalysisEnergyBudget) {
 onMounted(() => {
   fetchData()
   fetchSummary()
+  nextTick(() => fetchChartData())
+  window.addEventListener('resize', () => {
+    typePieChart?.resize()
+    rateBarChart?.resize()
+  })
+})
+
+onUnmounted(() => {
+  typePieChart?.dispose()
+  rateBarChart?.dispose()
 })
 </script>
 
 <style scoped lang="scss">
 .analysis-budget {
   .filter-card { margin-bottom: 16px; }
+  .chart-row { margin-bottom: 16px; }
   .summary-row { margin-bottom: 16px; }
   .summary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .summary-title { font-size: 16px; font-weight: bold; }
