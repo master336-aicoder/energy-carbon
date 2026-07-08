@@ -9,7 +9,7 @@
       </template>
       <el-form :inline="true" class="search-form">
         <el-form-item label="目标年度">
-          <el-input v-model="searchForm.targetYear" placeholder="请输入目标年度" clearable />
+          <el-input-number v-model="searchForm.targetYear" :min="2000" :max="2100" placeholder="请输入目标年度" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
@@ -21,7 +21,11 @@
         <el-table-column type="index" label="序号" width="60" />
         <el-table-column prop="targetName" label="目标名称" width="180" />
         <el-table-column prop="targetYear" label="目标年度" width="120" />
-        <el-table-column prop="targetType" label="目标类型" width="140" />
+        <el-table-column prop="targetType" label="目标类型" width="140">
+          <template #default="{ row }">
+            {{ row.targetType === 1 ? '能耗目标' : row.targetType === 2 ? '碳排目标' : row.targetType }}
+          </template>
+        </el-table-column>
         <el-table-column prop="targetValue" label="目标值" width="120" />
         <el-table-column prop="actualValue" label="实际值" width="120" />
         <el-table-column prop="unit" label="单位" width="100" />
@@ -56,10 +60,13 @@
           <el-input v-model="form.targetName" placeholder="请输入目标名称" />
         </el-form-item>
         <el-form-item label="目标年度">
-          <el-input v-model="form.targetYear" placeholder="请输入目标年度" />
+          <el-input-number v-model="form.targetYear" :min="2000" :max="2100" placeholder="请输入目标年度" />
         </el-form-item>
         <el-form-item label="目标类型">
-          <el-input v-model="form.targetType" placeholder="请输入目标类型" />
+          <el-select v-model="form.targetType" placeholder="请选择目标类型">
+            <el-option label="能耗目标" :value="1" />
+            <el-option label="碳排目标" :value="2" />
+          </el-select>
         </el-form-item>
         <el-form-item label="目标值">
           <el-input-number v-model="form.targetValue" :precision="2" />
@@ -132,10 +139,14 @@ function handleEdit(row) {
 
 async function handleSubmit() {
   try {
+    const payload = JSON.parse(JSON.stringify(form))
+    payload.targetYear = parseInt(payload.targetYear) || 0
+    payload.targetType = parseInt(payload.targetType) || 0
+    payload.status = parseInt(payload.status) || 0
     if (form.id) {
-      await updateTarget(form.id, JSON.parse(JSON.stringify(form)))
+      await updateTarget(form.id, payload)
     } else {
-      await createTarget(JSON.parse(JSON.stringify(form)))
+      await createTarget(payload)
     }
     ElMessage.success(dialogTitle.value + '成功')
     dialogVisible.value = false

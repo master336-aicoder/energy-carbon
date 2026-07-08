@@ -26,9 +26,17 @@ public class AiServiceRecordController {
     @PostMapping
     public Result<Void> add(@RequestBody @Valid AiServiceRecord entity) {
         if (entity.getStatus() == null) {
-            entity.setStatus("PENDING");
+            entity.setStatus(1);
         }
         aiServiceRecordService.save(entity);
+        return Result.ok();
+    }
+
+    @ApiOperation("修改服务预约记录")
+    @PutMapping("/{id}")
+    public Result<Void> update(@ApiParam("ID") @PathVariable Long id, @RequestBody @Valid AiServiceRecord entity) {
+        entity.setId(id);
+        aiServiceRecordService.updateById(entity);
         return Result.ok();
     }
 
@@ -39,7 +47,7 @@ public class AiServiceRecordController {
         if (entity == null) {
             return Result.error("记录不存在");
         }
-        entity.setStatus("CANCELLED");
+        entity.setStatus(0);
         aiServiceRecordService.updateById(entity);
         return Result.ok();
     }

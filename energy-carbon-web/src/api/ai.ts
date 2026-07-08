@@ -1,11 +1,11 @@
 import request from '@/utils/request'
 
-// AI服务
-export const getAiServiceList = (params?: any) => request.get('/ai/service/list', { params })
-export const getAiServiceDetail = (id: number) => request.get(`/ai/service/${id}`)
-export const createAiService = (data: any) => request.post('/ai/service', data)
-export const updateAiService = (id: number, data: any) => request.put(`/ai/service/${id}`, data)
-export const deleteAiService = (id: number) => request.delete(`/ai/service/${id}`)
+// AI服务（使用 ai_service_record 表，对应后端 /ai/service-record 接口）
+export const getAiServiceList = (params?: any) => request.get('/ai/service-record/list', { params })
+export const getAiServiceDetail = (id: number) => request.get(`/ai/service-record/${id}`)
+export const createAiService = (data: any) => request.post('/ai/service-record', data)
+export const updateAiService = (id: number, data: any) => request.put(`/ai/service-record/${id}`, data)
+export const deleteAiService = (id: number) => request.delete(`/ai/service-record/${id}`)
 
 // 报告模板
 export const getReportTemplateList = (params?: any) => request.get('/ai/report-template/list', { params })

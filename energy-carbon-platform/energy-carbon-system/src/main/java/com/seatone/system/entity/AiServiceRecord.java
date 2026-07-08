@@ -1,50 +1,59 @@
 package com.seatone.system.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.seatone.common.base.BaseEntity;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
+import java.math.BigDecimal;
 
+/**
+ * AI 智能服务记录实体
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("ai_service_record")
+@ApiModel("AI 智能服务记录")
 public class AiServiceRecord extends BaseEntity {
 
-    /**
-     * 服务名称
-     */
-    @NotBlank(message = "服务名称不能为空")
+    @TableId(type = IdType.AUTO)
+    @ApiModelProperty("主键ID")
+    private Long id;
+
+    @ApiModelProperty("服务名称")
     private String serviceName;
 
-    /**
-     * 联系人姓名
-     */
-    @NotBlank(message = "联系人姓名不能为空")
-    private String contactName;
+    @ApiModelProperty("服务类型")
+    private String serviceType;
 
-    /**
-     * 联系人电话
-     */
-    @NotBlank(message = "联系人电话不能为空")
-    private String contactPhone;
+    @ApiModelProperty("描述")
+    private String description;
 
-    /**
-     * 预约日期
-     */
-    @NotNull(message = "预约日期不能为空")
-    private LocalDate appointmentDate;
+    @ApiModelProperty("价格")
+    private BigDecimal price;
 
-    /**
-     * 状态（如：PENDING-待处理，CONFIRMED-已确认，CANCELLED-已取消）
-     */
-    private String status;
+    @ApiModelProperty("状态：1启用 0停用")
+    private Integer status;
 
-    /**
-     * 备注
-     */
+    @ApiModelProperty("申请人")
+    private String applicant;
+
+    @ApiModelProperty("联系方式")
+    private String contact;
+
+    @ApiModelProperty("期望日期")
+    private String expectedDate;
+
+    @ApiModelProperty("处理结果")
+    private String result;
+
+    @ApiModelProperty("备注")
     private String remark;
+
+    @ApiModelProperty("是否删除：0否 1是")
+    private Integer deleted;
 }
