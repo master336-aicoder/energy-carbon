@@ -1,6 +1,53 @@
 <template>
   <div class="carbon-accounting">
-    <el-card shadow="never">
+    <!-- 数据概览仪表盘 -->
+    <el-row :gutter="16" class="dashboard-row">
+      <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
+        <el-card shadow="never" class="chart-card">
+          <template #header>
+            <div class="chart-header">
+              <span class="chart-title">核算范围排放占比</span>
+              <span class="chart-subtitle">按范围一/二/三汇总</span>
+            </div>
+          </template>
+          <div ref="scopePieRef" class="chart-container"></div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="24" :md="10" :lg="10" :xl="10">
+        <el-card shadow="never" class="chart-card">
+          <template #header>
+            <div class="chart-header">
+              <span class="chart-title">月度总排放量趋势</span>
+              <span class="chart-subtitle">按创建时间月统计 (tCO2e)</span>
+            </div>
+          </template>
+          <div ref="monthBarRef" class="chart-container"></div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="24" :md="6" :lg="6" :xl="6">
+        <el-card shadow="never" class="chart-card">
+          <template #header>
+            <div class="chart-header">
+              <span class="chart-title">排放量 TOP5</span>
+              <span class="chart-subtitle">tCO2e</span>
+            </div>
+          </template>
+          <div class="top5-table-wrap">
+            <el-table :data="top5Data" size="small" stripe style="width:100%">
+              <el-table-column type="index" label="排名" width="55" />
+              <el-table-column prop="accountingName" label="核算名称" show-overflow-tooltip />
+              <el-table-column prop="totalEmission" label="排放量" width="90" align="right">
+                <template #default="{ row }">
+                  <span class="emission-value">{{ formatNumber(row.totalEmission) }}</span>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-card shadow="never" class="list-card">
       <template #header>
         <div class="header-row">
           <span class="title">碳排放核算</span>
@@ -198,7 +245,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import echarts from '@/utils/echarts'
 import {
@@ -230,7 +277,131 @@ const reportVisible = ref(false)
 const reportData = ref<any>(null)
 const reportChartRef = ref<HTMLElement | null>(null)
 
-onMounted(() => { getList() })
+// 仪表盘
+const scopePieRef = ref<HTMLElement | null>(null)
+const monthBarRef = ref<HTMLElement | null>(null)
+const top5Data = ref<any[]>([])
+let scopePieChart: echarts.ECharts | null = null
+let monthBarChart: echarts.ECharts | null = null
+let reportChart: echarts.ECharts | null = null
+
+onMounted(() => { getList(); loadDashboardData() })
+onUnmounted(() => { disposeCharts() })
+
+function disposeCharts() {
+  scopePieChart?.dispose()
+  monthBarChart?.dispose()
+  reportChart?.dispose()
+  scopePieChart = null
+  monthBarChart = null
+  reportChart = null
+}
+
+function formatNumber(val: any) {
+  const num = Number(val)
+  return isNaN(num) ? '-' : num.toLocaleString('zh-CN', { maximumFractionDigits: 2 })
+}
+
+async function loadDashboardData() {
+  try {
+    const res = await getAccountingList({ current: 1, size: 9999 })
+    const list = res.data.records || []
+
+    // 按核算范围汇总
+    const scopeMap: Record<string, number> = { SCOPE1: 0, SCOPE2: 0, SCOPE3: 0 }
+    list.forEach((item: any) => {
+      const scope = item.scopeType || 'SCOPE1'
+      scopeMap[scope] = (scopeMap[scope] || 0) + Number(item.totalEmission || 0)
+    })
+
+    // 按创建月份汇总
+    const monthMap: Record<string, number> = {}
+    list.forEach((item: any) => {
+      const date = item.createTime ? new Date(item.createTime) : null
+      if (date) {
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        monthMap[monthKey] = (monthMap[monthKey] || 0) + Number(item.totalEmission || 0)
+      }
+    })
+    const sortedMonths = Object.keys(monthMap).sort()
+    // 最多展示最近 12 个月
+    const recentMonths = sortedMonths.slice(-12)
+
+    // TOP5
+    top5Data.value = [...list]
+      .sort((a: any, b: any) => Number(b.totalEmission || 0) - Number(a.totalEmission || 0))
+      .slice(0, 5)
+
+    await nextTick()
+    renderScopePie(scopeMap)
+    renderMonthBar(recentMonths, monthMap)
+  } catch (e) { console.error(e) }
+}
+
+function renderScopePie(scopeMap: Record<string, number>) {
+  if (!scopePieRef.value) return
+  scopePieChart?.dispose()
+  scopePieChart = echarts.init(scopePieRef.value)
+  const data = [
+    { value: scopeMap.SCOPE1 || 0, name: '范围一（直接排放）' },
+    { value: scopeMap.SCOPE2 || 0, name: '范围二（间接排放）' },
+    { value: scopeMap.SCOPE3 || 0, name: '范围三（其他排放）' }
+  ].filter(d => d.value > 0)
+
+  scopePieChart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c} tCO2e ({d}%)' },
+    legend: { bottom: 0, icon: 'circle', itemWidth: 10, itemHeight: 10 },
+    color: ['#0ea5e9', '#10b981', '#f59e0b'],
+    series: [{
+      type: 'pie',
+      radius: ['40%', '70%'],
+      center: ['50%', '45%'],
+      avoidLabelOverlap: true,
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+      label: { show: true, formatter: '{b}\n{d}%' },
+      labelLine: { show: true },
+      data: data.length ? data : [{ value: 0, name: '暂无数据' }]
+    }]
+  })
+  window.addEventListener('resize', () => scopePieChart?.resize())
+}
+
+function renderMonthBar(months: string[], monthMap: Record<string, number>) {
+  if (!monthBarRef.value) return
+  monthBarChart?.dispose()
+  monthBarChart = echarts.init(monthBarRef.value)
+  monthBarChart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: months.map(m => m.slice(5) + '月'),
+      axisLine: { lineStyle: { color: '#cbd5e1' } },
+      axisLabel: { color: '#64748b' }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'tCO2e',
+      nameTextStyle: { color: '#64748b' },
+      axisLine: { show: false },
+      splitLine: { lineStyle: { color: '#f1f5f9' } },
+      axisLabel: { color: '#64748b' }
+    },
+    series: [{
+      type: 'bar',
+      data: months.map(m => Number(monthMap[m] || 0).toFixed(2)),
+      barWidth: '50%',
+      itemStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: '#34d399' },
+          { offset: 1, color: '#059669' }
+        ]),
+        borderRadius: [4, 4, 0, 0]
+      }
+    }]
+  })
+  window.addEventListener('resize', () => monthBarChart?.resize())
+}
 
 async function getList() {
   loading.value = true
@@ -265,6 +436,7 @@ async function handleAddSubmit() {
   ElMessage.success('新增成功')
   addVisible.value = false
   getList()
+  loadDashboardData()
 }
 
 async function handleDetail(row: any) {
@@ -296,23 +468,27 @@ async function handleCalculate() {
   await calculateEmission({ accountingId: currentAccountingId.value, activities })
   ElMessage.success('计算完成')
   getList()
+  loadDashboardData()
 }
 
 async function handleSubmit(row: any) {
   await submitAccounting(row.id)
   ElMessage.success('已提交')
   getList()
+  loadDashboardData()
 }
 async function handleApprove(row: any) {
   await approveAccounting(row.id)
   ElMessage.success('已审核')
   getList()
+  loadDashboardData()
 }
 async function handleDelete(row: any) {
   await ElMessageBox.confirm('确认删除该核算记录？', '提示')
   await deleteAccounting(row.id)
   ElMessage.success('删除成功')
   getList()
+  loadDashboardData()
 }
 
 async function handleReport(row: any) {
@@ -327,8 +503,9 @@ async function handleReport(row: any) {
 
 function renderReportChart() {
   if (!reportChartRef.value || !reportData.value) return
-  const chart = echarts.init(reportChartRef.value)
-  chart.setOption({
+  reportChart?.dispose()
+  reportChart = echarts.init(reportChartRef.value)
+  reportChart.setOption({
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', data: ['范围一', '范围二', '范围三'] },
     yAxis: { type: 'value', name: 'tCO2e' },
@@ -343,12 +520,23 @@ function renderReportChart() {
       }
     }]
   })
-  window.addEventListener('resize', () => chart.resize())
+  window.addEventListener('resize', () => reportChart?.resize())
 }
 </script>
 
 <style scoped>
 .carbon-accounting { padding: 16px; }
+.dashboard-row { margin-bottom: 16px; }
+.chart-card { height: 100%; }
+.chart-card :deep(.el-card__header) { padding: 14px 16px; }
+.chart-card :deep(.el-card__body) { padding: 16px; height: calc(100% - 50px); box-sizing: border-box; }
+.chart-header { display: flex; flex-direction: column; }
+.chart-title { font-size: 15px; font-weight: 600; color: #1e293b; }
+.chart-subtitle { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.chart-container { width: 100%; height: 280px; }
+.top5-table-wrap { height: 280px; overflow-y: auto; }
+.emission-value { font-weight: 600; color: #059669; }
+.list-card { margin-bottom: 0; }
 .header-row { display: flex; justify-content: space-between; align-items: center; }
 .title { font-size: 16px; font-weight: 600; }
 .search-form { margin-bottom: 10px; }
