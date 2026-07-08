@@ -2,9 +2,9 @@
   <el-container class="layout-container">
     <el-aside :width="appStore.sidebarCollapsed ? '64px' : '220px'" class="sidebar">
       <div class="logo">
-        <img src="/favicon.svg" alt="logo" v-if="!appStore.sidebarCollapsed">
+        <img :src="faviconSrc" alt="logo" v-if="!appStore.sidebarCollapsed">
         <span v-if="!appStore.sidebarCollapsed">能碳管理平台</span>
-        <img src="/favicon.svg" alt="logo" v-else style="width: 32px;">
+        <img :src="faviconSrc" alt="logo" v-else style="width: 32px;">
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -123,6 +123,8 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const appStore = useAppStore()
+
+const faviconSrc = `${import.meta.env.BASE_URL}favicon.svg`
 
 // 我的消息
 const unreadCount = ref(0)

@@ -13,7 +13,7 @@ const isElementIcon = computed(() => {
   return !props.name.startsWith('custom-')
 })
 
-const iconSrc = computed(() => `/icons/${props.name}.svg`)
+const iconSrc = computed(() => `${import.meta.env.BASE_URL}icons/${props.name}.svg`)
 </script>
 
 <style scoped>
