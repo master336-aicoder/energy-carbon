@@ -428,7 +428,8 @@ JSON Web Token实现无状态认证，支持Token刷新机制。
     │   └── pom.xml
     ├── energy-carbon-system/          # 系统管理模块
     │   ├── 用户管理、角色管理、菜单管理、部门管理
-    │   └── 操作日志、数据字典
+    │   ├── 操作日志、数据字典
+    │   └── AI 服务预约记录（ai_service_record）
     ├── energy-carbon-monitor/         # 在线监测模块
     │   ├── 实时数据、历史数据、设备对标、时间对标
     │   └── 计量抄表、状态监测
@@ -1258,6 +1259,25 @@ MinIO| 对象存储| 报告文件、凭证附件、导入模板
         INDEX idx_status (alarm_status)
     ) COMMENT='报警记录表';
     
+    -- 能效对标库表
+    CREATE TABLE efficiency_benchmark (
+        id BIGINT NOT NULL AUTO_INCREMENT COMMENT 'ID',
+        benchmark_name VARCHAR(200) NOT NULL COMMENT '对标名称',
+        industry VARCHAR(100) COMMENT '行业',
+        unit_name VARCHAR(100) COMMENT '用能单元',
+        benchmark_value DECIMAL(19,4) COMMENT '对标值',
+        unit VARCHAR(50) COMMENT '单位',
+        our_value DECIMAL(19,4) COMMENT '我方值',
+        gap DECIMAL(19,4) COMMENT '差距',
+        status INT DEFAULT 1 COMMENT '状态',
+        remark VARCHAR(500) COMMENT '备注',
+        create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+        update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        create_by BIGINT COMMENT '创建人',
+        update_by BIGINT COMMENT '更新人',
+        deleted TINYINT DEFAULT 0 COMMENT '删除标记',
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='能效对标';
 
 #### 5.3.5 系统管理扩展表
 
@@ -1279,6 +1299,10 @@ CREATE TABLE sys_log (
     error_msg TEXT COMMENT '错误消息',
     oper_time DATETIME DEFAULT NULL COMMENT '操作时间',
     cost_time BIGINT DEFAULT 0 COMMENT '消耗时间（毫秒）',
+    browser VARCHAR(255) DEFAULT NULL COMMENT '浏览器',
+    os VARCHAR(255) DEFAULT NULL COMMENT '操作系统',
+    referer VARCHAR(500) DEFAULT NULL COMMENT '来源页面',
+    user_agent VARCHAR(500) DEFAULT NULL COMMENT 'User-Agent',
     PRIMARY KEY (id),
     KEY idx_oper_time (oper_time),
     KEY idx_oper_name (oper_name)
@@ -1704,6 +1728,52 @@ MinIO| 4核16G| 2| 对象存储集群
     log.info("用户登录成功, userId={}, ip={}", userId, ip);
     log.error("查询碳排放数据失败, year={}, unitId={}", year, unitId, e);
     
+
+## 9\. 版本更新记录
+
+### V1.1（2026-07）
+
+**前端可视化增强**
+- 碳排放核算页面引入 ECharts 饼图（范围占比）、季度柱状图（年-季度聚合）及 TOP5 表格，数据来自全量 `carbon_accounting` 记录前端聚合。
+- 能效对标页面新增雷达图（`benchmarkValue` vs `ourValue`）和差距柱状图（`gap`）。
+- 能效分析页面新增分组柱状图（`efficiencyValue` vs `standardValue`）和状态分布饼图。
+- 能碳预算页面新增预算类型饼图与完成率水平柱状图。
+- 图表统一通过 `window.addEventListener('resize')` 实现响应式，并在组件卸载时调用 `dispose()` 释放实例。
+
+**后端接口与模型调整**
+- `AiServiceRecordController` 新增 `PUT /api/ai/service-record/{id}` 接口，支持服务预约记录的完整编辑。
+- 前端 AI 服务模块接口统一由 `/api/ai/service/*` 迁移至 `/api/ai/service-record/*`，与数据模型 `ai_service_record` 保持一致。
+- `sys_log` 表扩展 `browser`、`os`、`referer`、`user_agent` 字段，支撑操作日志完整记录。
+- 新增 `efficiency_benchmark` 表，用于能效对标库数据维护。
+
+**数据治理与测试数据**
+- 修复碳核算、碳目标、能源设备/仪表、监控数据、计量抄表、指标录入、产量录入、各类报表等业务表中 0/NULL 数值，替换为符合业务场景的模拟有效值。
+- 为 38 个业务表补充 20~260 条真实模拟测试数据，脚本见 `seed_energy_carbon.py`。
+
+**缺陷修复**
+- 修正 7 个后台菜单路径与前端路由不匹配导致的 404 问题。
+- 修复操作日志、能效对标、AI 服务预约等页面因表/字段缺失或接口不一致导致的 500 报错。
+
+## 9\. 版本更新记录
+
+### V1.1（2026-07）
+
+**数据库与数据治理**
+- `sys_log` 表补充 `browser`、`os`、`referer`、`user_agent` 字段，用于完整记录客户端环境信息。
+- 新建 `efficiency_benchmark` 表，用于能效对标数据存储；新增/调整 `ai_service_record` 表字段（`applicant` 可空），支持 AI 服务预约完整 CRUD。
+- 修正碳核算、碳目标、能源设备/仪表、监控数据、计量抄表、指标录入、产量录入、各类报表等业务表中的 0/NULL 数值为模拟有效值。
+- 为报警、分析、碳资产、CBAM、IoT、报表、工具包等 38 个业务表补充 20~260 条真实模拟测试数据。
+
+**接口与后端调整**
+- AI 服务预约接口统一调整至 `/api/ai/service-record/*`，新增 `PUT /api/ai/service-record/{id}` 编辑接口。
+- 修正 7 个后台菜单路由与前端组件不匹配问题，消除页面 404。
+- 修复操作日志、能效对标、AI 服务预约等页面因表/字段缺失导致的 500 报错。
+
+**前端可视化增强**
+- 碳核算页面新增核算范围饼图、年-季度排放趋势柱状图、排放量 TOP5 表格。
+- 能效对标页面新增雷达图（对标值 vs 我方值）与差距柱状图。
+- 能效分析页面新增分组柱状图（能效值 vs 标准值）与状态分布饼图。
+- 能碳预算页面新增预算类型分布饼图与完成率水平柱状图。
 
 **文档说明**
 
