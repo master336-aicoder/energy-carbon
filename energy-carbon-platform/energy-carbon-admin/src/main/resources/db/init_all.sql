@@ -1471,11 +1471,11 @@ INSERT INTO product_type (id, product_code, product_name, product_category, unit
 
 -- 11. 能碳预算数据
 INSERT INTO analysis_energy_budget (id, energy_unit_id, budget_year, budget_type, target_value, target_unit, current_value, completion_rate, status) VALUES
-(1, 1, 2026, 'ENERGY', 50000.0000, 'tce', 24500.0000, 49.00, 1, '全厂年度能源预算'),
-(2, 1, 2026, 'CARBON', 12000.0000, 'tCO2', 5800.0000, 48.33, 1, '全厂年度碳排放预算'),
-(3, 2, 2026, 'ENERGY', 20000.0000, 'tce', 9800.0000, 49.00, 1, '一分厂年度能源预算'),
-(4, 3, 2026, 'ENERGY', 15000.0000, 'tce', 7200.0000, 48.00, 1, '二分厂年度能源预算'),
-(5, 4, 2026, 'ENERGY', 12000.0000, 'tce', 5900.0000, 49.17, 1, '三分厂年度能源预算');
+(1, 1, 2026, 'ENERGY', 50000.0000, 'tce', 24500.0000, 49.00, 1),
+(2, 1, 2026, 'CARBON', 12000.0000, 'tCO2', 5800.0000, 48.33, 1),
+(3, 2, 2026, 'ENERGY', 20000.0000, 'tce', 9800.0000, 49.00, 1),
+(4, 3, 2026, 'ENERGY', 15000.0000, 'tce', 7200.0000, 48.00, 1),
+(5, 4, 2026, 'ENERGY', 12000.0000, 'tce', 5900.0000, 49.17, 1);
 
 -- 12. 碳排放核算测试数据
 INSERT INTO carbon_accounting (id, accounting_name, accounting_year, accounting_period, energy_unit_id, scope_type, total_emission, emission_unit, status, remark) VALUES
