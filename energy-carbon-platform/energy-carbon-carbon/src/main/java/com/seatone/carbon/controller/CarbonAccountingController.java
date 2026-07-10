@@ -230,10 +230,19 @@ public class CarbonAccountingController {
             detail.setActivityUnit(item.getActivityUnit());
             detail.setSourceDescription(item.getSourceDescription());
             detail.setCategory(item.getCategory());
+            detail.setCategoryCode(resolveCategoryCode(item.getCategory()));
+            detail.setScopeType(resolveScopeType(item.getCategory()));
+            detail.setScopeTypeCode(resolveScopeTypeCode(item.getCategory()));
             detail.setEmissionSource(item.getEmissionSource());
             detail.setDataSource(item.getDataSource());
+            detail.setDataQuality(item.getDataQuality());
+            detail.setVerifyStatus(item.getVerifyStatus());
             detail.setOperator(item.getOperator());
             detail.setRelatedIndicator(item.getRelatedIndicator());
+            detail.setAttachmentUrl(item.getAttachmentUrl());
+            detail.setCalcFormula(item.getCalcFormula());
+            detail.setOriginalValue(item.getOriginalValue());
+            detail.setVersion(1);
 
             BigDecimal factorValue;
             if (item.getFactorId() != null) {
@@ -269,6 +278,7 @@ public class CarbonAccountingController {
                 emission = item.getActivityData().multiply(factorValue).setScale(4, RoundingMode.HALF_UP);
             }
             detail.setEmission(emission);
+            detail.setEmissionTco2(emission);
             detail.setEmissionUnit("tCO2e");
 
             totalEmission = totalEmission.add(emission);
@@ -396,5 +406,26 @@ public class CarbonAccountingController {
         CarbonAccountingDetailDTO dto = new CarbonAccountingDetailDTO();
         BeanUtils.copyProperties(entity, dto);
         return dto;
+    }
+
+    private String resolveCategoryCode(String category) {
+        if (category == null) return "CATEGORY_1";
+        if (category.contains("类别二")) return "CATEGORY_2";
+        if (category.contains("类别三")) return "CATEGORY_3";
+        return "CATEGORY_1";
+    }
+
+    private String resolveScopeType(String category) {
+        if (category == null) return "范围一";
+        if (category.contains("类别二")) return "范围二";
+        if (category.contains("类别三")) return "范围三";
+        return "范围一";
+    }
+
+    private String resolveScopeTypeCode(String category) {
+        if (category == null) return "SCOPE_1";
+        if (category.contains("类别二")) return "SCOPE_2";
+        if (category.contains("类别三")) return "SCOPE_3";
+        return "SCOPE_1";
     }
 }

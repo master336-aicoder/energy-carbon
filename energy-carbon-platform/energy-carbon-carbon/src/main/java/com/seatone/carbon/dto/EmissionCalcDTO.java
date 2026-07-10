@@ -21,13 +21,18 @@ public class EmissionCalcDTO {
         private String activityName;
         private Long energyTypeId;
         private BigDecimal activityData;
+        private BigDecimal originalValue;
         private String activityUnit;
         private Long factorId;
         private String sourceDescription;
         private String category;
         private String emissionSource;
         private String dataSource;
+        private String dataQuality;
+        private String verifyStatus;
         private String operator;
         private String relatedIndicator;
+        private String attachmentUrl;
+        private String calcFormula;
     }
 }

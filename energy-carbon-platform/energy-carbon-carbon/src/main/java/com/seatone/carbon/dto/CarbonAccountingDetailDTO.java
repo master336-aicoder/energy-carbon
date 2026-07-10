@@ -32,13 +32,33 @@ public class CarbonAccountingDetailDTO {
 
     private String category;
 
+    private String categoryCode;
+
+    private String scopeType;
+
+    private String scopeTypeCode;
+
     private String emissionSource;
 
     private String dataSource;
 
+    private String dataQuality;
+
+    private String verifyStatus;
+
     private String operator;
 
     private String relatedIndicator;
+
+    private String attachmentUrl;
+
+    private String calcFormula;
+
+    private BigDecimal originalValue;
+
+    private BigDecimal emissionTco2;
+
+    private Integer version;
 
     private LocalDateTime createTime;
 }
