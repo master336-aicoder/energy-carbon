@@ -70,34 +70,36 @@
     </el-row>
 
     <!-- 活动数据明细 -->
-    <el-card shadow="never" class="activity-card">
-      <template #header>
-        <div class="header-row">
-          <span class="title">类别一：直接温室气体排放</span>
-          <el-button type="primary" size="small" :icon="Plus" @click="handleAddActivity">新增活动</el-button>
+    <div v-for="group in groupedActivityData" :key="group.category" class="activity-card">
+      <el-card shadow="never">
+        <template #header>
+          <div class="header-row">
+            <span class="title">{{ group.category || '未分类' }}</span>
+            <el-button type="primary" size="small" :icon="Plus" @click="handleAddActivity">新增活动</el-button>
+          </div>
+        </template>
+        <div class="table-wrap">
+          <el-table :data="group.items" border stripe size="small" v-loading="loading">
+            <el-table-column type="index" label="序号" width="55" />
+            <el-table-column prop="category" label="活动" width="150" show-overflow-tooltip />
+            <el-table-column prop="emissionSource" label="排放源" width="120" show-overflow-tooltip />
+            <el-table-column prop="activityName" label="活动名称" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="dataSource" label="数据来源" width="100" />
+            <el-table-column prop="operator" label="运算符" width="80" />
+            <el-table-column prop="relatedIndicator" label="关联指标" width="120" show-overflow-tooltip />
+            <el-table-column prop="activityData" label="活动水平(数量)" width="130" align="right" />
+            <el-table-column prop="activityUnit" label="计量单位" width="90" />
+            <el-table-column prop="emission" label="排放量(tCO₂e)" width="140" align="right" />
+            <el-table-column label="操作" width="140" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" @click="handleEditActivity(row)">编辑</el-button>
+                <el-button link type="danger" @click="handleDeleteActivity(row)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
-      </template>
-      <div class="table-wrap">
-        <el-table :data="activityData" border stripe size="small" v-loading="loading">
-          <el-table-column type="index" label="序号" width="55" />
-          <el-table-column prop="category" label="活动" width="150" show-overflow-tooltip />
-          <el-table-column prop="emissionSource" label="排放源" width="120" show-overflow-tooltip />
-          <el-table-column prop="activityName" label="活动名称" min-width="140" show-overflow-tooltip />
-          <el-table-column prop="dataSource" label="数据来源" width="100" />
-          <el-table-column prop="operator" label="运算符" width="80" />
-          <el-table-column prop="relatedIndicator" label="关联指标" width="120" show-overflow-tooltip />
-          <el-table-column prop="activityData" label="活动水平(数量)" width="130" align="right" />
-          <el-table-column prop="activityUnit" label="计量单位" width="90" />
-          <el-table-column prop="emission" label="排放量(tCO₂e)" width="140" align="right" />
-          <el-table-column label="操作" width="140" fixed="right">
-            <template #default="{ row, $index }">
-              <el-button link type="primary" @click="handleEditActivity(row, $index)">编辑</el-button>
-              <el-button link type="danger" @click="handleDeleteActivity(row, $index)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-    </el-card>
+      </el-card>
+    </div>
 
     <!-- 新增/编辑活动弹窗 -->
     <el-dialog v-model="activityVisible" :title="activityFormIndex > -1 ? '编辑活动' : '新增活动'" width="650px">
@@ -210,7 +212,7 @@ import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh, Document, Download, Upload, MagicStick, Plus } from '@element-plus/icons-vue'
 import echarts from '@/utils/echarts'
-import { getAccountingList, getAccountingDetail, getEmissionReport, calculateEmission, deleteAccounting } from '@/api/carbon'
+import { getAccountingList, getAccountingDetail, getEmissionReportById, calculateEmission, deleteAccounting } from '@/api/carbon'
 import { getDeptTree } from '@/api/dept'
 import { getAllEnergyTypes } from '@/api/energyType'
 
@@ -249,6 +251,16 @@ const summaryData = computed(() => {
 })
 
 const activityData = computed(() => currentAccounting.value?.details || [])
+
+const groupedActivityData = computed(() => {
+  const map: Record<string, any[]> = {}
+  activityData.value.forEach((item: any) => {
+    const key = item.category || '未分类'
+    if (!map[key]) map[key] = []
+    map[key].push(item)
+  })
+  return Object.keys(map).map(key => ({ category: key, items: map[key] }))
+})
 
 const scopePieRef = ref<HTMLElement | null>(null)
 const monthBarRef = ref<HTMLElement | null>(null)
@@ -387,7 +399,7 @@ function handleQuery() { loadAccounting() }
 async function handleReport() {
   if (!currentAccounting.value) { ElMessage.warning('请先选择核算记录'); return }
   try {
-    const res = await getEmissionReport(currentAccounting.value.id)
+    const res = await getEmissionReportById(currentAccounting.value.id)
     reportData.value = res.data
     reportVisible.value = true
     await nextTick()
@@ -426,7 +438,7 @@ const activityForm = reactive({
   dataSource: '录入',
   operator: '+',
   relatedIndicator: '',
-  activityData: null as number | null,
+  activityData: 0 as number | null,
   activityUnit: 't',
   energyTypeId: null as number | null,
   emissionFactor: null as number | null,
@@ -441,7 +453,7 @@ function resetActivityForm() {
     dataSource: '录入',
     operator: '+',
     relatedIndicator: '',
-    activityData: null,
+    activityData: 0,
     activityUnit: 't',
     energyTypeId: null,
     emissionFactor: null,
@@ -456,7 +468,7 @@ function handleAddActivity() {
   activityVisible.value = true
 }
 
-function handleEditActivity(row: any, index: number) {
+function handleEditActivity(row: any) {
   Object.assign(activityForm, {
     category: row.category || '类别一：直接温室气体排放',
     emissionSource: row.emissionSource || '',
@@ -470,7 +482,7 @@ function handleEditActivity(row: any, index: number) {
     emissionFactor: row.emissionFactor,
     sourceDescription: row.sourceDescription || ''
   })
-  activityFormIndex.value = index
+  activityFormIndex.value = activityData.value.findIndex((d: any) => d.id === row.id)
   activityVisible.value = true
 }
 
@@ -498,7 +510,7 @@ async function handleSaveActivity() {
   await loadAccounting()
 }
 
-async function handleDeleteActivity(row: any, index: number) {
+async function handleDeleteActivity(row: any) {
   await ElMessageBox.confirm('确认删除该活动数据？', '提示')
   // 通过 detail id 删除（后端暂缺明细删除接口，这里仅做前端过滤提示）
   ElMessage.warning('明细删除接口需后端补充，当前仅做提示')

@@ -1,0 +1,23 @@
+{
+  "login": true,
+  "page_load": true,
+  "summary_loaded": true,
+  "pie_chart_loaded": true,
+  "bar_chart_loaded": true,
+  "activity_table_loaded": true,
+  "category_groups": [
+    {
+      "title": "类别一：直接温室气体排放",
+      "rows": 2
+    },
+    {
+      "title": "类别二：输入能源间接排放",
+      "rows": 1
+    }
+  ],
+  "add_activity_dialog": true,
+  "emission_report": true,
+  "refresh": true,
+  "console_errors": [],
+  "api_errors": []
+}

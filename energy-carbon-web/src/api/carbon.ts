@@ -64,4 +64,5 @@ export const submitAccounting = (id: number) => request.put(`/carbon/accounting/
 export const approveAccounting = (id: number) => request.put(`/carbon/accounting/${id}/approve`)
 export const getAccountingDetail = (id: number) => request.get(`/carbon/accounting/${id}`)
 export const getEmissionReport = (params?: any) => request.get('/carbon/accounting/report', { params })
+export const getEmissionReportById = (id: number) => request.get(`/carbon/accounting/report/${id}`)
 export const calculateEmission = (data: any) => request.post('/carbon/accounting/calculate', data)
