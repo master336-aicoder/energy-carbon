@@ -3,6 +3,7 @@ package com.seatone.carbon.dto;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 public class CarbonAccountingDetailDTO {
@@ -28,4 +29,16 @@ public class CarbonAccountingDetailDTO {
     private String emissionUnit;
 
     private String sourceDescription;
+
+    private String category;
+
+    private String emissionSource;
+
+    private String dataSource;
+
+    private String operator;
+
+    private String relatedIndicator;
+
+    private LocalDateTime createTime;
 }

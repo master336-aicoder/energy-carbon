@@ -24,5 +24,10 @@ public class EmissionCalcDTO {
         private String activityUnit;
         private Long factorId;
         private String sourceDescription;
+        private String category;
+        private String emissionSource;
+        private String dataSource;
+        private String operator;
+        private String relatedIndicator;
     }
 }

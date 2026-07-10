@@ -229,6 +229,11 @@ public class CarbonAccountingController {
             detail.setActivityData(item.getActivityData());
             detail.setActivityUnit(item.getActivityUnit());
             detail.setSourceDescription(item.getSourceDescription());
+            detail.setCategory(item.getCategory());
+            detail.setEmissionSource(item.getEmissionSource());
+            detail.setDataSource(item.getDataSource());
+            detail.setOperator(item.getOperator());
+            detail.setRelatedIndicator(item.getRelatedIndicator());
 
             BigDecimal factorValue;
             if (item.getFactorId() != null) {
@@ -336,9 +341,15 @@ public class CarbonAccountingController {
 
         for (CarbonAccountingDetail d : details) {
             if (d.getEmission() != null) {
-                // 根据关联能源类型判断范围（简化逻辑：需要查能源类型表）
-                // 这里简化为全部计入范围一，实际应按能源类型分类
-                scope1 = scope1.add(d.getEmission());
+                // 根据排放类别判断范围：类别一=范围一，类别二=范围二，类别三=范围三
+                String category = d.getCategory();
+                if (category != null && category.contains("类别二")) {
+                    scope2 = scope2.add(d.getEmission());
+                } else if (category != null && category.contains("类别三")) {
+                    scope3 = scope3.add(d.getEmission());
+                } else {
+                    scope1 = scope1.add(d.getEmission());
+                }
             }
         }
 

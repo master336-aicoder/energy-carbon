@@ -1,232 +1,194 @@
 <template>
   <div class="carbon-accounting">
-    <!-- 数据概览仪表盘 -->
+    <!-- 顶部筛选与操作 -->
+    <el-card shadow="never" class="filter-card">
+      <el-form :inline="true" :model="queryParams" class="filter-form">
+        <el-form-item label="年度">
+          <el-date-picker v-model="queryParams.accountingYear" type="year" placeholder="选择年份" value-format="YYYY" style="width:120px" />
+        </el-form-item>
+        <el-form-item label="用能单元">
+          <el-tree-select
+            v-model="queryParams.energyUnitId"
+            :data="deptTree"
+            :props="{ label: 'deptName', value: 'id', children: 'children' }"
+            placeholder="请选择"
+            clearable
+            style="width:200px"
+          />
+        </el-form-item>
+        <el-form-item label="选择模型">
+          <el-select v-model="queryParams.modelId" placeholder="请选择" clearable style="width:140px">
+            <el-option label="标准核算模型" value="standard" />
+            <el-option label="行业核算模型" value="industry" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :icon="Refresh" @click="handleQuery">刷新</el-button>
+          <el-button :icon="Document" @click="handleReport">碳排放报告</el-button>
+          <el-button :icon="Download" @click="handleImportTemplate">导入模板</el-button>
+          <el-button :icon="Upload" @click="handleImport">导入</el-button>
+          <el-button type="warning" :icon="MagicStick" @click="handleAIAnalysis">AI 智能分析</el-button>
+          <el-button type="primary" :icon="Plus" @click="handleAddActivity">新增活动</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 指标/图表 -->
     <el-row :gutter="16" class="dashboard-row">
-      <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
+      <el-col :xs="24" :sm="24" :md="6" :lg="6" :xl="6">
+        <el-card shadow="never" class="summary-card">
+          <template #header>
+            <span class="card-title">排放指标</span>
+          </template>
+          <el-table :data="summaryData" size="small" :show-header="false" class="summary-table">
+            <el-table-column prop="label" />
+            <el-table-column prop="value" align="right" width="120">
+              <template #default="{ row }">
+                <span class="summary-value">{{ row.value }}</span>
+                <span class="summary-unit">tCO₂e</span>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="24" :md="9" :lg="9" :xl="9">
         <el-card shadow="never" class="chart-card">
           <template #header>
-            <div class="chart-header">
-              <span class="chart-title">核算范围排放占比</span>
-              <span class="chart-subtitle">按范围一/二/三汇总</span>
-            </div>
+            <span class="card-title">碳排放分布</span>
           </template>
           <div ref="scopePieRef" class="chart-container"></div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="24" :md="10" :lg="10" :xl="10">
+      <el-col :xs="24" :sm="24" :md="9" :lg="9" :xl="9">
         <el-card shadow="never" class="chart-card">
           <template #header>
-            <div class="chart-header">
-              <span class="chart-title">季度总排放量趋势</span>
-          <span class="chart-subtitle">按年-季度统计 (tCO2e)</span>
-            </div>
+            <span class="card-title">碳排放总量</span>
           </template>
           <div ref="monthBarRef" class="chart-container"></div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="24" :md="6" :lg="6" :xl="6">
-        <el-card shadow="never" class="chart-card">
-          <template #header>
-            <div class="chart-header">
-              <span class="chart-title">排放量 TOP5</span>
-              <span class="chart-subtitle">tCO2e</span>
-            </div>
-          </template>
-          <div class="top5-table-wrap">
-            <el-table :data="top5Data" size="small" stripe style="width:100%">
-              <el-table-column type="index" label="排名" width="55" />
-              <el-table-column prop="accountingName" label="核算名称" show-overflow-tooltip />
-              <el-table-column prop="totalEmission" label="排放量" width="90" align="right">
-                <template #default="{ row }">
-                  <span class="emission-value">{{ formatNumber(row.totalEmission) }}</span>
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
-        </el-card>
-      </el-col>
     </el-row>
 
-    <el-card shadow="never" class="list-card">
+    <!-- 活动数据明细 -->
+    <el-card shadow="never" class="activity-card">
       <template #header>
         <div class="header-row">
-          <span class="title">碳排放核算</span>
-          <el-button type="primary" @click="handleAdd">新增核算</el-button>
+          <span class="title">类别一：直接温室气体排放</span>
+          <el-button type="primary" size="small" :icon="Plus" @click="handleAddActivity">新增活动</el-button>
         </div>
       </template>
-
-      <!-- 搜索栏 -->
-      <el-form :inline="true" :model="queryParams" class="search-form">
-        <el-form-item label="核算名称">
-          <el-input v-model="queryParams.accountingName" placeholder="请输入" clearable style="width:180px" />
-        </el-form-item>
-        <el-form-item label="核算年份">
-          <el-date-picker v-model="queryParams.accountingYear" type="year" placeholder="选择年份" value-format="YYYY" style="width:140px" />
-        </el-form-item>
-        <el-form-item label="核算期次">
-          <el-select v-model="queryParams.accountingPeriod" placeholder="全部" clearable style="width:120px">
-            <el-option label="年度" value="YEARLY" />
-            <el-option label="季度" value="QUARTERLY" />
-            <el-option label="月度" value="MONTHLY" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="queryParams.status" placeholder="全部" clearable style="width:120px">
-            <el-option label="草稿" value="DRAFT" />
-            <el-option label="已提交" value="SUBMITTED" />
-            <el-option label="已审核" value="APPROVED" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleQuery">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
-
-      <!-- 表格 -->
-      <el-table :data="tableData" v-loading="loading" border stripe style="width: 100%">
-        <el-table-column type="index" label="序号" width="60" />
-        <el-table-column prop="accountingName" label="核算名称" min-width="160" />
-        <el-table-column prop="accountingYear" label="核算年份" width="100" />
-        <el-table-column prop="accountingPeriod" label="期次" width="80">
-          <template #default="{ row }">
-            <el-tag :type="row.accountingPeriod === 'YEARLY' ? '' : row.accountingPeriod === 'QUARTERLY' ? 'warning' : 'info'" size="small">
-              {{ row.accountingPeriod === 'YEARLY' ? '年度' : row.accountingPeriod === 'QUARTERLY' ? '季度' : '月度' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="totalEmission" label="总排放量(tCO2e)" width="150" />
-        <el-table-column prop="scopeType" label="核算范围" width="120">
-          <template #default="{ row }">
-            {{ row.scopeType === 'SCOPE1' ? '范围一' : row.scopeType === 'SCOPE2' ? '范围二' : row.scopeType === 'SCOPE3' ? '范围三' : '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'APPROVED' ? 'success' : row.status === 'SUBMITTED' ? 'warning' : 'info'" size="small">
-              {{ row.status === 'DRAFT' ? '草稿' : row.status === 'SUBMITTED' ? '已提交' : '已审核' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="280" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="handleDetail(row)">详情</el-button>
-            <el-button link type="primary" @click="handleReport(row)">报告</el-button>
-            <el-button link type="primary" v-if="row.status === 'DRAFT'" @click="handleSubmit(row)">提交</el-button>
-            <el-button link type="primary" v-if="row.status === 'SUBMITTED'" @click="handleApprove(row)">审核</el-button>
-            <el-button link type="danger" v-if="row.status === 'DRAFT'" @click="handleDelete(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <div class="pagination-row">
-        <el-pagination
-          v-model:current="queryParams.current"
-          v-model:page-size="queryParams.size"
-          :total="total"
-          :page-sizes="[10, 20, 50]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @current-change="getList"
-          @size-change="getList"
-        />
-      </div>
-    </el-card>
-
-    <!-- 新增核算弹窗 -->
-    <el-dialog v-model="addVisible" title="新增核算" width="500px">
-      <el-form ref="addFormRef" :model="addForm" :rules="rules" label-width="100px">
-        <el-form-item label="核算名称" prop="accountingName">
-          <el-input v-model="addForm.accountingName" placeholder="请输入" />
-        </el-form-item>
-        <el-form-item label="核算年份" prop="accountingYear">
-          <el-date-picker v-model="addForm.accountingYear" type="year" placeholder="选择年份" value-format="YYYY" style="width:100%" />
-        </el-form-item>
-        <el-form-item label="核算期次" prop="accountingPeriod">
-          <el-select v-model="addForm.accountingPeriod" placeholder="请选择" style="width:100%">
-            <el-option label="年度" value="YEARLY" />
-            <el-option label="季度" value="QUARTERLY" />
-            <el-option label="月度" value="MONTHLY" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="核算范围" prop="scopeType">
-          <el-select v-model="addForm.scopeType" placeholder="请选择" style="width:100%">
-            <el-option label="范围一（直接排放）" value="SCOPE1" />
-            <el-option label="范围二（间接排放）" value="SCOPE2" />
-            <el-option label="范围三（其他排放）" value="SCOPE3" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="addForm.remark" type="textarea" :rows="3" placeholder="请输入" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="addVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleAddSubmit">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 核算详情弹窗 -->
-    <el-dialog v-model="detailVisible" title="核算详情" width="900px">
-      <template v-if="detailData">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="核算名称">{{ detailData.accountingName }}</el-descriptions-item>
-          <el-descriptions-item label="核算年份">{{ detailData.accountingYear }}</el-descriptions-item>
-          <el-descriptions-item label="核算期次">{{ detailData.accountingPeriod === 'YEARLY' ? '年度' : detailData.accountingPeriod === 'QUARTERLY' ? '季度' : '月度' }}</el-descriptions-item>
-          <el-descriptions-item label="总排放量">{{ detailData.totalEmission || 0 }} tCO2e</el-descriptions-item>
-          <el-descriptions-item label="状态">
-            <el-tag :type="detailData.status === 'APPROVED' ? 'success' : detailData.status === 'SUBMITTED' ? 'warning' : 'info'" size="small">
-              {{ detailData.status === 'DRAFT' ? '草稿' : detailData.status === 'SUBMITTED' ? '已提交' : '已审核' }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="备注">{{ detailData.remark || '-' }}</el-descriptions-item>
-        </el-descriptions>
-
-        <!-- 活动数据录入 -->
-        <h4 style="margin:16px 0 8px">活动数据</h4>
-        <el-table :data="activityData" border stripe size="small" style="width: 100%">
-          <el-table-column type="index" label="序号" width="50" />
-          <el-table-column prop="activityName" label="活动名称" min-width="120">
+      <div class="table-wrap">
+        <el-table :data="activityData" border stripe size="small" v-loading="loading">
+          <el-table-column type="index" label="序号" width="55" />
+          <el-table-column prop="category" label="活动" width="150" show-overflow-tooltip />
+          <el-table-column prop="emissionSource" label="排放源" width="120" show-overflow-tooltip />
+          <el-table-column prop="activityName" label="活动名称" min-width="140" show-overflow-tooltip />
+          <el-table-column prop="dataSource" label="数据来源" width="100" />
+          <el-table-column prop="operator" label="运算符" width="80" />
+          <el-table-column prop="relatedIndicator" label="关联指标" width="120" show-overflow-tooltip />
+          <el-table-column prop="activityData" label="活动水平(数量)" width="130" align="right" />
+          <el-table-column prop="activityUnit" label="计量单位" width="90" />
+          <el-table-column prop="emission" label="排放量(tCO₂e)" width="140" align="right" />
+          <el-table-column label="操作" width="140" fixed="right">
             <template #default="{ row, $index }">
-              <el-input v-model="row.activityName" placeholder="请输入" size="small" />
-            </template>
-          </el-table-column>
-          <el-table-column prop="activityData" label="活动数据" width="140">
-            <template #default="{ row }">
-              <el-input-number v-model="row.activityData" :min="0" :precision="2" size="small" style="width:120px" />
-            </template>
-          </el-table-column>
-          <el-table-column prop="activityUnit" label="单位" width="80">
-            <template #default="{ row }">
-              <el-select v-model="row.activityUnit" placeholder="单位" size="small" style="width:70px">
-                <el-option label="t" value="t" />
-                <el-option label="kWh" value="kWh" />
-                <el-option label="m3" value="m3" />
-                <el-option label="GJ" value="GJ" />
-              </el-select>
-            </template>
-          </el-table-column>
-          <el-table-column prop="emissionFactor" label="排放因子" width="140">
-            <template #default="{ row }">
-              <el-input-number v-model="row.emissionFactor" :min="0" :precision="6" size="small" style="width:120px" />
-            </template>
-          </el-table-column>
-          <el-table-column prop="emission" label="排放量(tCO2e)" width="140">
-            <template #default="{ row }">
-              <span>{{ (row.activityData || 0) * (row.emissionFactor || 0) | round(4) }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column width="60">
-            <template #default="{ $index }">
-              <el-button link type="danger" @click="activityData.splice($index, 1)">删除</el-button>
+              <el-button link type="primary" @click="handleEditActivity(row, $index)">编辑</el-button>
+              <el-button link type="danger" @click="handleDeleteActivity(row, $index)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
-        <el-button type="primary" class="add-row-btn" @click="addActivityRow">添加活动</el-button>
-        <el-button type="success" @click="handleCalculate">计算排放</el-button>
+      </div>
+    </el-card>
+
+    <!-- 新增/编辑活动弹窗 -->
+    <el-dialog v-model="activityVisible" :title="activityFormIndex > -1 ? '编辑活动' : '新增活动'" width="650px">
+      <el-form :model="activityForm" label-width="110px">
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="排放类别">
+              <el-select v-model="activityForm.category" placeholder="请选择" style="width:100%">
+                <el-option label="类别一：直接温室气体排放" value="类别一：直接温室气体排放" />
+                <el-option label="类别二：输入能源间接排放" value="类别二：输入能源间接排放" />
+                <el-option label="类别三：其他间接排放" value="类别三：其他间接排放" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="排放源">
+              <el-input v-model="activityForm.emissionSource" placeholder="如固定燃烧、移动燃烧" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="活动名称">
+              <el-input v-model="activityForm.activityName" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="数据来源">
+              <el-select v-model="activityForm.dataSource" placeholder="请选择" style="width:100%">
+                <el-option label="录入" value="录入" />
+                <el-option label="自动采集" value="自动采集" />
+                <el-option label="系统计算" value="系统计算" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="运算符">
+              <el-select v-model="activityForm.operator" placeholder="请选择" style="width:100%">
+                <el-option label="+" value="+" />
+                <el-option label="-" value="-" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="关联指标">
+              <el-input v-model="activityForm.relatedIndicator" placeholder="如能耗指标、产量指标" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="活动水平">
+              <el-input-number v-model="activityForm.activityData" :min="0" :precision="2" style="width:100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="计量单位">
+              <el-select v-model="activityForm.activityUnit" placeholder="请选择" style="width:100%">
+                <el-option label="t" value="t" />
+                <el-option label="kWh" value="kWh" />
+                <el-option label="m³" value="m³" />
+                <el-option label="GJ" value="GJ" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="能源类型">
+              <el-select v-model="activityForm.energyTypeId" placeholder="请选择" style="width:100%" clearable>
+                <el-option v-for="et in energyTypes" :key="et.id" :label="et.typeName" :value="et.id" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="排放因子">
+              <el-input-number v-model="activityForm.emissionFactor" :min="0" :precision="6" style="width:100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <template #footer>
+        <el-button @click="activityVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSaveActivity">保存</el-button>
       </template>
     </el-dialog>
 
     <!-- 排放报告弹窗 -->
-    <el-dialog v-model="reportVisible" title="排放报告" width="700px">
+    <el-dialog v-model="reportVisible" title="碳排放报告" width="700px">
       <template v-if="reportData">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="核算名称">{{ reportData.accountingName }}</el-descriptions-item>
@@ -237,7 +199,6 @@
           <el-descriptions-item label="范围二排放">{{ reportData.scope2Emission }} ({{ reportData.scope2Percent }}%)</el-descriptions-item>
           <el-descriptions-item label="范围三排放">{{ reportData.scope3Emission }} ({{ reportData.scope3Percent }}%)</el-descriptions-item>
         </el-descriptions>
-        <!-- 排放对比图 -->
         <div ref="reportChartRef" style="height:300px;margin-top:16px"></div>
       </template>
     </el-dialog>
@@ -245,47 +206,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh, Document, Download, Upload, MagicStick, Plus } from '@element-plus/icons-vue'
 import echarts from '@/utils/echarts'
-import {
-  getAccountingList,
-  createAccounting,
-  deleteAccounting,
-  submitAccounting,
-  approveAccounting,
-  getAccountingDetail,
-  getEmissionReport,
-  calculateEmission
-} from '@/api/carbon'
+import { getAccountingList, getAccountingDetail, getEmissionReport, calculateEmission, deleteAccounting } from '@/api/carbon'
+import { getDeptTree } from '@/api/dept'
+import { getAllEnergyTypes } from '@/api/energyType'
 
 const loading = ref(false)
-const tableData = ref<any[]>([])
-const total = ref(0)
-const queryParams = reactive({ current: 1, size: 10, accountingName: '', accountingYear: null, accountingPeriod: '', status: '' })
-
-const addVisible = ref(false)
-const addForm = reactive({ accountingName: '', accountingYear: '', accountingPeriod: 'YEARLY', scopeType: 'SCOPE1', remark: '' })
-const rules = { accountingName: [{ required: true, message: '请输入核算名称', trigger: 'blur' }], accountingYear: [{ required: true, message: '请选择核算年份', trigger: 'change' }], accountingPeriod: [{ required: true, message: '请选择核算期次', trigger: 'change' }] }
-
-const detailVisible = ref(false)
-const detailData = ref<any>(null)
-const activityData = ref<any[]>([])
-const currentAccountingId = ref<number>(0)
-
+const deptTree = ref<any[]>([])
+const energyTypes = ref<any[]>([])
+const currentAccounting = ref<any>(null)
 const reportVisible = ref(false)
 const reportData = ref<any>(null)
 const reportChartRef = ref<HTMLElement | null>(null)
-
-// 仪表盘
-const scopePieRef = ref<HTMLElement | null>(null)
-const monthBarRef = ref<HTMLElement | null>(null)
-const top5Data = ref<any[]>([])
-let scopePieChart: echarts.ECharts | null = null
-let monthBarChart: echarts.ECharts | null = null
 let reportChart: echarts.ECharts | null = null
 
-onMounted(() => { getList(); loadDashboardData() })
+const queryParams = reactive({
+  accountingYear: new Date().getFullYear().toString(),
+  energyUnitId: null as number | null,
+  modelId: 'standard'
+})
+
+const summaryData = computed(() => {
+  const details = currentAccounting.value?.details || []
+  let total = 0, scope1 = 0, scope2 = 0, scope3 = 0
+  details.forEach((d: any) => {
+    const emission = Number(d.emission || 0)
+    total += emission
+    const category = d.category || ''
+    if (category.includes('类别二')) scope2 += emission
+    else if (category.includes('类别三')) scope3 += emission
+    else scope1 += emission
+  })
+  return [
+    { label: '碳排放总量', value: total.toFixed(2) },
+    { label: '范围一', value: scope1.toFixed(2) },
+    { label: '范围二', value: scope2.toFixed(2) },
+    { label: '范围三', value: scope3.toFixed(2) }
+  ]
+})
+
+const activityData = computed(() => currentAccounting.value?.details || [])
+
+const scopePieRef = ref<HTMLElement | null>(null)
+const monthBarRef = ref<HTMLElement | null>(null)
+let scopePieChart: echarts.ECharts | null = null
+let monthBarChart: echarts.ECharts | null = null
+
+onMounted(() => { initData() })
 onUnmounted(() => { disposeCharts() })
 
 function disposeCharts() {
@@ -297,62 +267,50 @@ function disposeCharts() {
   reportChart = null
 }
 
-function formatNumber(val: any) {
-  const num = Number(val)
-  return isNaN(num) ? '-' : num.toLocaleString('zh-CN', { maximumFractionDigits: 2 })
+async function initData() {
+  const [deptRes, energyRes] = await Promise.all([getDeptTree(), getAllEnergyTypes()])
+  deptTree.value = deptRes.data || []
+  energyTypes.value = energyRes.data || []
+  await loadAccounting()
 }
 
-async function loadDashboardData() {
+async function loadAccounting() {
+  loading.value = true
   try {
-    const res = await getAccountingList({ current: 1, size: 9999 })
-    const list = res.data.records || []
-
-    // 按核算范围汇总
-    const scopeMap: Record<string, number> = { SCOPE1: 0, SCOPE2: 0, SCOPE3: 0 }
-    list.forEach((item: any) => {
-      const scope = item.scopeType || 'SCOPE1'
-      scopeMap[scope] = (scopeMap[scope] || 0) + Number(item.totalEmission || 0)
-    })
-
-    // 按年-季度汇总
-    const quarterMap: Record<string, number> = {}
-    list.forEach((item: any) => {
-      const date = item.createTime ? new Date(item.createTime) : null
-      if (date) {
-        const year = date.getFullYear()
-        const quarter = Math.ceil((date.getMonth() + 1) / 3)
-        const quarterKey = `${year}-Q${quarter}`
-        quarterMap[quarterKey] = (quarterMap[quarterKey] || 0) + Number(item.totalEmission || 0)
-      }
-    })
-    const sortedQuarters = Object.keys(quarterMap).sort()
-    // 最多展示最近 8 个季度
-    const recentQuarters = sortedQuarters.slice(-8)
-
-    // TOP5
-    top5Data.value = [...list]
-      .sort((a: any, b: any) => Number(b.totalEmission || 0) - Number(a.totalEmission || 0))
-      .slice(0, 5)
-
+    const params: any = { current: 1, size: 10 }
+    if (queryParams.accountingYear) params.accountingYear = parseInt(queryParams.accountingYear)
+    if (queryParams.energyUnitId) params.energyUnitId = queryParams.energyUnitId
+    const res = await getAccountingList(params)
+    const records = res.data.records || []
+    if (records.length > 0) {
+      const detailRes = await getAccountingDetail(records[0].id)
+      currentAccounting.value = detailRes.data
+    } else {
+      currentAccounting.value = null
+    }
     await nextTick()
-    renderScopePie(scopeMap)
-    renderQuarterBar(recentQuarters, quarterMap)
+    renderCharts()
   } catch (e) { console.error(e) }
+  finally { loading.value = false }
 }
 
-function renderScopePie(scopeMap: Record<string, number>) {
+function renderCharts() {
+  renderScopePie()
+  renderMonthBar()
+}
+
+function renderScopePie() {
   if (!scopePieRef.value) return
   scopePieChart?.dispose()
   scopePieChart = echarts.init(scopePieRef.value)
   const data = [
-    { value: scopeMap.SCOPE1 || 0, name: '范围一（直接排放）' },
-    { value: scopeMap.SCOPE2 || 0, name: '范围二（间接排放）' },
-    { value: scopeMap.SCOPE3 || 0, name: '范围三（其他排放）' }
+    { value: Number(summaryData.value[1].value), name: '范围一' },
+    { value: Number(summaryData.value[2].value), name: '范围二' },
+    { value: Number(summaryData.value[3].value), name: '范围三' }
   ].filter(d => d.value > 0)
-
   scopePieChart.setOption({
-    tooltip: { trigger: 'item', formatter: '{b}: {c} tCO2e ({d}%)' },
-    legend: { bottom: 0, icon: 'circle', itemWidth: 10, itemHeight: 10 },
+    tooltip: { trigger: 'item', formatter: '{b}: {c} tCO₂e ({d}%)' },
+    legend: { bottom: 0, icon: 'circle' },
     color: ['#0ea5e9', '#10b981', '#f59e0b'],
     series: [{
       type: 'pie',
@@ -361,32 +319,48 @@ function renderScopePie(scopeMap: Record<string, number>) {
       avoidLabelOverlap: true,
       itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
       label: { show: true, formatter: '{b}\n{d}%' },
-      labelLine: { show: true },
       data: data.length ? data : [{ value: 0, name: '暂无数据' }]
     }]
   })
   window.addEventListener('resize', () => scopePieChart?.resize())
 }
 
-function renderQuarterBar(quarters: string[], quarterMap: Record<string, number>) {
+function renderMonthBar() {
   if (!monthBarRef.value) return
   monthBarChart?.dispose()
   monthBarChart = echarts.init(monthBarRef.value)
+
+  const details = currentAccounting.value?.details || []
+  const monthMap: Record<string, number> = {}
+  details.forEach((d: any) => {
+    const date = d.createTime ? new Date(d.createTime) : null
+    if (date && queryParams.accountingYear && date.getFullYear() === parseInt(queryParams.accountingYear)) {
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      monthMap[key] = (monthMap[key] || 0) + Number(d.emission || 0)
+    }
+  })
+  // 如果没有明细按创建时间月聚合，则展示所选年份 1-12 月均为 0
+  const months: string[] = []
+  const values: number[] = []
+  const year = queryParams.accountingYear || new Date().getFullYear().toString()
+  for (let i = 1; i <= 12; i++) {
+    const key = `${year}-${String(i).padStart(2, '0')}`
+    months.push(`${i}月`)
+    values.push(Number(monthMap[key] || 0).toFixed(2) as any)
+  }
+
   monthBarChart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
     xAxis: {
       type: 'category',
-      data: quarters.map(q => {
-        const [year, qStr] = q.split('-')
-        return `${year}年${qStr}`
-      }),
+      data: months,
       axisLine: { lineStyle: { color: '#cbd5e1' } },
-      axisLabel: { color: '#64748b', rotate: 30 }
+      axisLabel: { color: '#64748b' }
     },
     yAxis: {
       type: 'value',
-      name: 'tCO2e',
+      name: 'tCO₂e',
       nameTextStyle: { color: '#64748b' },
       axisLine: { show: false },
       splitLine: { lineStyle: { color: '#f1f5f9' } },
@@ -394,7 +368,7 @@ function renderQuarterBar(quarters: string[], quarterMap: Record<string, number>
     },
     series: [{
       type: 'bar',
-      data: quarters.map(q => Number(quarterMap[q] || 0).toFixed(2)),
+      data: values,
       barWidth: '50%',
       itemStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -408,97 +382,12 @@ function renderQuarterBar(quarters: string[], quarterMap: Record<string, number>
   window.addEventListener('resize', () => monthBarChart?.resize())
 }
 
-async function getList() {
-  loading.value = true
+function handleQuery() { loadAccounting() }
+
+async function handleReport() {
+  if (!currentAccounting.value) { ElMessage.warning('请先选择核算记录'); return }
   try {
-    const params: any = { current: queryParams.current, size: queryParams.size }
-    if (queryParams.accountingName) params.accountingName = queryParams.accountingName
-    if (queryParams.accountingYear) params.accountingYear = parseInt(queryParams.accountingYear as string)
-    if (queryParams.accountingPeriod) params.accountingPeriod = queryParams.accountingPeriod
-    if (queryParams.status) params.status = queryParams.status
-    const res = await getAccountingList(params)
-    tableData.value = res.data.records
-    total.value = res.data.total
-  } catch (e: any) {
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
-}
-
-function handleQuery() { queryParams.current = 1; getList() }
-function handleReset() { Object.assign(queryParams, { current: 1, size: 10, accountingName: '', accountingYear: null, accountingPeriod: '', status: '' }); getList() }
-
-function handleAdd() {
-  Object.assign(addForm, { accountingName: '', accountingYear: '', accountingPeriod: 'YEARLY', scopeType: 'SCOPE1', remark: '' })
-  addVisible.value = true
-}
-
-async function handleAddSubmit() {
-  const data: any = { ...addForm }
-  if (data.accountingYear) data.accountingYear = parseInt(data.accountingYear)
-  await createAccounting(data)
-  ElMessage.success('新增成功')
-  addVisible.value = false
-  getList()
-  loadDashboardData()
-}
-
-async function handleDetail(row: any) {
-  try {
-    const res = await getAccountingDetail(row.id)
-    detailData.value = res.data
-    currentAccountingId.value = row.id
-    activityData.value = (res.data.details || []).map((d: any) => ({ ...d }))
-    if (activityData.value.length === 0) addActivityRow()
-    detailVisible.value = true
-  } catch (e) { console.error(e) }
-}
-
-function addActivityRow() {
-  activityData.value.push({ activityName: '', activityData: null, activityUnit: 't', emissionFactor: null })
-}
-
-function addFormRef() {}
-async function handleCalculate() {
-  if (!currentAccountingId.value) return
-  const activities = activityData.value.map(a => ({
-    activityName: a.activityName || '未命名',
-    energyTypeId: 0,
-    activityData: a.activityData || 0,
-    activityUnit: a.activityUnit || 't',
-    factorId: null,
-    sourceDescription: ''
-  }))
-  await calculateEmission({ accountingId: currentAccountingId.value, activities })
-  ElMessage.success('计算完成')
-  getList()
-  loadDashboardData()
-}
-
-async function handleSubmit(row: any) {
-  await submitAccounting(row.id)
-  ElMessage.success('已提交')
-  getList()
-  loadDashboardData()
-}
-async function handleApprove(row: any) {
-  await approveAccounting(row.id)
-  ElMessage.success('已审核')
-  getList()
-  loadDashboardData()
-}
-async function handleDelete(row: any) {
-  await ElMessageBox.confirm('确认删除该核算记录？', '提示')
-  await deleteAccounting(row.id)
-  ElMessage.success('删除成功')
-  getList()
-  loadDashboardData()
-}
-
-async function handleReport(row: any) {
-  try {
-    const res = await getEmissionReport(row.id)
+    const res = await getEmissionReport(currentAccounting.value.id)
     reportData.value = res.data
     reportVisible.value = true
     await nextTick()
@@ -513,38 +402,127 @@ function renderReportChart() {
   reportChart.setOption({
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', data: ['范围一', '范围二', '范围三'] },
-    yAxis: { type: 'value', name: 'tCO2e' },
+    yAxis: { type: 'value', name: 'tCO₂e' },
     series: [{
       type: 'bar',
       data: [reportData.value.scope1Emission, reportData.value.scope2Emission, reportData.value.scope3Emission],
-      itemStyle: {
-        color: (params: any) => {
-          const colors = ['#409EFF', '#67C23A', '#E6A23C']
-          return colors[params.dataIndex]
-        }
-      }
+      itemStyle: { color: (params: any) => ['#0ea5e9', '#10b981', '#f59e0b'][params.dataIndex] }
     }]
   })
   window.addEventListener('resize', () => reportChart?.resize())
 }
+
+function handleImportTemplate() { ElMessage.info('导入模板功能开发中') }
+function handleImport() { ElMessage.info('导入功能开发中') }
+function handleAIAnalysis() { ElMessage.info('AI 智能分析功能开发中') }
+
+// 活动新增/编辑
+const activityVisible = ref(false)
+const activityFormIndex = ref(-1)
+const activityForm = reactive({
+  category: '类别一：直接温室气体排放',
+  emissionSource: '',
+  activityName: '',
+  dataSource: '录入',
+  operator: '+',
+  relatedIndicator: '',
+  activityData: null as number | null,
+  activityUnit: 't',
+  energyTypeId: null as number | null,
+  emissionFactor: null as number | null,
+  sourceDescription: ''
+})
+
+function resetActivityForm() {
+  Object.assign(activityForm, {
+    category: '类别一：直接温室气体排放',
+    emissionSource: '',
+    activityName: '',
+    dataSource: '录入',
+    operator: '+',
+    relatedIndicator: '',
+    activityData: null,
+    activityUnit: 't',
+    energyTypeId: null,
+    emissionFactor: null,
+    sourceDescription: ''
+  })
+  activityFormIndex.value = -1
+}
+
+function handleAddActivity() {
+  if (!currentAccounting.value) { ElMessage.warning('当前无核算记录，请先新增核算'); return }
+  resetActivityForm()
+  activityVisible.value = true
+}
+
+function handleEditActivity(row: any, index: number) {
+  Object.assign(activityForm, {
+    category: row.category || '类别一：直接温室气体排放',
+    emissionSource: row.emissionSource || '',
+    activityName: row.activityName || '',
+    dataSource: row.dataSource || '录入',
+    operator: row.operator || '+',
+    relatedIndicator: row.relatedIndicator || '',
+    activityData: row.activityData,
+    activityUnit: row.activityUnit || 't',
+    energyTypeId: row.energyTypeId,
+    emissionFactor: row.emissionFactor,
+    sourceDescription: row.sourceDescription || ''
+  })
+  activityFormIndex.value = index
+  activityVisible.value = true
+}
+
+async function handleSaveActivity() {
+  if (!currentAccounting.value) return
+  const payload = {
+    accountingId: currentAccounting.value.id,
+    activities: [{
+      activityName: activityForm.activityName,
+      energyTypeId: activityForm.energyTypeId,
+      activityData: activityForm.activityData,
+      activityUnit: activityForm.activityUnit,
+      factorId: null,
+      sourceDescription: activityForm.sourceDescription,
+      category: activityForm.category,
+      emissionSource: activityForm.emissionSource,
+      dataSource: activityForm.dataSource,
+      operator: activityForm.operator,
+      relatedIndicator: activityForm.relatedIndicator
+    }]
+  }
+  await calculateEmission(payload)
+  ElMessage.success('保存成功')
+  activityVisible.value = false
+  await loadAccounting()
+}
+
+async function handleDeleteActivity(row: any, index: number) {
+  await ElMessageBox.confirm('确认删除该活动数据？', '提示')
+  // 通过 detail id 删除（后端暂缺明细删除接口，这里仅做前端过滤提示）
+  ElMessage.warning('明细删除接口需后端补充，当前仅做提示')
+}
+
+watch(() => currentAccounting.value, () => {
+  nextTick(() => renderCharts())
+}, { deep: true })
 </script>
 
 <style scoped>
 .carbon-accounting { padding: 16px; }
+.filter-card { margin-bottom: 16px; }
+.filter-form :deep(.el-form-item) { margin-bottom: 0; }
 .dashboard-row { margin-bottom: 16px; }
-.chart-card { height: 100%; }
-.chart-card :deep(.el-card__header) { padding: 14px 16px; }
-.chart-card :deep(.el-card__body) { padding: 16px; height: calc(100% - 50px); box-sizing: border-box; }
-.chart-header { display: flex; flex-direction: column; }
-.chart-title { font-size: 15px; font-weight: 600; color: #1e293b; }
-.chart-subtitle { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.summary-card, .chart-card { height: 100%; }
+.summary-card :deep(.el-card__body), .chart-card :deep(.el-card__body) { padding: 16px; height: calc(100% - 50px); box-sizing: border-box; }
+.card-title { font-size: 15px; font-weight: 600; color: #1e293b; }
+.summary-table { font-size: 14px; }
+.summary-value { font-size: 18px; font-weight: 700; color: #059669; }
+.summary-unit { font-size: 12px; color: #94a3b8; margin-left: 4px; }
 .chart-container { width: 100%; height: 280px; }
-.top5-table-wrap { height: 280px; overflow-y: auto; }
-.emission-value { font-weight: 600; color: #059669; }
-.list-card { margin-bottom: 0; }
+.activity-card { margin-bottom: 0; }
 .header-row { display: flex; justify-content: space-between; align-items: center; }
 .title { font-size: 16px; font-weight: 600; }
-.search-form { margin-bottom: 10px; }
-.pagination-row { margin-top: 16px; display: flex; justify-content: flex-end; }
-.add-row-btn { margin: 8px 8px 8px 0; }
+.table-wrap { overflow-x: auto; }
 </style>
